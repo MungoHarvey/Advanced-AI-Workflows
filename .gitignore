@@ -1,0 +1,36 @@
+# Sub-repositories (independent git repos cloned into workspace)
+advanced-planning/
+plannotator/
+superpowers/
+
+# Claude Code working state
+.claude/
+
+# Local agent briefing (not public)
+CLAUDE.md
+
+# Internal working documents (superseded by public docs)
+discovery-evaluation-report.md
+META_REPO_LAUNCH.md
+run-tests.sh
+
+# Spec and plan files (development process, not public output)
+docs/superpowers/
+
+# Node/Bun
+node_modules/
+bun-*.zip
+
+# Python
+__pycache__/
+*.pyc
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*~
+
+# Logs
+*.log

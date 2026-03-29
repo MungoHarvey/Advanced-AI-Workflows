@@ -3,8 +3,11 @@ advanced-planning/
 plannotator/
 superpowers/
 
-# Claude Code working state
-.claude/
+# Claude Code working state (ignore everything, then whitelist the public skill)
+.claude/*
+!.claude/skills/
+.claude/skills/*
+!.claude/skills/setup-with-claude/
 
 # Local agent briefing (not public)
 CLAUDE.md

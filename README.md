@@ -64,7 +64,17 @@ No tool needs to know the internal implementation of the others. They communicat
 
 ## Quick Start
 
-Clone the repository, install each tool's dependencies, and configure your project following the step-by-step instructions in [SETUP.md](SETUP.md).
+**Automated (let Claude do it):** Install the setup skill and tell Claude to set up your project:
+
+```bash
+mkdir -p ~/.claude/skills/setup-with-claude
+curl -fsSL https://raw.githubusercontent.com/MungoHarvey/advanced-ai-workflows/main/.claude/skills/setup-with-claude/SKILL.md \
+  -o ~/.claude/skills/setup-with-claude/SKILL.md
+```
+
+Then in any Claude Code session: *"Set up advanced planning in this project."*
+
+**Manual:** Follow the step-by-step instructions in [SETUP.md](SETUP.md).
 
 ---
 

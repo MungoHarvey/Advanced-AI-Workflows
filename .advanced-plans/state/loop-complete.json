@@ -1,13 +1,13 @@
 {
-  "loop_name": "ralph-loop-004",
+  "loop_name": "ralph-loop-005",
   "loop_file": "C:\\Users\\mharvey2\\Documents\\Coding\\planning-architectures\\Advanced-AI-Workflows\\.advanced-plans\\phases\\phase-1\\loops.md",
   "status": "completed",
   "todos_done": 4,
   "todos_failed": 0,
-  "completed_at": "2026-05-22T00:00:00Z",
+  "completed_at": "2026-05-22T17:05:00Z",
   "handoff": {
-    "done": "Branch meta-project/fix-structure-md-stale-paths created in C:\\Users\\mharvey2\\Documents\\Coding\\advanced-planning with commit fa799d3 (1 file changed, 20 insertions, 16 deletions). STRUCTURE.md rewritten: plans/ root block replaced with .advanced-plans/ canonical layout, PLANS-INDEX.md renamed to PLANNING.md in naming conventions table, plans/gate-verdicts/ updated to .advanced-plans/gate-verdicts/, .claude/plans/ runtime entry updated to .advanced-plans/. Zero current-state stale-path references remain. Diff scoped to STRUCTURE.md only.",
+    "done": "Branch meta-project/fix-brainstorming-ap-default-path created in C:\\Users\\mharvey2\\Documents\\Coding\\planning-architectures\\superpowers with commit fde9f97 (1 file changed, 2 insertions, 2 deletions). brainstorming/SKILL.md updated: AP-detected default path changed from .claude/plans/ to .advanced-plans/specs/ in checklist step 6 (line 30) and Documentation section (line 123). writing-plans/SKILL.md examined — its default is docs/superpowers/plans/ not .claude/plans/, so no change needed. User-preference override (line 125) preserved bit-for-bit.",
     "failed": "",
-    "needed": "User must push and open PR manually (branch-only mode per user override). Run: cd C:\\Users\\mharvey2\\Documents\\Coding\\advanced-planning && git push -u origin meta-project/fix-structure-md-stale-paths && gh pr create --title \"docs: STRUCTURE.md — reflect v0.11.0 .advanced-plans/ layout\" --body \"$(git log -1 --format=%B)\""
+    "needed": "User must push and open PR manually (branch-only mode per user override). Run: cd C:\\Users\\mharvey2\\Documents\\Coding\\planning-architectures\\superpowers && git push -u origin meta-project/fix-brainstorming-ap-default-path && gh pr create --title \"fix(brainstorming): update AP-detected default from .claude/plans/ to .advanced-plans/specs/\" --body \"$(git log -1 --format=%B)\""
   }
 }

@@ -635,9 +635,9 @@ max_iterations: 2
 on_max_iterations: checkpoint
 
 handoff_summary:
-  done: ""
+  done: "Branch meta-project/fix-brainstorming-ap-default-path created in C:\\Users\\mharvey2\\Documents\\Coding\\planning-architectures\\superpowers with commit fde9f97 (1 file changed, 2 insertions, 2 deletions). brainstorming/SKILL.md updated: AP-detected default path changed from .claude/plans/ to .advanced-plans/specs/ in checklist step 6 (line 30) and Documentation section (line 123). writing-plans/SKILL.md examined — its default is docs/superpowers/plans/ not .claude/plans/, so no change needed. User-preference override (line 125: '(User preferences for spec location override both defaults)') preserved bit-for-bit."
   failed: ""
-  needed: ""
+  needed: "User must push and open PR manually (branch-only mode per user override). Run: cd C:\\Users\\mharvey2\\Documents\\Coding\\planning-architectures\\superpowers && git push -u origin meta-project/fix-brainstorming-ap-default-path && gh pr create --title \"fix(brainstorming): update AP-detected default from .claude/plans/ to .advanced-plans/specs/\" --body \"$(git log -1 --format=%B)\""
 
 todos:
   - id: "loop-005-1"
@@ -645,7 +645,7 @@ todos:
     skill: "NA"
     agent: "Explore"
     outcome: "Working notes cite line numbers for the AP-detected default and confirm the user-preference override branch is logically separate (will be preserved)"
-    status: pending
+    status: completed
     complexity: low
     priority: high
   - id: "loop-005-2"
@@ -653,23 +653,23 @@ todos:
     skill: "NA"
     agent: "NA"
     outcome: "Branch exists; diff modifies only the AP-detected default; user-preference override behaviour bit-for-bit preserved as verified by re-reading the modified file"
-    status: pending
+    status: completed
     complexity: medium
     priority: high
   - id: "loop-005-3"
-    content: "Commit + push the branch; open a PR with description explaining: (a) AP v0.11.0 moved off .claude/plans/, (b) meta-project's CLAUDE.md preference override is the v0.1 workaround, (c) PR makes that workaround redundant for AP-detected case"
-    skill: "ship"
+    content: "Commit on branch (BRANCH-ONLY mode — do NOT push, do NOT open PR)"
+    skill: "NA"
     agent: "NA"
-    outcome: "PR opened; URL captured; description names the meta-project, cites the AP v0.11.0 path, and explains the workaround relationship"
-    status: pending
+    outcome: "Commit fde9f97 on branch meta-project/fix-brainstorming-ap-default-path; branch not pushed; stayed on branch"
+    status: completed
     complexity: low
     priority: high
   - id: "loop-005-4"
-    content: "Record the PR URL in handoff_summary.done"
+    content: "Record the branch name and the commands the user needs to run later (push + PR command) in handoff_summary.needed"
     skill: "NA"
     agent: "NA"
-    outcome: "handoff_summary.done contains the PR URL"
-    status: pending
+    outcome: "handoff_summary.needed contains exact push and gh pr create commands for the user to run"
+    status: completed
     complexity: low
     priority: medium
 

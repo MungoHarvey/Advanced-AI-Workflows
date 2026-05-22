@@ -7,7 +7,7 @@ max_iterations: 3
 on_max_iterations: escalate
 
 handoff_summary:
-  done: ""
+  done: "Three artifacts produced: .claude/skills/gstack-to-plans/SKILL.md (pure markdown, 4 AskUserQuestion branches), references/claude-md-routing.md (fenced markers, 4 front-door routes, closing instruction, superpowers overrides), references/settings-snippet.json (PostToolUse hook scoped to ~/.gstack/projects/, 4 canonical .advanced-plans/** permission entries). Both open questions resolved: Q2 superpowers override is free-prose (brainstorming SKILL.md line 125, writing-plans SKILL.md line 19); Q3 permission schema sourced verbatim from advanced-planning/platforms/claude-code/settings.json lines 16-19."
   failed: ""
   needed: ""
 
@@ -17,7 +17,7 @@ todos:
     skill: "NA"
     agent: "Explore"
     outcome: "Open question resolved: exact format the override block must use is documented in working notes; cited line(s) in superpowers source"
-    status: pending
+    status: completed
     complexity: medium
     priority: high
   - id: "loop-001-2"
@@ -25,7 +25,7 @@ todos:
     skill: "permission-config"
     agent: "Explore"
     outcome: "Open question resolved: exact JSON entries copied verbatim into working notes; ready to drop into references/settings-snippet.json"
-    status: pending
+    status: completed
     complexity: medium
     priority: high
   - id: "loop-001-3"
@@ -33,7 +33,7 @@ todos:
     skill: "skill-creator"
     agent: "NA"
     outcome: ".claude/skills/gstack-to-plans/SKILL.md exists; contains explicit AskUserQuestion callouts at all three ambiguous branches; zero executable helpers (no bin/, no shell scripts)"
-    status: pending
+    status: completed
     complexity: medium
     priority: high
   - id: "loop-001-4"
@@ -41,7 +41,7 @@ todos:
     skill: "NA"
     agent: "NA"
     outcome: "references/claude-md-routing.md exists; contains <!-- aaw-routing:begin --> and <!-- aaw-routing:end --> markers; all four front-door routes present; closing instruction for /gstack-to-plans fallback present"
-    status: pending
+    status: completed
     complexity: medium
     priority: high
   - id: "loop-001-5"
@@ -51,7 +51,7 @@ todos:
       - "update-config"
     agent: "NA"
     outcome: "references/settings-snippet.json exists; hook matcher includes ~/.gstack/projects/ path filter and no broader scope; permission entries match the canonical schema from loop-001-2"
-    status: pending
+    status: completed
     complexity: medium
     priority: high
   - id: "loop-001-6"
@@ -59,7 +59,7 @@ todos:
     skill: "verification-before-completion"
     agent: "NA"
     outcome: "grep across the three files confirms identical slash-command name (/gstack-to-plans) in all references; no name drift; fenced markers parse"
-    status: pending
+    status: completed
     complexity: low
     priority: medium
 

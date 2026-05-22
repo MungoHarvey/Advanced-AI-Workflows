@@ -1,0 +1,13 @@
+{
+  "loop_name": "ralph-loop-001",
+  "loop_file": "C:\\Users\\mharvey2\\Documents\\Coding\\planning-architectures\\Advanced-AI-Workflows\\.advanced-plans\\phases\\phase-1\\loops.md",
+  "status": "completed",
+  "todos_done": 6,
+  "todos_failed": 0,
+  "completed_at": "2026-05-22T00:00:00Z",
+  "handoff": {
+    "done": "Three artifacts produced: .claude/skills/gstack-to-plans/SKILL.md (pure markdown, 4 AskUserQuestion branches), references/claude-md-routing.md (fenced markers, 4 front-door routes, closing instruction, superpowers overrides), references/settings-snippet.json (PostToolUse hook scoped to ~/.gstack/projects/, 4 canonical .advanced-plans/** permission entries). Both open questions resolved: Q2 superpowers override is free-prose (brainstorming SKILL.md line 125, writing-plans SKILL.md line 19); Q3 permission schema sourced verbatim from advanced-planning/platforms/claude-code/settings.json lines 16-19.",
+    "failed": "",
+    "needed": ""
+  }
+}

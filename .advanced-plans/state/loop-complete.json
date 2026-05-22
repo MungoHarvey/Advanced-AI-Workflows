@@ -1,13 +1,15 @@
 {
-  "loop_name": "ralph-loop-005",
-  "loop_file": "C:\\Users\\mharvey2\\Documents\\Coding\\planning-architectures\\Advanced-AI-Workflows\\.advanced-plans\\phases\\phase-1\\loops.md",
-  "status": "completed",
-  "todos_done": 4,
+  "loop_name": "ralph-loop-006",
+  "loop_file": ".advanced-plans/phases/phase-1/loops.md",
+  "status": "partial",
+  "todos_done": 3,
   "todos_failed": 0,
-  "completed_at": "2026-05-22T17:05:00Z",
+  "todos_deferred": 2,
+  "todos_pending": 1,
+  "completed_at": "2026-05-22T17:40:00Z",
   "handoff": {
-    "done": "Branch meta-project/fix-brainstorming-ap-default-path created in C:\\Users\\mharvey2\\Documents\\Coding\\planning-architectures\\superpowers with commit fde9f97 (1 file changed, 2 insertions, 2 deletions). brainstorming/SKILL.md updated: AP-detected default path changed from .claude/plans/ to .advanced-plans/specs/ in checklist step 6 (line 30) and Documentation section (line 123). writing-plans/SKILL.md examined — its default is docs/superpowers/plans/ not .claude/plans/, so no change needed. User-preference override (line 125) preserved bit-for-bit.",
+    "done": "Headless PREP mode executed. Fresh test project created at scratch/aaw-smoketest-20260522/ (empty git init, no .claude/, scratch/ added to .gitignore). REG-7 static analysis PASS: four sub-cases verified against settings-snippet.json — prefix guard (startsWith ~/.gstack/projects/) and filename-pattern guard (/-design-\\d/.test) both confirmed correct; negative paths (b) and (c) correctly rejected; idempotency (d) handled by gstack-to-plans SKILL.md Step 3 not the hook matcher. tests/v0.1-smoke-report.md written with REG-7 evidence table and REG-1..6 user-driven checklist.",
     "failed": "",
-    "needed": "User must push and open PR manually (branch-only mode per user override). Run: cd C:\\Users\\mharvey2\\Documents\\Coding\\planning-architectures\\superpowers && git push -u origin meta-project/fix-brainstorming-ap-default-path && gh pr create --title \"fix(brainstorming): update AP-detected default from .claude/plans/ to .advanced-plans/specs/\" --body \"$(git log -1 --format=%B)\""
+    "needed": "User must open scratch/aaw-smoketest-20260522/ in a fresh Claude Code session and execute the REG-1..REG-6 checklist in tests/v0.1-smoke-report.md. If any REG fails, activate todo-006-6 (fix iterations) by fixing the affected loop artifact and re-running."
   }
 }

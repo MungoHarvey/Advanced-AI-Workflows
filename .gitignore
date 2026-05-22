@@ -3,6 +3,9 @@ advanced-planning/
 plannotator/
 superpowers/
 
+# Scratch test projects (intentionally isolated fresh repos)
+scratch/
+
 # Claude Code working state (ignore everything, then whitelist the public skill)
 .claude/*
 !.claude/skills/

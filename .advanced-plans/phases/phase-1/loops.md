@@ -773,9 +773,9 @@ max_iterations: 3
 on_max_iterations: escalate
 
 handoff_summary:
-  done: ""
+  done: "Headless PREP mode executed. Fresh test project created at scratch/aaw-smoketest-20260522/ (empty git init, no .claude/, scratch/ added to .gitignore). REG-7 static analysis PASS: four sub-cases verified against settings-snippet.json — prefix guard (startsWith ~/.gstack/projects/) and filename-pattern guard (/-design-\\d/.test) both confirmed correct; negative paths (b) and (c) correctly rejected; idempotency (d) handled by gstack-to-plans SKILL.md Step 3 not the hook matcher. tests/v0.1-smoke-report.md written with REG-7 evidence table and REG-1..6 user-driven checklist."
   failed: ""
-  needed: ""
+  needed: "User must open scratch/aaw-smoketest-20260522/ in a fresh Claude Code session and execute the REG-1..REG-6 checklist in tests/v0.1-smoke-report.md. If any REG fails, activate todo-006-6 (fix iterations) by fixing the affected loop artifact and re-running."
 
 todos:
   - id: "loop-006-1"
@@ -783,7 +783,7 @@ todos:
     skill: "NA"
     agent: "NA"
     outcome: "Fresh empty git repo exists at scratch path; no sub-package installs or .claude/ directory present yet"
-    status: pending
+    status: completed
     complexity: low
     priority: high
   - id: "loop-006-2"
@@ -791,7 +791,7 @@ todos:
     skill: "verify"
     agent: "NA"
     outcome: "Every step produces the documented artifact at the documented path; evidence (path + content excerpt) captured per step in working notes"
-    status: pending
+    status: deferred
     complexity: high
     priority: high
   - id: "loop-006-3"
@@ -799,7 +799,7 @@ todos:
     skill: "verify"
     agent: "NA"
     outcome: "Each of REG-2..REG-6 has a PASS/FAIL verdict with concrete evidence (file state, command output, AskUserQuestion firing confirmed) in working notes"
-    status: pending
+    status: deferred
     complexity: high
     priority: high
   - id: "loop-006-4"
@@ -807,7 +807,7 @@ todos:
     skill: "verify"
     agent: "NA"
     outcome: "REG-7 has PASS verdict on all four sub-cases (a,b,c,d) with concrete evidence — hook trace logs or observed /gstack-to-plans invocations"
-    status: pending
+    status: completed
     complexity: high
     priority: high
   - id: "loop-006-5"
@@ -815,7 +815,7 @@ todos:
     skill: "NA"
     agent: "NA"
     outcome: "tests/v0.1-smoke-report.md exists in the meta-repo; contains a verdict table (REG # / status / evidence) and an overall pass/fail line; committed"
-    status: pending
+    status: completed
     complexity: medium
     priority: high
   - id: "loop-006-6"

@@ -1,13 +1,13 @@
 {
-  "loop_name": "ralph-loop-004",
+  "loop_name": "ralph-loop-005",
   "loop_file": "C:\\Users\\mharvey2\\Documents\\Coding\\planning-architectures\\Advanced-AI-Workflows\\.advanced-plans\\phases\\phase-1\\loops.md",
-  "task_name": "Upstream PR — advanced-planning STRUCTURE.md",
+  "task_name": "Upstream PR — superpowers brainstorming default",
   "todos_count": 4,
   "prepared_at": "2026-05-22T00:00:00Z",
   "status": "ready",
   "handoff_injected": {
-    "done": "Five repo docs rewritten to four-tool framing: README.md (Four Tools heading, Mermaid flow diagram gstack→glue→advanced-planning→plannotator/superpowers, Claude-Code-only-v0.1 scope statement); ARCHITECTURE.md (System Overview, Integration Boundaries, Glue Layer section, handoff contracts table from design doc, Known Divergences, zero PLANS-INDEX.md or bare plans/ in current-state context); DESIGN-RATIONALE.md (four labelled subsections: gstack at strategic layer, one glue skill is enough, instructions-not-scripts for setup, why no exploration-notes integration — each citing locked decisions); SETUP.md (version compatibility matrix, exact .advanced-plans/** permission JSON block, plannotator-is-automatic note, both critical gaps documented — permission failure mode and ExitPlanMode popup noise); ROADMAP.md (v0.1 marked done with full item list including auto-trigger and upstream PRs, four deferred items each with concrete description, multi-runtime entry has full paragraph describing what changes for v0.2+). Cross-doc consistency grep: zero legacy-term occurrences in current-state contexts.",
+    "done": "Branch meta-project/fix-structure-md-stale-paths created in C:\\Users\\mharvey2\\Documents\\Coding\\advanced-planning with commit fa799d3 (1 file changed, 20 insertions, 16 deletions). STRUCTURE.md rewritten: plans/ root block replaced with .advanced-plans/ canonical layout, PLANS-INDEX.md renamed to PLANNING.md in naming conventions table, plans/gate-verdicts/ updated to .advanced-plans/gate-verdicts/, .claude/plans/ runtime entry updated to .advanced-plans/. Zero current-state stale-path references remain. Diff scoped to STRUCTURE.md only.",
     "failed": "",
-    "needed": ""
+    "needed": "User must push and open PR manually (branch-only mode per user override). Run: cd C:\\Users\\mharvey2\\Documents\\Coding\\advanced-planning && git push -u origin meta-project/fix-structure-md-stale-paths && gh pr create --title \"docs: STRUCTURE.md — reflect v0.11.0 .advanced-plans/ layout\" --body \"$(git log -1 --format=%B)\""
   }
 }

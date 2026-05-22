@@ -497,9 +497,9 @@ max_iterations: 2
 on_max_iterations: checkpoint
 
 handoff_summary:
-  done: ""
+  done: "Branch meta-project/fix-structure-md-stale-paths created in C:\\Users\\mharvey2\\Documents\\Coding\\advanced-planning with commit fa799d3 (1 file changed, 20 insertions, 16 deletions). STRUCTURE.md rewritten: plans/ root block replaced with .advanced-plans/ canonical layout, PLANS-INDEX.md renamed to PLANNING.md in naming conventions table, plans/gate-verdicts/ updated to .advanced-plans/gate-verdicts/, .claude/plans/ runtime entry updated to .advanced-plans/. Zero current-state stale-path references remain. Diff scoped to STRUCTURE.md only."
   failed: ""
-  needed: ""
+  needed: "User must push and open PR manually (branch-only mode per user override). Run: cd C:\\Users\\mharvey2\\Documents\\Coding\\advanced-planning && git push -u origin meta-project/fix-structure-md-stale-paths && gh pr create --title \"docs: STRUCTURE.md — reflect v0.11.0 .advanced-plans/ layout\" --body \"$(git log -1 --format=%B)\""
 
 todos:
   - id: "loop-004-1"
@@ -507,7 +507,7 @@ todos:
     skill: "NA"
     agent: "Explore"
     outcome: "Working notes contain a complete table of stale-path occurrences with line numbers; ready to drive the rewrite"
-    status: pending
+    status: completed
     complexity: low
     priority: high
   - id: "loop-004-2"
@@ -515,23 +515,23 @@ todos:
     skill: "NA"
     agent: "NA"
     outcome: "Branch exists; STRUCTURE.md contains zero references to plans/, .claude/plans/, or PLANS-INDEX.md (only .advanced-plans/ and its sub-paths); diff scoped to STRUCTURE.md only"
-    status: pending
+    status: completed
     complexity: medium
     priority: high
   - id: "loop-004-3"
-    content: "Commit + push the branch; open a PR with a description referencing the meta-project's audit as discovery context and v0.11.0 commands/skills as ground truth"
-    skill: "ship"
+    content: "Commit the change on the branch (BRANCH-ONLY mode — do NOT push, do NOT open PR)"
+    skill: "NA"
     agent: "NA"
-    outcome: "PR opened; URL captured; description names the meta-project (Advanced-AI-Workflows) and cites at least two v0.11.0 command files showing the canonical paths"
-    status: pending
+    outcome: "Commit fa799d3 on branch meta-project/fix-structure-md-stale-paths; branch not pushed; stayed on branch"
+    status: completed
     complexity: low
     priority: high
   - id: "loop-004-4"
-    content: "Record the PR URL in handoff_summary.done for downstream loops to reference"
+    content: "Record the branch name and the commands the user needs to run later (push + PR command) in handoff_summary.needed"
     skill: "NA"
     agent: "NA"
-    outcome: "handoff_summary.done contains the PR URL"
-    status: pending
+    outcome: "handoff_summary.needed contains exact push and gh pr create commands for the user to run"
+    status: completed
     complexity: low
     priority: medium
 

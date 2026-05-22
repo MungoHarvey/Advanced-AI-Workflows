@@ -1,12 +1,12 @@
 {
-  "loop_name": "ralph-loop-003",
+  "loop_name": "ralph-loop-004",
   "loop_file": "C:\\Users\\mharvey2\\Documents\\Coding\\planning-architectures\\Advanced-AI-Workflows\\.advanced-plans\\phases\\phase-1\\loops.md",
-  "task_name": "Structural Doc Rewrites",
-  "todos_count": 6,
+  "task_name": "Upstream PR — advanced-planning STRUCTURE.md",
+  "todos_count": 4,
   "prepared_at": "2026-05-22T00:00:00Z",
   "status": "ready",
   "handoff_injected": {
-    "done": "setup-with-claude SKILL.md rewritten as instructions-Claude-reads covering 8-step pipeline (detect→install→wire routing→grant permissions→install glue→write integrations.json→verify) plus --uninstall and --refresh modes; 6 reference files written to .claude/skills/setup-with-claude/references/ (4 install-*.md per sub-package, claude-md-routing.md, settings-snippet.json); dry-run walkthrough confirmed zero blocking gaps; REG-4 and REG-5 scenarios satisfied by the skill's Case C routing-block handling and explicit sub-package exclusion list.",
+    "done": "Five repo docs rewritten to four-tool framing: README.md (Four Tools heading, Mermaid flow diagram gstack→glue→advanced-planning→plannotator/superpowers, Claude-Code-only-v0.1 scope statement); ARCHITECTURE.md (System Overview, Integration Boundaries, Glue Layer section, handoff contracts table from design doc, Known Divergences, zero PLANS-INDEX.md or bare plans/ in current-state context); DESIGN-RATIONALE.md (four labelled subsections: gstack at strategic layer, one glue skill is enough, instructions-not-scripts for setup, why no exploration-notes integration — each citing locked decisions); SETUP.md (version compatibility matrix, exact .advanced-plans/** permission JSON block, plannotator-is-automatic note, both critical gaps documented — permission failure mode and ExitPlanMode popup noise); ROADMAP.md (v0.1 marked done with full item list including auto-trigger and upstream PRs, four deferred items each with concrete description, multi-runtime entry has full paragraph describing what changes for v0.2+). Cross-doc consistency grep: zero legacy-term occurrences in current-state contexts.",
     "failed": "",
     "needed": ""
   }

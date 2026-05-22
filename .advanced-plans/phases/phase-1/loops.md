@@ -174,7 +174,7 @@ max_iterations: 3
 on_max_iterations: escalate
 
 handoff_summary:
-  done: ""
+  done: "setup-with-claude SKILL.md rewritten as instructions-Claude-reads covering 8-step pipeline (detect→install→wire routing→grant permissions→install glue→write integrations.json→verify) plus --uninstall and --refresh modes; 6 reference files written to .claude/skills/setup-with-claude/references/ (4 install-*.md per sub-package, claude-md-routing.md, settings-snippet.json); dry-run walkthrough confirmed zero blocking gaps; REG-4 and REG-5 scenarios satisfied by the skill's Case C routing-block handling and explicit sub-package exclusion list."
   failed: ""
   needed: ""
 
@@ -184,7 +184,7 @@ todos:
     skill: "NA"
     agent: "NA"
     outcome: "Four install-{tool}.md files exist under .claude/skills/setup-with-claude/references/; each contains commands verified against the sub-package's actual README, not invented"
-    status: pending
+    status: completed
     complexity: medium
     priority: high
   - id: "loop-002-2"
@@ -192,7 +192,7 @@ todos:
     skill: "skill-creator"
     agent: "NA"
     outcome: "SKILL.md is pure markdown; walks Claude through each pipeline step; no executable helpers; each destructive step gated by AskUserQuestion"
-    status: pending
+    status: completed
     complexity: medium
     priority: high
   - id: "loop-002-3"
@@ -200,7 +200,7 @@ todos:
     skill: "skill-creator"
     agent: "NA"
     outcome: "SKILL.md contains a labelled '--uninstall' section; explicitly states that fenced-marker absence aborts with manual-recovery instructions; states sub-package installs are never touched"
-    status: pending
+    status: completed
     complexity: medium
     priority: high
   - id: "loop-002-4"
@@ -208,7 +208,7 @@ todos:
     skill: "skill-creator"
     agent: "NA"
     outcome: "SKILL.md contains a labelled '--refresh' section; explicitly limited to detection + integrations.json update"
-    status: pending
+    status: completed
     complexity: low
     priority: medium
   - id: "loop-002-5"
@@ -216,7 +216,7 @@ todos:
     skill: "NA"
     agent: "NA"
     outcome: "References directory contains both files; SKILL.md reads from these relative paths, not from loop-001's original location"
-    status: pending
+    status: completed
     complexity: low
     priority: high
   - id: "loop-002-6"
@@ -224,7 +224,7 @@ todos:
     skill: "verification-before-completion"
     agent: "NA"
     outcome: "Dry-run walkthrough recorded in working notes; zero blocking gaps remain or any gaps are explicitly added to handoff_summary.needed"
-    status: pending
+    status: completed
     complexity: low
     priority: medium
 

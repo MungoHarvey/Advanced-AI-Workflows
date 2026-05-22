@@ -1,12 +1,12 @@
 {
-  "loop_name": "ralph-loop-002",
+  "loop_name": "ralph-loop-003",
   "loop_file": "C:\\Users\\mharvey2\\Documents\\Coding\\planning-architectures\\Advanced-AI-Workflows\\.advanced-plans\\phases\\phase-1\\loops.md",
-  "task_name": "Setup-with-Claude Rewrite",
+  "task_name": "Structural Doc Rewrites",
   "todos_count": 6,
   "prepared_at": "2026-05-22T00:00:00Z",
   "status": "ready",
   "handoff_injected": {
-    "done": "Three artifacts produced: .claude/skills/gstack-to-plans/SKILL.md (pure markdown, 4 AskUserQuestion branches), references/claude-md-routing.md (fenced markers, 4 front-door routes, closing instruction, superpowers overrides), references/settings-snippet.json (PostToolUse hook scoped to ~/.gstack/projects/, 4 canonical .advanced-plans/** permission entries). Both open questions resolved: Q2 superpowers override is free-prose (brainstorming SKILL.md line 125, writing-plans SKILL.md line 19); Q3 permission schema sourced verbatim from advanced-planning/platforms/claude-code/settings.json lines 16-19.",
+    "done": "setup-with-claude SKILL.md rewritten as instructions-Claude-reads covering 8-step pipeline (detect→install→wire routing→grant permissions→install glue→write integrations.json→verify) plus --uninstall and --refresh modes; 6 reference files written to .claude/skills/setup-with-claude/references/ (4 install-*.md per sub-package, claude-md-routing.md, settings-snippet.json); dry-run walkthrough confirmed zero blocking gaps; REG-4 and REG-5 scenarios satisfied by the skill's Case C routing-block handling and explicit sub-package exclusion list.",
     "failed": "",
     "needed": ""
   }

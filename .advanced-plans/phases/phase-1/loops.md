@@ -340,7 +340,7 @@ max_iterations: 3
 on_max_iterations: escalate
 
 handoff_summary:
-  done: ""
+  done: "Five repo docs rewritten to four-tool framing: README.md (Four Tools heading, Mermaid flow diagram gstack→glue→advanced-planning→plannotator/superpowers, Claude-Code-only-v0.1 scope statement); ARCHITECTURE.md (System Overview, Integration Boundaries, Glue Layer section, handoff contracts table from design doc, Known Divergences, zero PLANS-INDEX.md or bare plans/ in current-state context); DESIGN-RATIONALE.md (four labelled subsections: gstack at strategic layer, one glue skill is enough, instructions-not-scripts for setup, why no exploration-notes integration — each citing locked decisions); SETUP.md (version compatibility matrix, exact .advanced-plans/** permission JSON block, plannotator-is-automatic note, both critical gaps documented — permission failure mode and ExitPlanMode popup noise); ROADMAP.md (v0.1 marked done with full item list including auto-trigger and upstream PRs, four deferred items each with concrete description, multi-runtime entry has full paragraph describing what changes for v0.2+). Cross-doc consistency grep: zero legacy-term occurrences in current-state contexts."
   failed: ""
   needed: ""
 
@@ -350,7 +350,7 @@ todos:
     skill: "markdown-mermaid-writing"
     agent: "NA"
     outcome: "README.md contains 'Four Tools' heading; Mermaid diagram renders gstack at top and glue layer; Claude-only-v0.1 statement appears in scope or intro section"
-    status: pending
+    status: completed
     complexity: medium
     priority: high
   - id: "loop-003-2"
@@ -358,7 +358,7 @@ todos:
     skill: "markdown-mermaid-writing"
     agent: "NA"
     outcome: "ARCHITECTURE.md has 'Glue Layer' section; four-tool boundary table present verbatim; grep finds zero occurrences of 'plans/' (other than '.advanced-plans/') or 'PLANS-INDEX.md'"
-    status: pending
+    status: completed
     complexity: medium
     priority: high
   - id: "loop-003-3"
@@ -366,7 +366,7 @@ todos:
     skill: "NA"
     agent: "NA"
     outcome: "DESIGN-RATIONALE.md contains all four labelled subsections; each cites the relevant locked decision from the design doc"
-    status: pending
+    status: completed
     complexity: medium
     priority: high
   - id: "loop-003-4"
@@ -374,7 +374,7 @@ todos:
     skill: "NA"
     agent: "NA"
     outcome: "SETUP.md contains a version compatibility matrix; settings.json permission JSON block; explicit notes for both critical gaps (permission failure mode, plannotator ExitPlanMode popups)"
-    status: pending
+    status: completed
     complexity: medium
     priority: high
   - id: "loop-003-5"
@@ -382,7 +382,7 @@ todos:
     skill: "NA"
     agent: "NA"
     outcome: "ROADMAP.md shows v0.1 status as done; multi-runtime entry has at least a paragraph describing what changes for v0.2+; deferred list complete"
-    status: pending
+    status: completed
     complexity: medium
     priority: high
   - id: "loop-003-6"
@@ -390,7 +390,7 @@ todos:
     skill: "verification-before-completion"
     agent: "NA"
     outcome: "Grep across the five rewritten docs returns zero occurrences of legacy terms in current-state contexts (ROADMAP multi-runtime descriptions of future state excluded)"
-    status: pending
+    status: completed
     complexity: low
     priority: high
 

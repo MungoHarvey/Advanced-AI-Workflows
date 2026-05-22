@@ -1,23 +1,57 @@
 # Setup Guide
 
-This guide walks you through installing the full Advanced AI Workflows stack. Each tool can be installed independently -- you only need the ones relevant to your workflow. Installing all three gives you the complete planning-review-execution pipeline.
+This guide walks you through installing the full Advanced AI Workflows stack for the four-tool flow: gstack, advanced-planning, superpowers, and plannotator.
+
+> **Claude Code only in v0.1.** This guide assumes Claude Code. The CLAUDE.md routing, `.claude/skills/` install paths, and `.claude/settings.json` permission grants are Claude Code-specific. Multi-runtime support is a v0.2+ ROADMAP item.
+
+Each tool can be installed independently — you only need the ones relevant to your workflow. Installing all four gives you the complete think → plan → review → execute → review pipeline.
+
+---
+
+## Version Compatibility Matrix
+
+| Sub-package | Minimum version | Tested against | Notes |
+|---|---|---|---|
+| advanced-planning | ≥ v0.11.0 | v0.11.0 | v0.11.0 moved the runtime root to `.advanced-plans/`. Earlier versions used `plans/` and are not compatible with this meta-project. |
+| gstack | ≥ v1.0.0 | current main | Requires `~/.claude/skills/gstack/` install path and the `~/.gstack/projects/` write convention. |
+| superpowers | ≥ v1.0.0 | current main | Requires the `brainstorming` skill to support the user-preference override in CLAUDE.md (free-prose override syntax). |
+| plannotator | ≥ v0.1.0 | current main | Requires Claude Code plugin install (`.claude/commands/plannotator-annotate.md` must be present for advanced-planning's auto-detection in `/plan-and-phase` Step 5b). |
 
 ---
 
 ## Prerequisites
 
 | Requirement | Needed For | Install Guide |
-|-------------|-----------|---------------|
+|---|---|---|
 | git | Cloning repositories | [git-scm.com](https://git-scm.com/) |
-| Claude Code or OpenCode | Running the agent CLI | [claude.ai/code](https://claude.ai/code) or [opencode.ai](https://opencode.ai) |
+| Claude Code | Running the integrated four-tool flow | [claude.ai/code](https://claude.ai/code) |
 | Bun | Plannotator build and runtime | [bun.sh](https://bun.sh/) |
-| Python 3.10+ | Advanced Planning tests (optional) | [python.org](https://www.python.org/) |
-
-Not all prerequisites are needed for all tools. If you only want Superpowers, you need git and an agent CLI. If you only want Advanced Planning commands, you need git, an agent CLI, and optionally Python for running tests. Plannotator is the only tool that requires Bun.
+| Node.js (any recent LTS) | PostToolUse hook script | [nodejs.org](https://nodejs.org/) |
 
 ---
 
-## Step 1: Clone This Repository
+## Automated Setup (Recommended)
+
+Install the setup skill and tell Claude to walk you through setup:
+
+```bash
+mkdir -p ~/.claude/skills/setup-with-claude
+curl -fsSL https://raw.githubusercontent.com/MungoHarvey/advanced-ai-workflows/main/.claude/skills/setup-with-claude/SKILL.md \
+  -o ~/.claude/skills/setup-with-claude/SKILL.md
+```
+
+Then in any Claude Code session: *"Set up advanced AI workflows in this project."*
+
+Claude will detect existing installs, offer to install missing sub-packages, wire the CLAUDE.md routing block, grant `.advanced-plans/` permissions in `.claude/settings.json`, install the `gstack-to-plans` glue skill, and write `.claude/integrations.json`.
+
+For uninstall: *"Run setup-with-claude --uninstall in this project."*
+For re-detection only: *"Run setup-with-claude --refresh in this project."*
+
+---
+
+## Manual Setup
+
+### Step 1: Clone This Repository
 
 ```bash
 git clone https://github.com/MungoHarvey/advanced-ai-workflows.git
@@ -26,97 +60,82 @@ cd advanced-ai-workflows
 
 ---
 
-## Step 2: Clone the Tool Repositories
+### Step 2: Install gstack
 
-Clone each tool into its expected subdirectory inside the workspace:
-
-```bash
-git clone https://github.com/MungoHarvey/advanced-planning.git
-git clone https://github.com/MungoHarvey/plannotator.git
-git clone https://github.com/MungoHarvey/superpowers.git
-```
-
-After cloning, your directory structure should look like this:
+Follow the gstack install instructions at `~/.claude/skills/gstack/INSTALL.md` (or your distribution's README). After install, confirm you have access to gstack commands in Claude Code:
 
 ```
-advanced-ai-workflows/
-├── advanced-planning/      # Hierarchical multi-agent planning framework
-├── plannotator/            # Browser-based visual plan review UI
-├── superpowers/            # Development methodology skills
-├── ARCHITECTURE.md
-├── DESIGN-RATIONALE.md
-├── README.md
-├── ROADMAP.md
-├── SETUP.md                # (this file)
-└── CLAUDE.md
+/office-hours
 ```
+
+Claude should enter a gstack strategy session. The design doc will be written to `~/.gstack/projects/{slug}/{user}-{branch}-design-{datetime}.md`.
 
 ---
 
-## Step 3: Install Superpowers
+### Step 3: Install advanced-planning
 
-No build step needed -- Superpowers skills are markdown files loaded directly by your coding agent.
+Advanced Planning copies slash commands, skills, agent definitions, and schemas into your project's `.claude/` directory.
 
-### Claude Code (Official Marketplace)
+#### macOS / Linux
+
+```bash
+cd advanced-planning
+sh setup/claude-code/install.sh --project /path/to/your/project
+```
+
+#### Windows PowerShell
+
+```powershell
+cd advanced-planning
+.\setup\claude-code\install.ps1 -Project C:\path\to\your\project
+```
+
+#### Install Options
+
+| Option | Description |
+|---|---|
+| `--global` / `-Global` | Install to `~/.claude/` so commands are available in every project |
+| `--symlink` / `-Symlink` | Link to `core/skills/` instead of copying, so updates apply immediately |
+| `--dry-run` / `-DryRun` | Preview what would be installed without writing any files |
+
+#### Verify
+
+Open Claude Code in your target project and run:
+
+```
+/plan-and-phase test planning system
+```
+
+Claude should enter read-only exploration mode, examine the codebase, and present findings before running the planning pipeline.
+
+---
+
+### Step 4: Install superpowers
+
+#### Claude Code (Official Marketplace)
 
 ```
 /plugin install superpowers@claude-plugins-official
 ```
 
-### Claude Code (via Plugin Marketplace)
-
-Register the marketplace first, then install:
+#### Claude Code (via Plugin Marketplace)
 
 ```
 /plugin marketplace add obra/superpowers-marketplace
 /plugin install superpowers@superpowers-marketplace
 ```
 
-### OpenCode
+#### Verify
 
-Tell OpenCode to fetch and follow instructions from the raw install file:
-
-```
-Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.opencode/INSTALL.md
-```
-
-### Local Development
-
-Run Claude Code with the plugin directory pointed at your local clone:
-
-```bash
-claude --plugin-dir ./superpowers
-```
-
-### Verify
-
-Start a new Claude Code session and describe something you want to build. If Superpowers is installed correctly, the brainstorming skill should activate automatically -- the agent will ask clarifying questions about your intent before jumping into code.
+Start a new Claude Code session and describe something you want to build. If superpowers is installed correctly, the brainstorming skill should activate automatically.
 
 ---
 
-## Step 4: Install Plannotator
+### Step 5: Install plannotator
 
 Plannotator requires Bun. Install it from [bun.sh](https://bun.sh/) if you haven't already.
 
-### Build from Source
-
-```bash
-cd plannotator
-bun install
-bun run build
-```
-
-**Build order note:** If you modify review UI code (in `packages/ui/`, `packages/editor/`, or `packages/review-editor/`), you must rebuild the review app before the hook:
-
-```bash
-bun run --cwd apps/review build && bun run build:hook
-```
-
-Running only `bun run build:hook` after review-editor changes will copy stale HTML files.
-
-### Claude Code (Plugin Marketplace)
-
-First, install the `plannotator` command:
+#### Claude Code (Plugin Marketplace)
 
 **macOS / Linux / WSL:**
 
@@ -130,16 +149,22 @@ curl -fsSL https://plannotator.ai/install.sh | bash
 irm https://plannotator.ai/install.ps1 | iex
 ```
 
-Then in Claude Code, register the marketplace and install the plugin:
+Then in Claude Code:
 
 ```
 /plugin marketplace add backnotprop/plannotator
 /plugin install plannotator@plannotator
 ```
 
-**Important:** Restart Claude Code after plugin install for the hooks to take effect.
+Restart Claude Code after plugin install for the hooks to take effect.
 
-### Local Development
+#### Local Development
+
+```bash
+cd plannotator
+bun install
+bun run build
+```
 
 Run Claude Code with the plugin directory pointed at the hook app:
 
@@ -147,93 +172,164 @@ Run Claude Code with the plugin directory pointed at the hook app:
 claude --plugin-dir ./plannotator/apps/hook
 ```
 
-### OpenCode
+#### Plannotator integration is automatic
 
-Add to your `opencode.json`:
+Once plannotator is installed as a Claude Code plugin, integration with advanced-planning is fully automatic:
+
+- **`/plan-and-phase` Step 5b** auto-detects plannotator by checking for `.claude/commands/plannotator-annotate.md`. If detected, it invokes `/plannotator-annotate .advanced-plans/phases/phase-N/plan.md` after writing the phase plan — you will see the plannotator review UI open in your browser.
+- **`EnterPlanMode`/`ExitPlanMode` hooks** fire automatically on every plan-mode event when plannotator is installed.
+
+You do not need to invoke plannotator manually for the standard workflow. See [Critical Gap 2](#critical-gap-2-plannotator-exitplanmode-popup-noise) below for a known behaviour gap.
+
+---
+
+### Step 6: Grant `.advanced-plans/` Permissions
+
+Advanced-planning and the `gstack-to-plans` glue skill need Claude read/edit/write access to `.advanced-plans/`. Add the following entries to your project's `.claude/settings.json`:
 
 ```json
 {
-  "plugin": ["@plannotator/opencode@latest"]
+  "permissions": {
+    "allow": [
+      "Write(.advanced-plans/**)",
+      "Edit(.advanced-plans/**)",
+      "MultiEdit(.advanced-plans/**)",
+      "Read(.advanced-plans/**)"
+    ]
+  }
 }
 ```
 
-Then run the install script to get the slash commands (`/plannotator-review`, `/plannotator-annotate`, `/plannotator-last`):
+If `.claude/settings.json` already exists, append these four entries to the existing `permissions.allow` array. Do not duplicate entries that are already present.
 
-```bash
-curl -fsSL https://plannotator.ai/install.sh | bash
-```
+The `setup-with-claude` skill does this step automatically when invoked — it asks for confirmation before writing.
 
-Restart OpenCode after installation.
+#### Critical Gap 1: Permission failure mode
 
-### Verify
+If `.advanced-plans/` permission entries are missing, advanced-planning commands will appear to succeed but silently fail to write state files (`loop-ready.json`, `loop-complete.json`, phase plans). The failure mode is confusing: Claude completes the planning dialogue but no files appear on disk.
 
-Enter plan mode in Claude Code (start planning something) or run `/plannotator-annotate` on a markdown file. The Plannotator UI should open in your browser. If you installed via the plugin marketplace, the `ExitPlanMode` hook intercepts automatically when a plan is ready for review.
+**Diagnostic:** run `/plan-and-phase test` and check whether `.advanced-plans/phases/` is created. If not, check `.claude/settings.json` for the four permission entries above.
 
 ---
 
-## Step 5: Install Advanced Planning
+### Step 7: Wire CLAUDE.md Routing and Install the Glue Skill
 
-Advanced Planning copies slash commands, skills, agent definitions, and schemas into your project's `.claude/` directory.
+The `setup-with-claude` skill handles both of these steps automatically. To do it manually:
 
-### macOS / Linux
+#### CLAUDE.md routing block
+
+Add the following to your project's `CLAUDE.md` (or create it if absent), between the fenced markers:
+
+```markdown
+<!-- aaw-routing:begin -->
+## Advanced AI Workflows routing
+
+**Ambiguous problem / strategy session:** invoke `/office-hours` (gstack). This is the front door for unclear scope, architecture decisions, or when a second opinion is needed before committing to an approach.
+
+**Known scope, unfamiliar codebase:** invoke `/plan-and-phase` (advanced-planning). Pass the gstack design doc content as the description argument if one has been produced.
+
+**Known scope, known codebase:** invoke `/new-phase` (advanced-planning). Pass the design doc content as the description argument if available.
+
+**Stuck on options mid-execution / need ideation:** invoke the superpowers brainstorming skill.
+
+**Need a plan drafted:** invoke the superpowers writing-plans skill.
+
+**Second opinion on a plan or implementation:** invoke gstack `/plan-ceo-review`, `/plan-eng-review`, `/plan-design-review`, or `/codex`.
+
+**After any gstack planning skill writes a design doc:** invoke `/gstack-to-plans` if it has not already fired. This copies the design doc from `~/.gstack/projects/{slug}/` to `.advanced-plans/specs/` and prints the next-step suggestion.
+
+## Superpowers preference overrides
+
+Save brainstorming output to: `.advanced-plans/specs/`
+Save writing-plans output to: `.advanced-plans/specs/`
+<!-- aaw-routing:end -->
+```
+
+#### Glue skill install
+
+Copy `gstack-to-plans/SKILL.md` from the meta-project into the active project's `.claude/skills/gstack-to-plans/`:
 
 ```bash
-cd advanced-planning
-sh setup/claude-code/install.sh --project /path/to/your/project
+mkdir -p .claude/skills/gstack-to-plans
+cp path/to/advanced-ai-workflows/.claude/skills/gstack-to-plans/SKILL.md \
+   .claude/skills/gstack-to-plans/SKILL.md
 ```
 
-### Windows PowerShell
+Or for a global install available in all projects:
 
-```powershell
-cd advanced-planning
-.\setup\claude-code\install.ps1 -Project C:\path\to\your\project
+```bash
+mkdir -p ~/.claude/skills/gstack-to-plans
+cp path/to/advanced-ai-workflows/.claude/skills/gstack-to-plans/SKILL.md \
+   ~/.claude/skills/gstack-to-plans/SKILL.md
 ```
-
-### Install Options
-
-| Option | Description |
-|--------|-------------|
-| `--global` / `-Global` | Install to `~/.claude/` so commands are available in every project |
-| `--symlink` / `-Symlink` | Link to `core/skills/` instead of copying, so updates apply immediately |
-| `--dry-run` / `-DryRun` | Preview what would be installed without writing any files |
-
-These flags can be combined. For example, `--global --symlink` installs globally with symlinked skills. See `setup/claude-code/README.md` in the Advanced Planning repository for the full reference.
-
-### Verify
-
-Open Claude Code in your target project and run:
-
-```
-/plan-and-phase test planning system
-```
-
-Claude should enter read-only exploration mode, examine the codebase, and then present findings for review before running the planning pipeline. If the command is not found, check that `.claude/commands/` in your project contains the installed `.md` files.
 
 ---
 
-## Step 6: Verify the Full Pipeline
+### Step 8: Add the PostToolUse Hook (Auto-trigger)
 
-With all three tools installed, the complete workflow should chain together:
+The auto-trigger hook surfaces `/gstack-to-plans` in Claude's next turn whenever a gstack design doc is written. Add the following to your project's `.claude/settings.json`, in the `hooks.PostToolUse` array:
 
-1. **Start a Claude Code session** in a project where Advanced Planning is installed.
+```json
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"const p = process.env.CLAUDE_TOOL_INPUT_PATH || ''; const h = require('os').homedir(); const prefix = h + '/.gstack/projects/'; if (p.startsWith(prefix)) { const f = require('path').basename(p); if (/-design-\\d/.test(f)) { console.log('[aaw-hook] gstack design doc written: ' + p); console.log('[aaw-hook] Suggestion: invoke /gstack-to-plans to archive this design doc into .advanced-plans/specs/'); } }\" 2>/dev/null || true"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
 
-2. **Describe something you want to build.** Superpowers brainstorming should activate, asking clarifying questions and refining your intent into a design document.
+**Scope discipline:** this hook checks `CLAUDE_TOOL_INPUT_PATH` at runtime. It fires only when the written path starts with `~/.gstack/projects/` AND the filename matches the gstack design-doc pattern (`*-design-{datetime}.*`). Writes to any other path produce no output and exit 0 — the hook does not interfere with normal development.
 
-3. **Approve the design.** The brainstorming skill hands off to Advanced Planning's phase-plan-creator, which generates a hierarchical phase plan with success criteria.
+**Windows note:** `~/.gstack/projects/` resolves to `%USERPROFILE%\.gstack\projects\`. The `node -e` command handles this via `os.homedir()`, which is cross-platform.
 
-4. **Review the phase plan.** Plannotator opens in your browser, showing the plan with annotation tools. Approve to proceed, or add annotations and request changes.
+If the hook misfires or is disabled, the manual fallback still works: run `/gstack-to-plans` directly, or follow the CLAUDE.md closing instruction.
 
-5. **Approve the plan.** Advanced Planning proceeds to ralph loop decomposition, populating todos with skill and agent assignments.
+---
 
-6. **Run `/next-loop`.** The orchestrator agent prepares the first loop, then the worker agent executes it with targeted skill injection. Repeat with `/next-loop` or chain with `/next-loop --auto`.
+## Verify the Full Pipeline
 
-### If Something Goes Wrong
+With all four tools installed, the complete workflow chains together:
 
-- **Check plugin install order.** The recommended order is Superpowers first, then Advanced Planning, then Plannotator. This avoids hook conflicts where multiple plugins intercept the same events.
+1. **Strategy session:** run `/office-hours` in Claude Code. Describe the problem. Gstack walks through a structured session and writes a design doc to `~/.gstack/projects/{slug}/`.
 
-- **Check hook entries.** Look at `~/.claude/settings.json` (or your project's `.claude/settings.json`) to confirm hooks are registered. Plannotator should have a `PermissionRequest` hook matching `ExitPlanMode`. Advanced Planning should have `PreToolUse` hooks for planning-mode and gate-review-mode sentinels.
+2. **Archive:** the auto-trigger hook surfaces `/gstack-to-plans`. Run it. Claude copies the design doc to `.advanced-plans/specs/` and prints the next-step suggestion.
 
-- **Check that Plannotator's server starts.** If the browser doesn't open, verify Bun is installed (`bun --version`) and that `bun run build` completed without errors in the `plannotator/` directory.
+3. **Phase planning:** run `/plan-and-phase` with the design doc as the description argument. Advanced-planning enters exploration mode, then calls `phase-plan-creator` to produce `.advanced-plans/phases/phase-1/plan.md`. If plannotator is installed, the review UI opens automatically (Step 5b).
+
+4. **Review:** approve or annotate the phase plan in plannotator.
+
+5. **Loop execution:** run `/next-loop`. The orchestrator prepares the first loop; the worker executes todos with targeted superpowers skill injection. Repeat with `/next-loop` or chain with `/next-loop --auto`.
+
+6. **Gate:** run `/run-gate`. Gate agents evaluate success criteria. Advance with `/next-phase` on pass, or loop back on fail.
+
+---
+
+## Critical Gaps
+
+### Critical Gap 1: Permission failure mode
+
+If the four `.advanced-plans/**` entries are absent from `.claude/settings.json`, advanced-planning silently fails to write state files. The failure mode is confusing — Claude completes the planning dialogue but no files appear on disk.
+
+**Diagnostic:** after running `/plan-and-phase`, check whether `.advanced-plans/phases/` was created. If not, verify the four permission entries in `.claude/settings.json`.
+
+**Workaround:** run `setup-with-claude` to have Claude add the permissions automatically, or add the four entries manually as shown in Step 6 above.
+
+### Critical Gap 2: plannotator ExitPlanMode popup noise
+
+When plannotator is installed, the `ExitPlanMode` hook fires on every plan-mode exit — including short or incidental planning sequences, not just full phase-plan creation sessions. Users may see the plannotator review UI open more frequently than expected.
+
+**Impact:** no data loss or correctness issue. The popup can be dismissed. But it adds friction for users who are not expecting a visual review for every brief plan-mode session.
+
+**Workaround in v0.1:** none without disabling the ExitPlanMode hook entirely, which removes plannotator's automatic review integration. Programmatic detection to suppress the hook for short sessions is on the ROADMAP (v0.2+).
 
 ---
 
@@ -243,31 +339,29 @@ With all three tools installed, the complete workflow should chain together:
 
 - Verify Bun is installed: `bun --version`
 - Rebuild: `cd plannotator && bun install && bun run build`
-- Check for port conflicts -- Plannotator uses random ports by default. Set `PLANNOTATOR_PORT` to a specific port if needed.
+- Check for port conflicts — plannotator uses random ports by default. Set `PLANNOTATOR_PORT` to a specific port if needed.
 - In remote/SSH environments, set `PLANNOTATOR_REMOTE=1` and forward the port manually.
 
 ### Superpowers skills don't trigger
 
 - Restart Claude Code after installing the plugin.
-- Verify the `using-superpowers` bootstrap skill is present -- it should load automatically on every session start.
-- Check plugin registration: run `/plugin list` in Claude Code to confirm Superpowers appears.
+- Verify the `using-superpowers` bootstrap skill is present — it loads automatically on every session start.
+- Check plugin registration: run `/plugin list` in Claude Code to confirm superpowers appears.
 
 ### Advanced Planning commands not found
 
 - Re-run the install script with the correct `--project` path pointing to your project root.
 - Check that `.claude/commands/` exists in your project and contains files like `plan-and-phase.md`, `next-loop.md`, etc.
-- Verify hooks are registered in `.claude/settings.json` (the install script writes this automatically).
+- Verify hooks are registered in `.claude/settings.json`.
 
-### Hook conflicts between tools
+### gstack-to-plans not finding the design doc
 
-- Install in the recommended order: Superpowers, then Advanced Planning, then Plannotator.
-- If Superpowers intercepts `EnterPlanMode` and prevents Advanced Planning from activating, this is a known conflict. The integration strategy routes brainstorming output into Advanced Planning's phase-plan-creator rather than Superpowers' own writing-plans skill.
-- Check `~/.claude/settings.json` for duplicate or conflicting hook entries.
+- Check that `~/.gstack/projects/{slug}/` exists and contains a file matching the pattern `{user}-{branch}-design-{datetime}.md`.
+- Confirm the current git branch name matches the branch used during the gstack session.
+- On detached HEAD or worktree setups, the skill will ask you which design doc to use via `AskUserQuestion`.
 
----
+### PostToolUse hook not firing
 
-## Future: Automated Install Scripts
-
-Unified `install.sh` and `install.ps1` scripts that install all three tools in the correct order are planned. These will handle dependency checks, build steps, and hook registration in a single command.
-
-See [ROADMAP.md](ROADMAP.md) for details and timeline.
+- Confirm Node.js is installed (`node --version`).
+- Check `.claude/settings.json` for the `hooks.PostToolUse` entry with the Write matcher.
+- The hook is advisory — if it doesn't fire, run `/gstack-to-plans` manually or follow the CLAUDE.md closing instruction.

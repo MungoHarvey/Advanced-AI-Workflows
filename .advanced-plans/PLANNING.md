@@ -13,7 +13,6 @@ todos_deferred: 2
 todos_pending: 1
 status: build_complete_pending_smoke
 last_updated: 2026-05-22
-last_updated: 2026-05-22
 
 ## Phases
 

@@ -11,8 +11,10 @@
 - **CLAUDE.md routing template** — four-tool front-door rules with superpowers preference overrides (brainstorming and writing-plans save to `.advanced-plans/specs/`). Fenced begin/end markers for clean install/uninstall.
 - **setup-with-claude** rewritten as instructions-Claude-reads — walks Claude through detect, install, wire routing, grant permissions, install glue, write integrations.json, verify. Supports `--uninstall` and `--refresh`.
 - **Five repo doc rewrites** (README, ARCHITECTURE, DESIGN-RATIONALE, SETUP, ROADMAP) — four-tool framing, updated Mermaid diagrams, handoff contract table, honest Claude-only positioning.
-- **Upstream PR: advanced-planning STRUCTURE.md** — fixes stale path references (`plans/`, `.claude/plans/`, `PLANS-INDEX.md` → `.advanced-plans/`). Pure documentation fix.
-- **Upstream PR: superpowers brainstorming default path** — updates the AP-detected default from `.claude/plans/` to `.advanced-plans/specs/`. Behavioural change, trivially correct. CLAUDE.md preference override is the v0.1 workaround if merge is delayed.
+- **Fork fix: advanced-planning STRUCTURE.md** — branch in `MungoHarvey/advanced-planning` correcting stale path references (`plans/`, `.claude/plans/`, `PLANS-INDEX.md` → `.advanced-plans/`). Pure documentation fix. Held until after v0.1 smoke test in case additional stale references surface.
+- **Fork fix: superpowers brainstorming default path** — merged into `MungoHarvey/superpowers` main. Updates the AP-detected default from `.claude/plans/` to `.advanced-plans/specs/`. Behavioural change, two lines. The CLAUDE.md preference override remains as a belt-and-braces fallback for non-fork installs.
+
+> **Scope note:** Both fixes target our own forks/repos. The meta-project consumes our forks because we have modified them to work together as a stack — that is the entire reason the forks exist. Promotion of either fix to a public upstream (`obra/superpowers`, etc.) is a separate, explicit decision deferred to v0.2 or later.
 
 ---
 

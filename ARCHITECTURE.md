@@ -338,6 +338,6 @@ These are the known places where sub-package defaults diverge from the meta-proj
 
 | Divergence | Sub-package default | Meta-project resolution |
 |---|---|---|
-| Superpowers `brainstorming` stale save path | Writes to `.claude/plans/` when advanced-planning detected | CLAUDE.md preference override redirects to `.advanced-plans/specs/`. Upstream PR proposed to superpowers to fix the default. |
-| Advanced-planning `STRUCTURE.md` stale paths | References `plans/`, `.claude/plans/`, `PLANS-INDEX.md` | Meta-project uses v0.11.0 commands/skills as ground truth and ignores `STRUCTURE.md`. Upstream PR proposed to advanced-planning to fix. |
+| Superpowers `brainstorming` stale save path | Writes to `.claude/plans/` when advanced-planning detected | CLAUDE.md preference override redirects to `.advanced-plans/specs/`. Fix merged into our `MungoHarvey/superpowers` fork so the override becomes redundant for fork users. |
+| Advanced-planning `STRUCTURE.md` stale paths | References `plans/`, `.claude/plans/`, `PLANS-INDEX.md` | Meta-project uses v0.11.0 commands/skills as ground truth and ignores `STRUCTURE.md`. Fix prepared as a branch in our `MungoHarvey/advanced-planning` repo, held until after v0.1 smoke test. |
 | No active sub-package patches required | — | All integration is via routing, preference overrides, and one glue skill. |

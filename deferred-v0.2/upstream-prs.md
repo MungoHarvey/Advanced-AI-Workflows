@@ -1,6 +1,6 @@
 # Deferred: Upstream PRs
 
-Two upstream-PR branches were prepared during phase-1 (ralph-loops 004 and 005) but deliberately **not pushed**. User chose "Prepare branches + diffs, hold off on push/PR" so the diffs could be reviewed before opening PRs against the public sub-package repos.
+Two upstream-PR branches were prepared during phase-1 (ralph-loops 004 and 005). PR 2 (superpowers) shipped on 2026-06-04 — see https://github.com/obra/superpowers/pull/1684. PR 1 (advanced-planning) is held until after the v0.1 smoke test in case REG-1..6 reveals additional stale STRUCTURE.md references worth folding into the same diff.
 
 These are real fixes — both correct stale-path bugs that contradict advanced-planning v0.11.0. They should ship, but the decision to push is the user's, not Claude's.
 
@@ -36,8 +36,9 @@ gh pr create \
 
 ---
 
-## Branch 2 — superpowers brainstorming AP-default-path
+## Branch 2 — superpowers brainstorming AP-default-path — **SHIPPED**
 
+**Status:** Pushed and PR opened — https://github.com/obra/superpowers/pull/1684 (2026-06-04)
 **Repo:** `C:\Users\mharvey2\Documents\Coding\planning-architectures\superpowers\`
 **Branch:** `meta-project/fix-brainstorming-ap-default-path`
 **Commit:** `fde9f97`

@@ -166,7 +166,7 @@ max_iterations: 3
 on_max_iterations: escalate
 
 handoff_summary:
-  done: ""
+  done: "Fast-forward merged meta-project/fix-structure-md-stale-paths into advanced-planning main (fa799d3) and pushed to MungoHarvey/advanced-planning via HTTPS; origin/main tracking ref synced."
   failed: ""
   needed: ""
 
@@ -176,7 +176,7 @@ todos:
     skill: "NA"
     agent: "NA"
     outcome: "git merge-base --is-ancestor main meta-project/fix-structure-md-stale-paths succeeds (main is an ancestor; ff is clean)"
-    status: pending
+    status: completed
     complexity: low
     priority: high
   - id: "loop-002-2"
@@ -184,7 +184,7 @@ todos:
     skill: "NA"
     agent: "NA"
     outcome: "advanced-planning main HEAD is fa799d3 (the STRUCTURE.md fix commit); merge was fast-forward, no merge commit"
-    status: pending
+    status: completed
     complexity: low
     priority: high
   - id: "loop-002-3"
@@ -192,7 +192,7 @@ todos:
     skill: "NA"
     agent: "NA"
     outcome: "origin/main of MungoHarvey/advanced-planning contains fa799d3; git status shows main up to date with origin"
-    status: pending
+    status: completed
     complexity: low
     priority: high
 

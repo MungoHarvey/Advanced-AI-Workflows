@@ -5,11 +5,11 @@ phase_name: "v0.1 Smoke-Findings Fix-Pack"
 plan_file: .advanced-plans/phases/phase-2/plan.md
 loops_file: .advanced-plans/phases/phase-2/loops.md
 status: in_progress
-current_loop: ralph-loop-002
+current_loop: ralph-loop-003
 loops_total: 3
 todos_total: 14
-todos_done: 5
-todos_pending: 9
+todos_done: 8
+todos_pending: 6
 last_updated: 2026-06-05
 
 ## Phases

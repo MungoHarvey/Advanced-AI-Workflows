@@ -1,13 +1,13 @@
 {
-  "loop_name": "ralph-loop-006",
-  "loop_file": "C:\\Users\\mharvey2\\Documents\\Coding\\planning-architectures\\Advanced-AI-Workflows\\.advanced-plans\\phases\\phase-1\\loops.md",
-  "task_name": "End-to-End Smoke Test (REG-1..REG-7)",
-  "todos_count": 6,
-  "prepared_at": "2026-05-22T00:00:00Z",
+  "loop_name": "ralph-loop-001",
+  "loop_file": ".advanced-plans/phases/phase-2/loops.md",
+  "task_name": "Meta-source fixes (--refresh, --uninstall, hook-restart doc)",
+  "todos_count": 5,
+  "prepared_at": "2026-06-05T00:00:00Z",
   "status": "ready",
   "handoff_injected": {
-    "done": "Branch meta-project/fix-brainstorming-ap-default-path created in C:\\Users\\mharvey2\\Documents\\Coding\\planning-architectures\\superpowers with commit fde9f97 (1 file changed, 2 insertions, 2 deletions). brainstorming/SKILL.md updated: AP-detected default path changed from .claude/plans/ to .advanced-plans/specs/ in checklist step 6 (line 30) and Documentation section (line 123). writing-plans/SKILL.md examined — its default is docs/superpowers/plans/ not .claude/plans/, so no change needed. User-preference override (line 125: '(User preferences for spec location override both defaults)') preserved bit-for-bit.",
+    "done": "",
     "failed": "",
-    "needed": "User must push and open PR manually (branch-only mode per user override). Run: cd C:\\Users\\mharvey2\\Documents\\Coding\\planning-architectures\\superpowers && git push -u origin meta-project/fix-brainstorming-ap-default-path && gh pr create --title \"fix(brainstorming): update AP-detected default from .claude/plans/ to .advanced-plans/specs/\" --body \"$(git log -1 --format=%B)\""
+    "needed": ""
   }
 }

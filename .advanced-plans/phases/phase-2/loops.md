@@ -23,7 +23,7 @@ todos:
     skill: "NA"
     agent: "NA"
     outcome: ".claude/skills/setup-with-claude/SKILL.md --refresh section instructs (a) re-fetching the canonical setup-with-claude, (b) re-running each detected sub-package installer, (c) printing a change report"
-    status: pending
+    status: completed
     complexity: medium
     priority: high
   - id: "loop-001-2"
@@ -31,7 +31,7 @@ todos:
     skill: "NA"
     agent: "NA"
     outcome: "The --uninstall section includes a step that checks ~/.claude for globally-installed glue (setup-with-claude / gstack-to-plans) and offers to remove it"
-    status: pending
+    status: completed
     complexity: low
     priority: high
   - id: "loop-001-3"
@@ -39,7 +39,7 @@ todos:
     skill: "NA"
     agent: "NA"
     outcome: "The --uninstall section instructs deleting CLAUDE.md only when it is empty or whitespace-only after block removal; non-empty CLAUDE.md is preserved"
-    status: pending
+    status: completed
     complexity: low
     priority: high
   - id: "loop-001-4"
@@ -47,7 +47,7 @@ todos:
     skill: "NA"
     agent: "NA"
     outcome: "Both the setup-with-claude post-install message and SETUP.md state that the PostToolUse hook registers at session startup and a restart is needed after first-time settings.json creation"
-    status: pending
+    status: completed
     complexity: low
     priority: medium
   - id: "loop-001-5"

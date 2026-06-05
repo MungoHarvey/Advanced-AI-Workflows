@@ -310,6 +310,11 @@ VISUAL (plannotator — if installed)
   /plannotator-annotate  Annotate a plan file and send feedback back
 ```
 
+> **Session restart required for the PostToolUse hook:** The PostToolUse hook is read by
+> Claude Code at session startup. If `.claude/settings.json` was created or modified for
+> the first time in this session, **restart Claude Code now** so the hook takes effect.
+> Until you restart, the auto-trigger for `/gstack-to-plans` will not fire live.
+
 ---
 
 ## --uninstall
@@ -378,6 +383,18 @@ If no: abort.
 Delete the lines from `<!-- aaw-routing:begin -->` through `<!-- aaw-routing:end -->` inclusive.
 Do not modify any other content in CLAUDE.md.
 
+After removing the block, check whether the remaining content is empty or whitespace-only
+(blank lines, spaces, tabs — nothing visible to the user):
+
+- If CLAUDE.md is now **empty or whitespace-only**: delete the file entirely. Print:
+  `"CLAUDE.md was empty after block removal — deleted."`
+- If CLAUDE.md still has **non-whitespace content**: leave it in place. Print:
+  `"CLAUDE.md has remaining content — kept."`
+
+**Guard:** never delete CLAUDE.md unless the only remaining content is whitespace. If
+there is any doubt (e.g. the content check is inconclusive), keep the file and inform
+the user.
+
 **Step U4: Remove the glue skill**
 
 Delete `.claude/skills/gstack-to-plans/` and all its contents.
@@ -397,19 +414,47 @@ malformed or would remove the only entry in an array (leaving an empty array tha
 advanced-planning or another tool also uses), show the diff and ask the user to confirm
 rather than writing blindly.
 
-**Step U7: Report**
+**Step U7: Check for globally-installed glue**
+
+After removing the project-local glue, check whether any Advanced AI Workflows glue
+components are installed globally in `~/.claude/`:
+
+- `~/.claude/skills/setup-with-claude/` (the setup skill itself)
+- `~/.claude/skills/gstack-to-plans/` (the global glue skill, if installed globally)
+
+If EITHER path exists, ask the user:
+
+> "I found the following globally-installed Advanced AI Workflows components in ~/.claude/:
+>
+> [list each found path]
+>
+> These affect ALL projects on this machine. Would you like to remove them?
+> (yes — remove global components / no — keep them)"
+
+If yes: delete each found global path and its contents.
+If no: leave them in place and note that they remain active for other projects.
+
+If neither path exists: note "No globally-installed glue found in ~/.claude/" and
+continue to the report.
+
+**Step U8: Report**
 
 Print a confirmation:
 
 ```
 Uninstall complete.
 
-Removed:
+Removed (project-local):
   - CLAUDE.md routing block
   - .claude/skills/gstack-to-plans/
   - .claude/integrations.json
   - settings.json: 4 .advanced-plans/** permission entries
   - settings.json: PostToolUse gstack hook
+
+Global components (~/.claude/):
+  [removed: ~/.claude/skills/setup-with-claude/  (if removed)]
+  [removed: ~/.claude/skills/gstack-to-plans/     (if removed)]
+  [kept: no global components found / user chose to keep]
 
 Not touched:
   - gstack (~/.claude/skills/gstack/)
@@ -424,16 +469,76 @@ To reinstall: run /setup-with-claude
 
 ## --refresh
 
-Re-run detection only. Update `.claude/integrations.json` to reflect the current state
-of each sub-package. No install actions. No changes to CLAUDE.md or settings.json.
+Re-detect installed tools, re-fetch the canonical `setup-with-claude` skill, re-run
+each detected sub-package's installer to pick up upstream changes, and update
+`.claude/integrations.json`. No changes to CLAUDE.md or settings.json.
+
+Use `--refresh` after: updating a sub-package to a new version, pulling new meta-project
+changes, or finding that a deployed copy has drifted from its source.
 
 ### Refresh procedure
 
 **Step R1: Detect current state**
 
 Run the same detection checks as Step 1 of the default flow. Build the status table.
+Record which sub-packages are currently detected — only detected packages will be
+re-installed in Step R3.
 
-**Step R2: Update integrations.json**
+**Step R2: Re-fetch the canonical setup-with-claude skill**
+
+This step updates the global `~/.claude/skills/setup-with-claude/SKILL.md` to the
+latest version from the meta-project.
+
+Present the following two methods to the user and ask which to use:
+
+> **Method A — Local copy (recommended when the meta-project repo is cloned locally):**
+> ```bash
+> cp path/to/advanced-ai-workflows/.claude/skills/setup-with-claude/SKILL.md \
+>    ~/.claude/skills/setup-with-claude/SKILL.md
+> ```
+> Replace `path/to/advanced-ai-workflows` with the actual clone path.
+>
+> **Method B — curl from GitHub (use when you do not have a local clone):**
+> ```bash
+> curl -fsSL https://raw.githubusercontent.com/MungoHarvey/advanced-ai-workflows/main/.claude/skills/setup-with-claude/SKILL.md \
+>   -o ~/.claude/skills/setup-with-claude/SKILL.md
+> ```
+>
+> "Which method would you like to use to refresh setup-with-claude?
+> (A — local copy / B — curl / skip)"
+
+Tell the user to run the command in a terminal outside this Claude Code session, then
+confirm when done. Do NOT attempt to run the command yourself.
+
+If the user chooses skip: note it and continue — the globally installed skill will remain
+at its current version.
+
+**Step R3: Re-run detected sub-package installers**
+
+For each sub-package detected in Step R1, present the re-install command and ask the
+user to run it. This picks up any upstream changes (new commands, updated agents, revised
+settings snippets) without a full manual setup.
+
+Sub-package re-install commands:
+
+| Sub-package | Re-install command (macOS / Linux) | Re-install command (Windows PowerShell) |
+|---|---|---|
+| **advanced-planning** | `sh setup/claude-code/install.sh --project /path/to/your/project` | `.\setup\claude-code\install.ps1 -Project C:\path\to\your\project` |
+| **gstack** | Follow `~/.claude/skills/gstack/INSTALL.md` for the update procedure | Same — check INSTALL.md |
+| **superpowers** | `/plugin install superpowers@claude-plugins-official` (in Claude Code) | Same |
+| **plannotator** | `bun install && bun run build` (in the plannotator directory) | Same |
+
+For each detected sub-package, ask:
+
+> "Would you like to re-run the [tool name] installer to pick up the latest version?
+> (yes / skip)"
+
+If yes: show the relevant install command from the table above (and cross-reference the
+`references/install-[tool].md` reference file for the canonical command text).
+Tell the user to run it in a terminal, then confirm when done.
+If skip: note it — this sub-package will retain its current version.
+
+**Step R4: Update integrations.json**
 
 If `.claude/integrations.json` exists, show the diff between current content and the
 new detection state. Ask:
@@ -443,12 +548,25 @@ new detection state. Ask:
 
 If it does not exist, write it without asking (same structure as Step 7 above).
 
-**Step R3: Report**
+**Step R5: Report what changed**
 
-Print the updated status table and confirm `.claude/integrations.json` was written.
+Print a change report:
 
-Explicitly note: no installs were performed, CLAUDE.md was not modified, settings.json
-was not modified. To re-run the full setup, use `/setup-with-claude` without flags.
+```
+Refresh complete.
+
+setup-with-claude skill:  [refreshed via Method A / refreshed via Method B / skipped]
+advanced-planning:        [re-installed / skipped / not detected]
+gstack:                   [re-installed / skipped / not detected]
+superpowers:              [re-installed / skipped / not detected]
+plannotator:              [re-installed / skipped / not detected]
+integrations.json:        [updated / written (new) / no change]
+
+Not modified: CLAUDE.md, .claude/settings.json
+To re-run full setup: /setup-with-claude (no flags)
+```
+
+Fill in each line's status based on what actually happened in Steps R2–R4.
 
 ---
 

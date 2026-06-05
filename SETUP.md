@@ -287,6 +287,8 @@ The auto-trigger hook surfaces `/gstack-to-plans` in Claude's next turn whenever
 }
 ```
 
+**Session restart required:** The PostToolUse hook registers at session startup. If you created or modified `.claude/settings.json` for the first time in this session, **restart Claude Code** before expecting the hook to fire live. Until you restart, the auto-trigger for `/gstack-to-plans` will not activate.
+
 **Scope discipline:** this hook checks `CLAUDE_TOOL_INPUT_PATH` at runtime. It fires only when the written path starts with `~/.gstack/projects/` AND the filename matches the gstack design-doc pattern (`*-design-{datetime}.*`). Writes to any other path produce no output and exit 0 — the hook does not interfere with normal development.
 
 **Windows note:** `~/.gstack/projects/` resolves to `%USERPROFILE%\.gstack\projects\`. The `node -e` command handles this via `os.homedir()`, which is cross-platform.

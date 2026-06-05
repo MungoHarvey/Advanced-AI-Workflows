@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>v0.1 Smoke Test Runbook — Advanced-AI-Workflows</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --panel: #161b22;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #58a6ff;
+    --green: #3fb950;
+    --amber: #d29922;
+    --code-bg: #1c2128;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 32px 24px 96px; }
+  h1 { font-size: 1.9rem; margin: 0 0 4px; }
+  h2 {
+    font-size: 1.35rem;
+    margin: 40px 0 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  h3 { font-size: 1.05rem; margin: 24px 0 8px; color: var(--accent); }
+  p { margin: 10px 0; }
+  .sub { color: var(--muted); margin-top: 0; }
+  a { color: var(--accent); }
+  code.inline {
+    background: var(--code-bg);
+    padding: 2px 6px;
+    border-radius: 5px;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 0.86em;
+  }
+  .callout {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 16px 0;
+  }
+  .callout.warn { border-left-color: var(--amber); }
+  .callout.ok { border-left-color: var(--green); }
+  .callout p { margin: 6px 0; }
+  .codeblock {
+    position: relative;
+    margin: 14px 0;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--code-bg);
+  }
+  .codeblock .label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    padding: 7px 12px;
+    border-bottom: 1px solid var(--border);
+    background: #11161d;
+  }
+  pre {
+    margin: 0;
+    padding: 14px 16px;
+    overflow-x: auto;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 0.84rem;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .copybtn {
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    background: #21262d;
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 0.74rem;
+    cursor: pointer;
+    transition: background .15s, color .15s;
+  }
+  .copybtn:hover { background: #30363d; }
+  .copybtn.copied { background: var(--green); color: #07120a; border-color: var(--green); }
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 0.9rem; }
+  th, td { text-align: left; padding: 8px 10px; border: 1px solid var(--border); vertical-align: top; }
+  th { background: var(--panel); }
+  .pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 0.78rem; font-weight: 600; }
+  .pill.pass { background: rgba(63,185,80,.15); color: var(--green); }
+  .pill.def { background: rgba(210,153,34,.15); color: var(--amber); }
+  ol.steps { padding-left: 20px; }
+  ol.steps > li { margin: 8px 0; }
+  .checklist { list-style: none; padding-left: 0; }
+  .checklist li { padding: 4px 0 4px 26px; position: relative; }
+  .checklist li::before {
+    content: "☐";
+    position: absolute;
+    left: 0;
+    color: var(--muted);
+  }
+  footer { margin-top: 48px; color: var(--muted); font-size: 0.82rem; border-top: 1px solid var(--border); padding-top: 16px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>v0.1 Smoke Test Runbook</h1>
+  <p class="sub">Advanced-AI-Workflows — four-tool integration (gstack + advanced-planning + superpowers + plannotator). Generated 2026-06-05.</p>
+
+  <div class="callout warn">
+    <p><strong>Why a fresh session is required.</strong> REG-1..6 are interactive slash-command tests (<code class="inline">/setup-with-claude</code>, <code class="inline">/gstack-to-plans</code>, …) that must target the <strong>scratch project as the session root</strong>. A Claude Code session's project root is fixed at launch. Running them in the meta-project session would install the integration into the meta-project itself — wrong target. So these steps run in a <em>new</em> session opened on <code class="inline">scratch/aaw-smoketest-20260522/</code>.</p>
+  </div>
+
+  <div class="callout ok">
+    <p><strong>Prerequisites confirmed (2026-06-05).</strong></p>
+    <p>✅ <code class="inline">/setup-with-claude</code> is globally available (<code class="inline">~/.claude/skills/setup-with-claude</code>) — the scratch session can run REG-1 step 1 immediately.</p>
+    <p>✅ <code class="inline">gstack-to-plans</code> lives in the meta-project's <code class="inline">.claude/skills/</code>; <code class="inline">/setup-with-claude</code> installs it into the target project (REG-1 step 1), so it becomes available in the scratch session right after.</p>
+    <p>✅ gstack works and has design docs (slugs: <code class="inline">Lovelace</code>, <code class="inline">mharvey2-full-lengthdrugseq</code>, others) — fallback if <code class="inline">/office-hours</code> generation is needed.</p>
+    <p>❓ Whether advanced-planning / superpowers / plannotator are detectable from the scratch session is exactly what REG-1 step 1's detection report reveals — that's the test doing its job, not a blocker.</p>
+  </div>
+
+  <h2>Step 1 — Open a fresh session on the scratch project</h2>
+  <p>In a new terminal (PowerShell):</p>
+  <div class="codeblock">
+    <div class="label">PowerShell</div>
+    <button class="copybtn" onclick="copyCode(this)">Copy</button>
+    <pre>cd "C:\Users\mharvey2\Documents\Coding\planning-architectures\Advanced-AI-Workflows\scratch\aaw-smoketest-20260522"
+claude</pre>
+  </div>
+
+  <h2>Step 2 — Paste this as the first message</h2>
+  <p>This drives the new session through REG-1..6 against the scratch project.</p>
+  <div class="codeblock">
+    <div class="label">Prompt — paste into the scratch session</div>
+    <button class="copybtn" onclick="copyCode(this)">Copy</button>
+    <pre>We're running the v0.1 smoke test for the Advanced-AI-Workflows four-tool integration (gstack + advanced-planning + superpowers + plannotator). This session is rooted at the scratch test project on purpose.
+
+The checklist is at ..\..\tests\v0.1-smoke-report.md (REG-1 through REG-6, under "User-Driven Checklist"). Read it first, then execute REG-1..6 in order, against THIS project. For each step:
+- run the command,
+- capture the artifact path + first 5-10 lines as evidence,
+- mark the checkbox.
+
+Sequence: REG-1 (full E2E: /setup-with-claude -> /office-hours -> /gstack-to-plans -> /plan-and-phase -> /next-loop -> /run-gate -> /next-phase), then REG-2 (idempotency), REG-3 (divergence -> AskUserQuestion), REG-4 (CLAUDE.md routing block appears exactly once), REG-5 (clean uninstall), REG-6 (superpowers preference -> .advanced-plans/specs/).
+
+If any REG fails, activate the "Fix Iterations" protocol in the report (identify owning loop, fix, re-run). When done, update the report's Status line and Summary table with PASS/FAIL per REG, then tell me the verdict.</pre>
+  </div>
+
+  <h2>The REG checklist (reference)</h2>
+  <p class="sub">Full detail lives in <code class="inline">tests/v0.1-smoke-report.md</code>. Summary below.</p>
+
+  <table>
+    <thead><tr><th>REG</th><th>What it proves</th><th>Status going in</th></tr></thead>
+    <tbody>
+      <tr><td>REG-1</td><td>Fresh-project E2E install &amp; four-tool flow</td><td><span class="pill def">DEFERRED</span></td></tr>
+      <tr><td>REG-2</td><td>Re-run idempotency (<code class="inline">/gstack-to-plans</code> no-op)</td><td><span class="pill def">DEFERRED</span></td></tr>
+      <tr><td>REG-3</td><td>Divergence detection → AskUserQuestion (3 choices)</td><td><span class="pill def">DEFERRED</span></td></tr>
+      <tr><td>REG-4</td><td>CLAUDE.md routing block appears exactly once</td><td><span class="pill def">DEFERRED</span></td></tr>
+      <tr><td>REG-5</td><td>Clean uninstall (only meta artifacts removed)</td><td><span class="pill def">DEFERRED</span></td></tr>
+      <tr><td>REG-6</td><td>Superpowers preference → <code class="inline">.advanced-plans/specs/</code></td><td><span class="pill def">DEFERRED</span></td></tr>
+      <tr><td>REG-7</td><td>Auto-trigger hook scope (static analysis)</td><td><span class="pill pass">PASS</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3>REG-1 sub-steps (run in order)</h3>
+  <ul class="checklist">
+    <li><code class="inline">/setup-with-claude</code> — detection report; AskUserQuestion gates before CLAUDE.md routing block &amp; before editing <code class="inline">.claude/settings.json</code>; <code class="inline">integrations.json</code> written to <code class="inline">.advanced-plans/</code></li>
+    <li><code class="inline">/office-hours</code> — gstack writes a design doc to <code class="inline">~/.gstack/projects/{slug}/</code>; PostToolUse hook surfaces the <code class="inline">/gstack-to-plans</code> suggestion next turn</li>
+    <li><code class="inline">/gstack-to-plans</code> — design doc archived to <code class="inline">.advanced-plans/specs/{slug}-design-{datetime}.md</code></li>
+    <li><code class="inline">/plan-and-phase</code> — <code class="inline">.advanced-plans/phases/phase-1/</code> created; <code class="inline">plan.md</code> + <code class="inline">loops.md</code> with ≥1 loop stub</li>
+    <li><code class="inline">/next-loop</code> — first loop's <code class="inline">loop-ready.json</code> written to <code class="inline">.advanced-plans/state/</code></li>
+    <li><code class="inline">/run-gate</code> — gate verdict written to <code class="inline">.advanced-plans/gate-verdicts/</code></li>
+    <li><code class="inline">/next-phase</code> — phase advancement or completion message</li>
+  </ul>
+
+  <h3>Quick evidence commands (run inside the scratch session)</h3>
+  <div class="codeblock">
+    <div class="label">Bash — REG-4: routing block appears exactly once</div>
+    <button class="copybtn" onclick="copyCode(this)">Copy</button>
+    <pre>grep -c 'aaw-routing:begin' CLAUDE.md   # expect: 1</pre>
+  </div>
+  <div class="codeblock">
+    <div class="label">Bash — REG-2: specs unchanged after re-run</div>
+    <button class="copybtn" onclick="copyCode(this)">Copy</button>
+    <pre>ls -la .advanced-plans/specs/</pre>
+  </div>
+  <div class="codeblock">
+    <div class="label">Bash — REG-5: uninstall left no routing residue</div>
+    <button class="copybtn" onclick="copyCode(this)">Copy</button>
+    <pre>grep 'aaw-routing' CLAUDE.md   # expect: empty</pre>
+  </div>
+
+  <h2>Step 3 — After the smoke test: push the meta-project commits</h2>
+  <p>Run these <strong>back in the meta-project session</strong> (or any terminal at the meta-project root). Only push once REG-1..6 pass. The repo is 23 commits ahead of <code class="inline">origin/main</code>.</p>
+
+  <div class="callout warn">
+    <p><strong>If SSH host key verification fails</strong> on push, trust the GitHub fingerprint once, then retry:</p>
+  </div>
+  <div class="codeblock">
+    <div class="label">Bash — one-time SSH host key trust (only if push fails)</div>
+    <button class="copybtn" onclick="copyCode(this)">Copy</button>
+    <pre>ssh-keyscan github.com >> ~/.ssh/known_hosts</pre>
+  </div>
+
+  <div class="codeblock">
+    <div class="label">PowerShell — verify state then push</div>
+    <button class="copybtn" onclick="copyCode(this)">Copy</button>
+    <pre>cd "C:\Users\mharvey2\Documents\Coding\planning-architectures\Advanced-AI-Workflows"
+git status -sb
+git log origin/main..HEAD --oneline
+git push origin main</pre>
+  </div>
+
+  <h3>If a REG fails instead</h3>
+  <p>Do <strong>not</strong> push. Activate the "Fix Iterations" protocol in <code class="inline">tests/v0.1-smoke-report.md</code>: identify the owning loop (001/002/003), fix the artifact in that loop's output location, re-run the affected REG, update the report, then re-evaluate the push.</p>
+
+  <h2>Held item (do not touch until smoke test passes)</h2>
+  <p><strong>Fix 1 — advanced-planning STRUCTURE.md</strong>: branch <code class="inline">meta-project/fix-structure-md-stale-paths</code> in <code class="inline">MungoHarvey/advanced-planning</code>. Held in case REG-1..6 surface more stale <code class="inline">STRUCTURE.md</code> path references to fold in. Decide after verdicts are in.</p>
+
+  <footer>
+    Runbook for <code class="inline">tests/v0.1-smoke-report.md</code>. Fork-first scope: all sub-package fixes target <code class="inline">MungoHarvey/&lt;repo&gt;</code> forks, never public upstreams, unless explicitly stated otherwise.
+  </footer>
+
+</div>
+
+<script>
+function copyCode(btn) {
+  var pre = btn.parentElement.querySelector('pre');
+  var text = pre.innerText;
+  navigator.clipboard.writeText(text).then(function () {
+    var orig = btn.textContent;
+    btn.textContent = 'Copied ✓';
+    btn.classList.add('copied');
+    setTimeout(function () {
+      btn.textContent = orig;
+      btn.classList.remove('copied');
+    }, 1600);
+  }).catch(function () {
+    // Fallback for non-secure contexts
+    var r = document.createRange();
+    r.selectNodeContents(pre);
+    var sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(r);
+    try { document.execCommand('copy'); btn.textContent = 'Copied ✓'; setTimeout(function(){ btn.textContent = 'Copy'; }, 1600); } catch (e) {}
+    sel.removeAllRanges();
+  });
+}
+</script>
+</body>
+</html>

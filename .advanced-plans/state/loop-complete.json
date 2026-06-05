@@ -1,15 +1,13 @@
 {
-  "loop_name": "ralph-loop-006",
-  "loop_file": ".advanced-plans/phases/phase-1/loops.md",
-  "status": "partial",
-  "todos_done": 3,
+  "loop_name": "ralph-loop-001",
+  "loop_file": ".advanced-plans/phases/phase-2/loops.md",
+  "status": "completed",
+  "todos_done": 5,
   "todos_failed": 0,
-  "todos_deferred": 2,
-  "todos_pending": 1,
-  "completed_at": "2026-05-22T17:40:00Z",
+  "completed_at": "2026-06-05T16:45:00Z",
   "handoff": {
-    "done": "Headless PREP mode executed. Fresh test project created at scratch/aaw-smoketest-20260522/ (empty git init, no .claude/, scratch/ added to .gitignore). REG-7 static analysis PASS: four sub-cases verified against settings-snippet.json — prefix guard (startsWith ~/.gstack/projects/) and filename-pattern guard (/-design-\\d/.test) both confirmed correct; negative paths (b) and (c) correctly rejected; idempotency (d) handled by gstack-to-plans SKILL.md Step 3 not the hook matcher. tests/v0.1-smoke-report.md written with REG-7 evidence table and REG-1..6 user-driven checklist.",
+    "done": "Extended --refresh (re-fetch + re-run installers + change report), fixed --uninstall for global glue and empty CLAUDE.md, added hook-restart caveat to SKILL.md and SETUP.md; all committed and pushed to meta main.",
     "failed": "",
-    "needed": "User must open scratch/aaw-smoketest-20260522/ in a fresh Claude Code session and execute the REG-1..REG-6 checklist in tests/v0.1-smoke-report.md. If any REG fails, activate todo-006-6 (fix iterations) by fixing the affected loop artifact and re-running."
+    "needed": ""
   }
 }

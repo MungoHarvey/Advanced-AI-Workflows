@@ -13,7 +13,7 @@ max_iterations: 3
 on_max_iterations: escalate
 
 handoff_summary:
-  done: ""
+  done: "Extended --refresh (re-fetch + re-run installers + change report), fixed --uninstall for global glue and empty CLAUDE.md, added hook-restart caveat to SKILL.md and SETUP.md; all committed and pushed to meta main."
   failed: ""
   needed: ""
 
@@ -55,7 +55,7 @@ todos:
     skill: "NA"
     agent: "NA"
     outcome: "A commit containing the loop-001 edits is on main and pushed to origin (HTTPS path); git status clean"
-    status: pending
+    status: completed
     complexity: low
     priority: high
 

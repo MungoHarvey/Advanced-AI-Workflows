@@ -94,6 +94,10 @@ prompt: |
   - Fork-first: meta-project repo only this loop; no sub-package or upstream changes
   - Preserve the existing fenced begin/end marker design for routing block install/uninstall
   - CLAUDE.md deletion must be guarded: only when empty/whitespace-only after block removal
+  - Push protocol (SSH auth is down in this env — use explicit HTTPS URL via GCM):
+    `git push https://github.com/MungoHarvey/Advanced-AI-Workflows.git main`
+    then sync the stale tracking ref: `git update-ref refs/remotes/origin/main HEAD`
+    Do NOT change the origin remote (it stays SSH).
 
   ## On completion
   1. git add -A && git commit -m "complete: ralph-loop-001 — meta-source fixes (refresh/uninstall/hook doc)"
@@ -221,8 +225,13 @@ prompt: |
 
   ## Constraints
   - Fork-internal only: target is MungoHarvey/advanced-planning main; NEVER a public upstream
+    (the repo has NO upstream remote configured — origin is the only remote, so this is structurally safe)
   - Fast-forward only; if not fast-forwardable, escalate (do not force or create a merge commit)
   - Do not touch the meta-project repo in this loop
+  - Push protocol (SSH auth is down in this env — use explicit HTTPS URL via GCM):
+    `git push https://github.com/MungoHarvey/advanced-planning.git main`
+    then sync the stale tracking ref: `git update-ref refs/remotes/origin/main HEAD`
+    Do NOT change the origin remote (it stays SSH).
 
   ## On completion
   1. (in advanced-planning) confirm main pushed; optionally delete the merged feature branch
@@ -378,6 +387,10 @@ prompt: |
   - Must run AFTER loop-001 so the redeployed global skill carries the new --refresh/--uninstall logic
   - Do not modify the advanced-planning source in this loop — only copy from it
   - If the phase-goals-agent runtime path cannot be found, escalate with the search paths tried
+  - Push protocol (SSH auth is down in this env — use explicit HTTPS URL via GCM):
+    `git push https://github.com/MungoHarvey/Advanced-AI-Workflows.git main`
+    then sync the stale tracking ref: `git update-ref refs/remotes/origin/main HEAD`
+    Do NOT change the origin remote (it stays SSH).
 
   ## On completion
   1. git add -A && git commit -m "complete: ralph-loop-003 — redeploy + verify + close findings"

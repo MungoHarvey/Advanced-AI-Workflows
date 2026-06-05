@@ -2,7 +2,16 @@
 
 | Phase | Name | Status | Plan |
 |-------|------|--------|------|
-| 1 | Four-Tool Integration v0.1 | planning | [phases/phase-1/plan.md](phases/phase-1/plan.md) |
+| 1 | Four-Tool Integration v0.1 | complete (smoke PASS 2026-06-05) | [phases/phase-1/plan.md](phases/phase-1/plan.md) |
+| 2 | v0.1 Smoke-Findings Fix-Pack | in_progress | [phases/phase-2/plan.md](phases/phase-2/plan.md) |
+
+## Ralph Loops (Phase 2)
+
+| Loop | Name | Status |
+|------|------|--------|
+| 001 | meta-source-fixes (--refresh, --uninstall, hook-restart doc) | pending |
+| 002 | land-fix-1 (advanced-planning STRUCTURE.md ff-merge) | pending |
+| 003 | redeploy-and-verify (+ close smoke findings) | pending |
 
 ## Source of truth
 

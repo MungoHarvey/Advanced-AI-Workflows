@@ -1,12 +1,12 @@
 {
-  "loop_name": "ralph-loop-001",
+  "loop_name": "ralph-loop-002",
   "loop_file": ".advanced-plans/phases/phase-2/loops.md",
-  "task_name": "Meta-source fixes (--refresh, --uninstall, hook-restart doc)",
-  "todos_count": 5,
+  "task_name": "Land held Fix 1 (advanced-planning STRUCTURE.md)",
+  "todos_count": 3,
   "prepared_at": "2026-06-05T00:00:00Z",
   "status": "ready",
   "handoff_injected": {
-    "done": "",
+    "done": "Extended --refresh (re-fetch + re-run installers + change report), fixed --uninstall for global glue and empty CLAUDE.md, added hook-restart caveat to SKILL.md and SETUP.md; all committed and pushed to meta main.",
     "failed": "",
     "needed": ""
   }

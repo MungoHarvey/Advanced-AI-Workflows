@@ -297,7 +297,7 @@ max_iterations: 3
 on_max_iterations: escalate
 
 handoff_summary:
-  done: ""
+  done: "Refreshed global setup-with-claude (byte-identical, 4-tool), found and refreshed 6 stale phase-goals-agent copies (all now have Write), verified all Group A checks pass, and marked smoke-report findings #1-#5 resolved/documented referencing phase-2."
   failed: ""
   needed: ""
 
@@ -307,7 +307,7 @@ todos:
     skill: "NA"
     agent: "NA"
     outcome: "~/.claude/skills/setup-with-claude/SKILL.md is byte-identical to the meta-project copy; grep -c returns >=1 for each of --uninstall, integrations.json, aaw-routing; header no longer says 'Three tools'"
-    status: pending
+    status: completed
     complexity: low
     priority: high
   - id: "loop-003-2"
@@ -315,7 +315,7 @@ todos:
     skill: "NA"
     agent: "general-purpose"
     outcome: "The file path Claude Code loads phase-goals-agent from is identified and printed (search ~/.claude, plugins, project .claude/agents, and any advanced-planning --global target)"
-    status: pending
+    status: completed
     complexity: medium
     priority: high
   - id: "loop-003-3"
@@ -323,7 +323,7 @@ todos:
     skill: "NA"
     agent: "NA"
     outcome: "The deployed phase-goals-agent.md tools line reads 'Read, Glob, Grep, Write'; matches advanced-planning main canonical source"
-    status: pending
+    status: completed
     complexity: low
     priority: high
   - id: "loop-003-4"
@@ -331,7 +331,7 @@ todos:
     skill: "NA"
     agent: "NA"
     outcome: "A verification block confirms global setup-with-claude markers present and phase-goals-agent has Write; all checks pass"
-    status: pending
+    status: completed
     complexity: low
     priority: high
   - id: "loop-003-5"
@@ -339,7 +339,7 @@ todos:
     skill: "NA"
     agent: "NA"
     outcome: "The report's findings section records resolution for #1-#4 and documentation for #5, with a pointer to phase-2"
-    status: pending
+    status: completed
     complexity: low
     priority: medium
   - id: "loop-003-6"
@@ -347,7 +347,7 @@ todos:
     skill: "NA"
     agent: "NA"
     outcome: "Report update committed on main and pushed; git status clean"
-    status: pending
+    status: completed
     complexity: low
     priority: high
 

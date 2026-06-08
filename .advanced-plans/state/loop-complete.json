@@ -1,12 +1,12 @@
 {
-  "loop_name": "ralph-loop-002",
+  "loop_name": "ralph-loop-003",
   "loop_file": ".advanced-plans/phases/phase-2/loops.md",
   "status": "completed",
-  "todos_done": 3,
+  "todos_done": 6,
   "todos_failed": 0,
-  "completed_at": "2026-06-05T00:00:00Z",
+  "completed_at": "2026-06-08T00:00:00Z",
   "handoff": {
-    "done": "Fast-forward merged meta-project/fix-structure-md-stale-paths into advanced-planning main (fa799d3) and pushed to MungoHarvey/advanced-planning via HTTPS; origin/main tracking ref synced.",
+    "done": "Refreshed global setup-with-claude (byte-identical, 4-tool), found and refreshed 6 stale phase-goals-agent copies (all now have Write), verified all Group A checks pass, and marked smoke-report findings #1-#5 resolved/documented referencing phase-2.",
     "failed": "",
     "needed": ""
   }

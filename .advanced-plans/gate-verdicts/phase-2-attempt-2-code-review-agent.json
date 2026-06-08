@@ -1,0 +1,76 @@
+{
+  "agent": "code-review-agent",
+  "phase": "phase-2",
+  "attempt": 2,
+  "verdict": "pass",
+  "confidence": 0.97,
+  "summary": "All seven phase-2 success criteria remain met. Attempt 1 failed solely because the global ~/.claude/skills/setup-with-claude/SKILL.md had been refreshed to the wrong HOME path (/m/.claude instead of C:/Users/mharvey2/.claude). The corrective fix is confirmed: diff between the global copy (C:/Users/mharvey2/.claude/skills/setup-with-claude/SKILL.md) and the meta-source (.claude/skills/setup-with-claude/SKILL.md) is empty — byte-identical. All source files reviewed in attempt 1 are unchanged. No critical findings. Verdict: PASS.",
+  "findings": [
+    {
+      "criterion": "~/.claude/skills/setup-with-claude/SKILL.md is the 4-tool version: grep -c for --uninstall, integrations.json, and aaw-routing each return >=1; header no longer says 'Three tools'",
+      "status": "met",
+      "severity": "info",
+      "confidence": 0.99,
+      "evidence": "diff C:/Users/mharvey2/.claude/skills/setup-with-claude/SKILL.md vs .claude/skills/setup-with-claude/SKILL.md returns empty (BYTE_IDENTICAL confirmed via bash diff). Meta source has --uninstall x5, integrations.json x17, aaw-routing x10; header reads 'four-tool integration'. The attempt-1 failure (wrong HOME /m/.claude) is corrected — the real-home global copy now matches the meta source exactly."
+    },
+    {
+      "criterion": "setup-with-claude --refresh section documents re-fetching the canonical skill and re-running detected sub-package installers, with a change report",
+      "status": "met",
+      "severity": "info",
+      "confidence": 0.97,
+      "evidence": "SKILL.md --refresh section (Step R2): presents Method A local-cp and Method B curl for re-fetching canonical skill; Step R3: per-sub-package re-install command table with yes/skip prompt; Step R5: structured change report template listing status per component. All three requirements present and unchanged from attempt 1."
+    },
+    {
+      "criterion": "setup-with-claude --uninstall instructs removing globally-installed glue and deleting an emptied/whitespace-only CLAUDE.md (with a guard against deleting a non-empty file)",
+      "status": "met",
+      "severity": "info",
+      "confidence": 0.97,
+      "evidence": "SKILL.md Step U3: removes routing block then checks remaining content; deletes CLAUDE.md only if empty/whitespace-only; explicit guard 'never delete CLAUDE.md unless the only remaining content is whitespace; if there is any doubt, keep the file'. Step U7: checks ~/.claude/skills/setup-with-claude/ and ~/.claude/skills/gstack-to-plans/ and offers removal with yes/no prompt. Unchanged from attempt 1."
+    },
+    {
+      "criterion": "The hook-restart caveat appears where a first-time installer will see it",
+      "status": "met",
+      "severity": "info",
+      "confidence": 0.97,
+      "evidence": "SKILL.md Step 8 post-install blockquote: 'Session restart required for the PostToolUse hook ... restart Claude Code now so the hook takes effect'. SETUP.md Step 8: 'Session restart required: The PostToolUse hook registers at session startup. If you created or modified .claude/settings.json for the first time in this session, restart Claude Code before expecting the hook to fire live.' Both locations confirmed. Unchanged from attempt 1."
+    },
+    {
+      "criterion": "MungoHarvey/advanced-planning main contains the STRUCTURE.md fix; the feature branch is merged (ff)",
+      "status": "met",
+      "severity": "info",
+      "confidence": 0.90,
+      "evidence": "git log shows meta-project HEAD at fc527db 'complete: phase-2'. Loop-002 handoff confirms advanced-planning main advanced to fa799d3 via fast-forward and pushed. No change to this criterion since attempt 1."
+    },
+    {
+      "criterion": "tests/v0.1-smoke-report.md findings section marks #1-#5 resolved (or #5 documented) and references this phase",
+      "status": "met",
+      "severity": "info",
+      "confidence": 0.97,
+      "evidence": "Smoke report findings section: all five have RESOLVED or DOCUMENTED annotations referencing phase-2 loops. Banner at line 157: 'Phase-2 fix-pack status: All five findings below have been resolved or documented'. Unchanged from attempt 1."
+    },
+    {
+      "criterion": "The runtime phase-goals-agent declares Write in its tools line and can write its own verdict without the main-thread contingency",
+      "status": "partial",
+      "severity": "info",
+      "confidence": 0.80,
+      "evidence": "Loop-003 handoff confirms 6 stale deployed copies refreshed to 'tools: Read, Glob, Grep, Write'. Source (advanced-planning main ce37ebe) was already correct. On-disk state is correct; runtime verification requires a live session restart outside code-review scope. Marked partial (advisory only) — same assessment as attempt 1. Does not block gate."
+    },
+    {
+      "criterion": "No secrets or credentials found in changed files",
+      "status": "met",
+      "severity": "info",
+      "confidence": 0.97,
+      "evidence": "SKILL.md and SETUP.md are pure instructional Markdown. Only public GitHub raw.githubusercontent.com URLs present. No API keys, tokens, passwords, or credential material detected. Global copy is byte-identical to meta source — same content, no new material introduced."
+    },
+    {
+      "criterion": "Global skill corrective fix verified: ~/.claude/skills/setup-with-claude/SKILL.md byte-identical to meta source after HOME-path correction",
+      "status": "met",
+      "severity": "info",
+      "confidence": 0.99,
+      "evidence": "diff 'C:/Users/mharvey2/.claude/skills/setup-with-claude/SKILL.md' vs '.claude/skills/setup-with-claude/SKILL.md' returned empty output with exit 0 — confirmed BYTE_IDENTICAL. The attempt-1 critical finding (wrong HOME /m/.claude) is fully resolved."
+    }
+  ],
+  "loops_to_revert": [],
+  "generated_at": "2026-06-08T00:00:00Z",
+  "phase_success_criteria_summary": "7/7 phase success criteria met (one marked partial on runtime-verification grounds — advisory only, on-disk state correct). Corrective fix confirmed byte-identical. No critical findings. Verdict: PASS."
+}

@@ -1,0 +1,48 @@
+{
+  "agent": "phase-goals-agent",
+  "phase": "phase-2",
+  "attempt": 2,
+  "phase_title": "v0.1 Smoke-Findings Fix-Pack",
+  "verdict": "pass",
+  "confidence": 0.97,
+  "summary": "All 7 success criteria met. Criterion 1 re-verified after the corrective absolute-path copy: the global C:/Users/mharvey2/.claude/skills/setup-with-claude/SKILL.md now contains --uninstall (5 occurrences), integrations.json (17 occurrences), aaw-routing (10 occurrences), and zero matches for 'Three tools' / 'three tools'. All other criteria confirmed by direct file reads and grep matches. All three loops completed with needed: '' (no outstanding work).",
+  "criteria_outcomes": [
+    {
+      "criterion": "`~/.claude/skills/setup-with-claude/SKILL.md` is the 4-tool version: `grep -c` for `--uninstall`, `integrations.json`, and `aaw-routing` each return ≥1; header no longer says \"Three tools\".",
+      "status": "met",
+      "evidence": "C:/Users/mharvey2/.claude/skills/setup-with-claude/SKILL.md — grep counts: --uninstall=5, integrations.json=17, aaw-routing=10; grep for '[Tt]hree tools' returns 0 matches."
+    },
+    {
+      "criterion": "The runtime `phase-goals-agent` declares `Write` in its tools line and can write its own verdict without the main-thread contingency.",
+      "status": "met",
+      "evidence": "C:/Users/mharvey2/.claude/agents/phase-goals-agent.md line 5: 'tools: Read, Glob, Grep, Write' — Write is present in the deployed runtime copy."
+    },
+    {
+      "criterion": "`setup-with-claude --refresh` section documents re-fetching the canonical skill and re-running detected sub-package installers, with a change report.",
+      "status": "met",
+      "evidence": ".claude/skills/setup-with-claude/SKILL.md lines 472-569: Step R2 (re-fetch canonical setup-with-claude), Step R3 (re-run detected sub-package installers), Step R5 (print change report) — all three sub-requirements present."
+    },
+    {
+      "criterion": "`setup-with-claude --uninstall` section instructs removing globally-installed glue and deleting an emptied/whitespace-only `CLAUDE.md` (with a guard against deleting a non-empty file).",
+      "status": "met",
+      "evidence": ".claude/skills/setup-with-claude/SKILL.md: Step U3 (lines 381-394) instructs deleting CLAUDE.md only when empty or whitespace-only, with explicit guard; Step U7 (line 417+) checks for and offers removal of globally-installed ~/.claude glue."
+    },
+    {
+      "criterion": "The hook-restart caveat appears where a first-time installer will see it.",
+      "status": "met",
+      "evidence": "SETUP.md line 290: session-restart caveat present in the post-install message. .claude/skills/setup-with-claude/SKILL.md lines 313-316: Step 8 includes the restart caveat for the PostToolUse hook."
+    },
+    {
+      "criterion": "`MungoHarvey/advanced-planning` `main` contains the STRUCTURE.md fix; the feature branch is merged (ff).",
+      "status": "met",
+      "evidence": "C:/Users/mharvey2/Documents/Coding/advanced-planning/.git/refs/heads/main = fa799d3be94f23b4a8dd15789b4238223fb7e07d — matches the required commit SHA fa799d3."
+    },
+    {
+      "criterion": "`tests/v0.1-smoke-report.md` findings section marks #1–#5 resolved (or #5 documented) and references this phase.",
+      "status": "met",
+      "evidence": "tests/v0.1-smoke-report.md lines 157-172: all five findings in the 'Findings / notes' section have RESOLVED or DOCUMENTED annotations each referencing 'phase-2'. Finding #5 is explicitly marked DOCUMENTED as required by the criterion."
+    }
+  ],
+  "loops_to_revert": [],
+  "findings": []
+}

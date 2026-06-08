@@ -1,0 +1,59 @@
+{
+  "agent": "phase-goals-agent",
+  "phase": "phase-2",
+  "attempt": 1,
+  "phase_title": "v0.1 Smoke-Findings Fix-Pack",
+  "verdict": "fail",
+  "confidence": 0.93,
+  "summary": "Six of seven success criteria are met. Criterion 1 fails: the on-disk global install at ~/.claude/skills/setup-with-claude/SKILL.md is still the old three-tool version (header reads 'Three tools'; zero matches for --uninstall, integrations.json, or aaw-routing). The smoke report claims the file was refreshed byte-identically in loop-003, but direct file inspection contradicts this. All other criteria are met: the meta-source SKILL.md has correct --refresh (R2/R3/R5) and --uninstall (U3/U7) sections, SETUP.md and SKILL.md both carry the hook-restart caveat, the runtime phase-goals-agent at ~/.claude/agents/phase-goals-agent.md declares Write, advanced-planning main HEAD is fa799d3, and the smoke report marks findings #1-#5 resolved/documented with phase-2 references.",
+  "criteria_outcomes": [
+    {
+      "criterion": "~/.claude/skills/setup-with-claude/SKILL.md is the 4-tool version: grep -c for --uninstall, integrations.json, and aaw-routing each return ≥1; header no longer says \"Three tools\".",
+      "status": "failed",
+      "evidence": "C:/Users/mharvey2/.claude/skills/setup-with-claude/SKILL.md line 12 reads 'Three tools integrate at boundaries to form a complete pipeline:'. grep for --uninstall, integrations.json, aaw-routing each return 0 matches. This is the old pre-phase-2 version. The meta-source at .claude/skills/setup-with-claude/SKILL.md (in the repo) is correct (32 combined matches for the three patterns; header says 'four-tool integration'), but the global deploy was not updated despite the smoke report claiming it was."
+    },
+    {
+      "criterion": "The runtime phase-goals-agent declares Write in its tools line and can write its own verdict without the main-thread contingency.",
+      "status": "met",
+      "evidence": "C:/Users/mharvey2/.claude/agents/phase-goals-agent.md line 5: 'tools: Read, Glob, Grep, Write'. Write is present. This agent successfully wrote its verdict file directly (no main-thread contingency required)."
+    },
+    {
+      "criterion": "setup-with-claude --refresh section documents re-fetching the canonical skill and re-running detected sub-package installers, with a change report.",
+      "status": "met",
+      "evidence": ".claude/skills/setup-with-claude/SKILL.md lines 487-569: Step R2 instructs re-fetching the canonical setup-with-claude skill via local cp or curl; Step R3 instructs re-running each detected sub-package installer; Step R5 prints a change report listing status of each component."
+    },
+    {
+      "criterion": "setup-with-claude --uninstall section instructs removing globally-installed glue and deleting an emptied/whitespace-only CLAUDE.md (with a guard against deleting a non-empty file).",
+      "status": "met",
+      "evidence": ".claude/skills/setup-with-claude/SKILL.md lines 382-394 (Step U3): after block removal, if CLAUDE.md is empty or whitespace-only it is deleted; if non-whitespace content remains it is kept. Lines 417-435 (Step U7): checks ~/.claude/skills/setup-with-claude/ and ~/.claude/skills/gstack-to-plans/ and offers to remove them."
+    },
+    {
+      "criterion": "The hook-restart caveat appears where a first-time installer will see it.",
+      "status": "met",
+      "evidence": "SETUP.md lines 290-292: 'Session restart required: The PostToolUse hook registers at session startup. If you created or modified .claude/settings.json for the first time in this session, restart Claude Code before expecting the hook to fire live.' .claude/skills/setup-with-claude/SKILL.md lines 313-316: equivalent callout block in the Step 8 post-install message."
+    },
+    {
+      "criterion": "MungoHarvey/advanced-planning main contains the STRUCTURE.md fix; the feature branch is merged (ff).",
+      "status": "met",
+      "evidence": "C:/Users/mharvey2/Documents/Coding/advanced-planning/.git/refs/heads/main contains 'fa799d3be94f23b4a8dd15789b4238223fb7e07d'. STRUCTURE.md exists at C:/Users/mharvey2/Documents/Coding/advanced-planning/STRUCTURE.md. Loop-002 handoff confirms fast-forward merge and push."
+    },
+    {
+      "criterion": "tests/v0.1-smoke-report.md findings section marks #1-#5 resolved (or #5 documented) and references this phase.",
+      "status": "met",
+      "evidence": "tests/v0.1-smoke-report.md lines 157-172: preamble note 'Phase-2 fix-pack status (ralph-loop-001..003, 2026-06-05): All five findings below have been resolved or documented.' Findings #1-#4 marked RESOLVED with phase-2 loop citations; finding #5 marked DOCUMENTED with phase-2 loop-001 citation."
+    }
+  ],
+  "findings": [
+    {
+      "id": "F1",
+      "severity": "critical",
+      "confidence": 93,
+      "criterion": "~/.claude/skills/setup-with-claude/SKILL.md is the 4-tool version",
+      "detail": "Direct read of C:/Users/mharvey2/.claude/skills/setup-with-claude/SKILL.md shows line 12: 'Three tools integrate at boundaries to form a complete pipeline:'. Grep for --uninstall, integrations.json, aaw-routing returns 0 matches in that file. Loop-003 handoff claims byte-identical refresh was performed, and the smoke report repeats this claim, but on-disk evidence contradicts it. The meta-source repo copy (.claude/skills/setup-with-claude/SKILL.md) is correct."
+    }
+  ],
+  "loops_to_revert": [],
+  "loops_reviewed": ["ralph-loop-001", "ralph-loop-002", "ralph-loop-003"],
+  "all_loops_complete": true,
+  "all_needed_fields_empty": true
+}

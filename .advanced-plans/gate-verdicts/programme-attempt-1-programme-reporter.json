@@ -1,0 +1,41 @@
+{
+  "agent": "programme-reporter",
+  "phase": "programme",
+  "attempt": 1,
+  "verdict": "pass",
+  "confidence": 100,
+  "summary": "Closeout synthesis complete. All 20 expected final outputs are present (100% output coverage). Two phases documented: Phase 1 (Four-Tool Integration v0.1, smoke PASS 2026-06-05, 6 loops) and Phase 2 (Smoke-Findings Fix-Pack, gate PASS attempt-2 2026-06-08, 3 loops, 14 todos). Gate review analysis covers the attempt-1 FAIL (wrong-HOME deploy, phase-goals-agent confidence 0.93) and attempt-2 PASS (both agents confidence 0.97). Key decisions, lessons learned, and deferred items are recorded. Closeout report written to .advanced-plans/programme-closeout.md.",
+  "findings": [
+    {
+      "criterion": "All Phase 1 primary deliverables present",
+      "status": "met",
+      "severity": "info",
+      "confidence": 100,
+      "evidence": "Glob-verified: .claude/skills/gstack-to-plans/SKILL.md, references/claude-md-routing.md, references/settings-snippet.json, .claude/skills/setup-with-claude/SKILL.md (+ 4 install-*.md references), README.md, ARCHITECTURE.md, DESIGN-RATIONALE.md, SETUP.md, ROADMAP.md, tests/v0.1-smoke-report.md — all present."
+    },
+    {
+      "criterion": "All Phase 2 primary deliverables present",
+      "status": "met",
+      "severity": "info",
+      "confidence": 100,
+      "evidence": "Gate-verdict files confirm: global setup-with-claude byte-identical to meta source at C:/Users/mharvey2/.claude/skills/setup-with-claude/SKILL.md; phase-goals-agent with Write at C:/Users/mharvey2/.claude/agents/phase-goals-agent.md; MungoHarvey/advanced-planning main @ fa799d3; smoke report findings #1-#5 resolved/documented."
+    },
+    {
+      "criterion": "Gate verdict record complete",
+      "status": "met",
+      "severity": "info",
+      "confidence": 100,
+      "evidence": "Four gate verdict files read: phase-2-attempt-1-code-review-agent.json (pass, 0.95), phase-2-attempt-1-phase-goals-agent.json (fail, 0.93), phase-2-attempt-2-code-review-agent.json (pass, 0.97), phase-2-attempt-2-phase-goals-agent.json (pass, 0.97). History.jsonl confirms gate_fail event at 2026-06-08T09:44:24Z and gate_pass event at 2026-06-08T09:48:28Z."
+    },
+    {
+      "criterion": "Superpowers PR branch push still requires manual user action",
+      "status": "info",
+      "severity": "info",
+      "confidence": 100,
+      "evidence": "Branch meta-project/fix-brainstorming-ap-default-path @ fde9f97 exists in local superpowers checkout but has not been pushed or PR'd. Recorded as outstanding item in closeout report. Does not affect programme completion — v0.1 release does not block on this PR."
+    }
+  ],
+  "loops_to_revert": [],
+  "generated_at": "2026-06-08T00:00:00Z",
+  "output_coverage": "20/20 expected outputs present (100%)"
+}

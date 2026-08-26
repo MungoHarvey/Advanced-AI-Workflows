@@ -27,6 +27,11 @@ run-tests.sh
 # Spec and plan files (development process, not public output)
 docs/superpowers/
 
+# The AAW installation manifest is generated per project by setup-with-claude and
+# records absolute paths on the machine that wrote it. The schema and the example
+# beside it ARE shipped; only the generated instance is ignored.
+.aaw/installed.json
+
 # Node/Bun
 node_modules/
 bun-*.zip

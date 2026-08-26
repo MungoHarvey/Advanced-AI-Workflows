@@ -33,3 +33,8 @@
 # The documents that describe the install.
 README.md
 SETUP.md
+.aaw/installed.schema.json
+# The manifest contract itself. Without it a clone can write an installation manifest
+# but nothing can check one, and the audit has no rule to audit against.
+.aaw/installed.example.json
+# The worked example. It is copied by people; a clone that lacks it invites invention.

@@ -2,7 +2,9 @@
 
 **An integrated planning-review-execution system built from four composable open-source tools — gstack, advanced-planning, superpowers, and plannotator.**
 
-> **Scope: Claude Code only in v0.1.** The CLAUDE.md routing, `.claude/skills/` install paths, and `.claude/settings.json` permission grants are all Claude Code-specific. Multi-runtime support (OpenCode, Gemini CLI) is a v0.2+ ROADMAP item. Each sub-package may support additional runtimes independently; the *integrated four-tool flow* does not in v0.1.
+> **Current implementation: Claude Code only in v0.1.** The CLAUDE.md routing, `.claude/skills/` install paths, and `.claude/settings.json` permission grants are Claude Code-specific. The implementation-ready v0.2 design adds Herdr-managed Claude Code, Codex, OpenCode, and Cursor sessions, but those capabilities remain planned until their acceptance suite passes.
+>
+> **Known packaging blocker on current `main`:** the repository documents and installer reference `.claude/skills/gstack-to-plans/SKILL.md`, but that source file is not tracked. The v0.2 programme repairs this before publishing a new installer. Treat the existing Quick Start as the v0.1 flow, not a verified fresh-install guarantee at this head.
 
 ---
 
@@ -83,6 +85,12 @@ The four tools are unaware of each other. The meta-project owns the glue — a s
 
 **The full cycle:** `/office-hours` (gstack) → `/gstack-to-plans` (glue) → `/plan-and-phase` (advanced-planning) → visual review (plannotator, automatic) → `/next-loop` (advanced-planning + superpowers skills) → `/run-gate` → `/next-phase`.
 
+### Herdr execution layer (v0.2 design)
+
+[Herdr](https://github.com/herdrdev/herdr) will provide persistent native-Windows terminal panes, Git worktrees, agent lifecycle detection, and session restore for Claude Code, Codex, OpenCode, and Cursor. Herdr does not replace any of the four workflow tools: Advanced Planning remains the sole planning-state owner, while isolated workers edit task branches and return evidence to a controller checkout.
+
+The design deliberately starts with Herdr's existing CLI rather than building another multiplexer. See the [complete implementation design](.advanced-plans/specs/2026-08-26-herdr-multi-runtime-orchestration-design.md), [Windows operating guide](docs/herdr-windows-operations.md), and [paste-ready controller prompt](docs/herdr-kickoff-prompt.md).
+
 ---
 
 ## Quick Start
@@ -110,7 +118,12 @@ Claude will walk you through detecting and installing each sub-package, wiring t
 | [ARCHITECTURE.md](ARCHITECTURE.md) | System architecture, component boundaries, glue layer, and data flow |
 | [DESIGN-RATIONALE.md](DESIGN-RATIONALE.md) | Why these tools, why this integration approach, key trade-offs |
 | [SETUP.md](SETUP.md) | Installation, version compatibility matrix, configuration, and first-run walkthrough |
-| [ROADMAP.md](ROADMAP.md) | v0.1 status, deferred items, and multi-runtime trajectory |
+| [ROADMAP.md](ROADMAP.md) | v0.1 status and v0.2 Herdr/multi-runtime delivery order |
+| [Herdr Windows operations](docs/herdr-windows-operations.md) | Native-Windows Herdr pilot, worktrees, provider sessions, evidence, and safe cleanup |
+| [Upstream sync playbook](docs/upstream-sync-playbook.md) | Current fork divergence and reviewed update procedures for gstack, Superpowers, and Plannotator |
+| [Upstream baseline snapshot](references/upstream-baseline-2026-08-26.json) | Machine-readable repository heads, divergence, fork-only commits, and intended sync strategy |
+| [v0.2 orchestration design](.advanced-plans/specs/2026-08-26-herdr-multi-runtime-orchestration-design.md) | Implementation-ready architecture, contracts, workstreams, and acceptance criteria |
+| [Herdr kickoff prompt](docs/herdr-kickoff-prompt.md) | Prompt to start the programme in a Herdr controller session |
 
 ---
 
@@ -126,4 +139,4 @@ Each todo in a ralph loop can have a skill injected — a focused markdown file 
 
 ## Licence
 
-TBD
+[MIT](LICENSE)

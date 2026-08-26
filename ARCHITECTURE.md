@@ -3,6 +3,8 @@
 This document is the technical centrepiece of the Advanced AI Workflows meta-repository. It explains how four independent tools — gstack, advanced-planning, superpowers, and plannotator — connect to form an integrated planning-review-execution system, without any tool needing to know the internals of the others.
 
 > **Scope: Claude Code only in v0.1.** CLAUDE.md routing, `.claude/skills/` install paths, Claude plugin install for plannotator/superpowers, and `.claude/settings.json` permission grants are all Claude Code-specific. Multi-runtime support is a v0.2+ ROADMAP item.
+>
+> **Successor design:** this document remains the implemented v0.1 architecture. The planned Herdr execution layer, controller/worker state boundary, and Claude Code/Codex/OpenCode/Cursor adapters are specified in [the v0.2 orchestration design](.advanced-plans/specs/2026-08-26-herdr-multi-runtime-orchestration-design.md). Where the two differ, v0.1 describes current behaviour and the v0.2 spec describes the implementation target.
 
 ---
 

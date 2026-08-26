@@ -3,6 +3,8 @@
 This guide walks you through installing the full Advanced AI Workflows stack for the four-tool flow: gstack, advanced-planning, superpowers, and plannotator.
 
 > **Claude Code only in v0.1.** This guide assumes Claude Code. The CLAUDE.md routing, `.claude/skills/` install paths, and `.claude/settings.json` permission grants are Claude Code-specific. Multi-runtime support is a v0.2+ ROADMAP item.
+>
+> **Current-head notice:** the documented `gstack-to-plans` source is missing from the present repository head, so this v0.1 setup path is not a verified fresh-install route until the packaging repair lands. Use the [Herdr Windows operating guide](docs/herdr-windows-operations.md) for the v0.2 pilot and the [orchestration design](.advanced-plans/specs/2026-08-26-herdr-multi-runtime-orchestration-design.md) for the implementation target.
 
 Each tool can be installed independently — you only need the ones relevant to your workflow. Installing all four gives you the complete think → plan → review → execute → review pipeline.
 

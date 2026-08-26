@@ -18,39 +18,92 @@
 
 ---
 
-## v0.2 — Deferred
+## v0.2 — Herdr-managed multi-runtime orchestration
+
+**Status:** implementation-ready design, not yet built. Full specification: [2026-08-26-herdr-multi-runtime-orchestration-design.md](.advanced-plans/specs/2026-08-26-herdr-multi-runtime-orchestration-design.md).
+
+v0.2 adopts **Herdr as the terminal and session runtime** rather than building another multiplexer. AAW stays the workflow and integration layer; Advanced Planning stays the sole owner of programme state. Herdr supplies persistent native-Windows panes, Git worktrees, agent lifecycle detection, and session restore across Claude Code, Codex, OpenCode, and Cursor.
+
+> **Scope change from the earlier v0.2 plan.** The previous roadmap framed v0.2 as "port the glue layer to OpenCode and Gemini CLI". That framing is superseded. The target runtimes are now **Claude Code, Codex, OpenCode, and Cursor** — Gemini CLI is no longer a v0.2 target. The work is also larger than routing: it adds an execution runtime (Herdr), a controller/worker state boundary, versioned task and result contracts, and a packaging repair that must land before any new installer is published.
+
+> **Blocking defect carried into v0.2.** The repository documents and installs `.claude/skills/gstack-to-plans/SKILL.md`, but that source is not tracked (`.gitignore` whitelists only `setup-with-claude/`). Workstream 1B repairs this. Until it lands, the v0.1 Quick Start is not a verified fresh-install route at this head.
+
+### Delivery order
+
+```mermaid
+flowchart TD
+    baseline["0. Baseline + Herdr pilot"]
+    forks["1A. Fork synchronisation"]
+    repair["1B. AAW packaging repair"]
+    adapters["2. Advanced Planning adapters"]
+    routing["3. AAW multi-host routing"]
+    cli["4. AAW run registry + CLI"]
+    e2e["5. Cross-host E2E + release"]
+
+    baseline --> forks
+    baseline --> repair
+    forks --> routing
+    repair --> routing
+    repair --> adapters
+    adapters --> cli
+    routing --> cli
+    cli --> e2e
+```
+
+### Workstreams and exit gates
+
+| # | Workstream | Principal deliverables | Exit gate (abridged) |
+|---|---|---|---|
+| 0 | Safety baseline and Herdr pilot | Herdr stable installed natively on Windows; integrations for `claude`, `codex`, `opencode`, `cursor`; recorded repository heads; branch/tag/push policy | Herdr reports `working`, `idle/done`, `blocked` correctly; Windows paths with spaces work; a clean Herdr worktree removes without `--force` |
+| 1A | Synchronise component forks | gstack synced from upstream; Plannotator fast-forwarded; Superpowers rebranched from upstream with integration intent reimplemented (preferably as AAW-owned routing) | Upstream/fork relationships recorded at full SHAs; upstream suites pass; Superpowers behaviour matrix passes with and without Advanced Planning |
+| 1B | Repair AAW packaging | Restore and track `gstack-to-plans/SKILL.md`; packaging test that fails on any missing documented install source; installation manifest replacing stale-directory detection; deterministic non-interactive audit/install; generated compatibility manifest | Fresh checkout contains every documented source artifact; stale `.advanced-plans/` alone no longer counts as installed; install/refresh/audit/uninstall are idempotent |
+| 2 | Advanced Planning multi-runtime adapters | Host-neutral skills/schemas moved to core; Claude Code, Codex, OpenCode, Cursor adapter installers; immutable external-task and collected-evidence schemas; per-host human-review fallback text | All four hosts discover the same named core skills; only the control checkout updates programme state; evidence advances a loop only after schema and gate validation |
+| 3 | AAW multi-host routing and installer | Tracked `.aaw/project.toml`; fenced `AGENTS.md` block shared by Codex/OpenCode/Cursor; updated fenced `CLAUDE.md`; skills installed to `.agents/skills/` and `.claude/skills/`; manifest-driven component detection; runtime-specific Plannotator fallbacks | No host detected only by another host's private path; install/refresh preserve user-authored content outside fenced blocks; four-tool flow works on Claude, planning-to-task works on the other three |
+| 4 | AAW registry and dispatcher | Zero-dependency Python package and `aaw` entry point; SQLite migrations; Herdr CLI adapter; run state machine; `doctor`, `dispatch`, `list`, `inspect`, `prompt`, `attach`, `collect`, `review`, `stop`, `resume`, `clean`; redaction and retention policy | Interruption does not corrupt the registry; a restored session rebinds to its run; collector catches writes outside `allowed_paths`; `clean` refuses a dirty or non-terminal worktree |
+| 5 | End-to-end release | Windows-native compatibility matrix; fixture repos and recorded commands for all four hosts; fork/update and install/refresh/uninstall regression suites; full design-to-gate scenario across two providers | All critical acceptance scenarios pass from fresh clones; docs claim no integration that was only simulated; release commits match manifest SHAs |
+
+Release tags on completion: **AAW v0.2.0** and **Advanced Planning v0.17.0**.
+
+### Acceptance scenarios
+
+Eighteen scenarios (ACC-01 – ACC-18) gate the release. The load-bearing ones:
+
+- **ACC-01** — fresh Windows install in a path containing spaces; `doctor` passes and every configured host discovers the intended guidance.
+- **ACC-02** — stale `.advanced-plans/` without an adapter reports *data present, Advanced Planning absent*.
+- **ACC-04 / ACC-05** — Superpowers behaves correctly both with and without Advanced Planning; no AAW path is fabricated when AP is absent.
+- **ACC-07 / ACC-08** — concurrent writing tasks get distinct branches and one declared owner each; a worker attempting a planning-state edit fails collection.
+- **ACC-11 / ACC-12** — a Herdr server restart never yields a false `completed`; an idle agent with a failing test is marked review/failed, because idle is not success.
+- **ACC-13 / ACC-17** — writes outside declared scope block completion; `clean` refuses a dirty worktree rather than forcing.
+- **ACC-18** — the gate reviewer is a different model from the implementer, and findings are resolved or explicitly waived by a human.
+
+Full table: §15 of the design document.
+
+### Definition of done
+
+v0.2 is complete only when the three forks are current through reviewed branches; AAW contains every source artifact it tells users to install; Advanced Planning has tested adapters for all four runtimes; Herdr is the documented and tested execution backend on native Windows; worktree ownership and sole-planning-state-writer rules are enforced; task and result contracts are versioned and validated; the registry survives interruption and never equates terminal idle with success; install, refresh, sync, run, review, resume, and safe cleanup all have acceptance evidence; every user-facing claim matches observed behaviour; and release tags plus the compatibility manifest point at the exact tested commits.
+
+### Operating guides
+
+- [Herdr Windows operations](docs/herdr-windows-operations.md) — native-Windows pilot, worktrees, provider sessions, evidence, safe cleanup.
+- [Upstream sync playbook](docs/upstream-sync-playbook.md) — Workstream 1A procedures and current fork divergence.
+- [Upstream baseline snapshot](references/upstream-baseline-2026-08-26.json) — machine-readable heads, divergence, and sync strategy.
+- [Herdr kickoff prompt](docs/herdr-kickoff-prompt.md) — paste-ready controller prompt to start the programme.
+
+---
+
+## Deferred beyond v0.2
 
 ### gate-to-gstack-review glue skill
 
-When `/run-gate` produces a verdict, invoking gstack's `/plan-eng-review` or `/codex` for a second opinion is the natural next step. v0.1 leaves this gap open: gate verdicts are text-only and do not surface to gstack automatically.
+When `/run-gate` produces a verdict, invoking gstack's `/plan-eng-review` or `/codex` for a second opinion is the natural next step. Gate verdicts remain text-only and do not surface to gstack automatically.
 
-The v0.2 `gate-to-gstack-review` glue skill would mirror `gstack-to-plans` in the other direction: read the gate verdict JSON from `.advanced-plans/phases/phase-N/gate-verdicts/`, format it as a gstack-compatible summary, and invoke `/plan-eng-review` or `/codex` with the relevant context. The same ask-when-unsure semantics apply — Claude asks before invoking a review that will consume gstack capacity.
+The skill would mirror `gstack-to-plans` in the other direction: read the gate verdict JSON from `.advanced-plans/phases/phase-N/gate-verdicts/`, format it as a gstack-compatible summary, and invoke `/plan-eng-review` or `/codex` with the relevant context, with the same ask-when-unsure semantics.
 
-### Multi-runtime support (OpenCode, Gemini CLI)
+Note that v0.2's ACC-18 already requires a cross-model gate reviewer, so part of the original motivation is addressed by the dispatcher rather than by this skill.
 
-v0.1 is Claude Code only. CLAUDE.md routing, `.claude/skills/` install paths, Claude plugin install for plannotator/superpowers, and `.claude/settings.json` permission grants are all Claude Code-specific.
+### Gemini CLI support
 
-For v0.2+ multi-runtime support, the following needs to change:
-
-- **Routing rules** — OpenCode uses `.opencode/` config; Gemini CLI uses its own config format. The routing template would need per-runtime variants or a runtime-agnostic format both support.
-- **Install paths** — `.claude/skills/` is Claude Code-specific. OpenCode uses `.opencode/skills/` or similar. The `setup-with-claude` skill would need detection logic and per-runtime copy targets.
-- **Permission grants** — `.claude/settings.json` permission entries are Claude Code-specific. OpenCode uses `opencode.json`; Gemini CLI has its own permission model.
-- **Hook mechanism** — the `PostToolUse` hook is a Claude Code plugin protocol. OpenCode supports hooks via `opencode.json` with a different schema. The auto-trigger for `gstack-to-plans` would need a parallel OpenCode hook entry.
-- **Plugin install** — plannotator's Claude Code plugin (`/plugin install`) has no direct OpenCode equivalent. The manual install path (Bun build + slash command install) would be the OpenCode route until upstream OpenCode support lands.
-
-The meta-project's boundary-integration design means the underlying tools (gstack, advanced-planning) can already work on OpenCode independently. The v0.2 work is porting the glue and routing layer to be runtime-aware, not re-architecting the integration contracts.
-
-### Fixture-driven acceptance tests + CI workflow
-
-v0.1 has no automated tests. REG-1 through REG-7 are run manually against a fresh project. v0.2 would add:
-
-- Fixture project state for each REG scenario (pre-populated `.advanced-plans/state/`, mock gstack output, etc.)
-- CI workflow (GitHub Actions) that runs the setup skill and verifies the expected state at each step
-- Pinned sub-package version matrix testing (minimum + current for each sub-package)
-
-### Programmatic plannotator-detection refinement
-
-v0.1 detects plannotator by checking for `.claude/commands/plannotator-annotate.md`. This is fragile — plannotator could be installed with a different command path, or a non-plannotator tool could install the same file. v0.2 would add a more robust detection mechanism, possibly checking for the hook entry in `.claude/settings.json` or for a plannotator-specific marker file.
+Dropped from the v0.2 runtime set in favour of Codex and Cursor. The adapter pattern established in Workstream 2 is what a future Gemini CLI adapter would extend.
 
 ---
 

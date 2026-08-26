@@ -1,0 +1,86 @@
+{
+  "schema_version": 1,
+  "observed_date": "2026-08-26",
+  "refresh_required_before_execution": true,
+  "divergence_command": "git rev-list --left-right --count upstream/main...origin/main",
+  "divergence_order": [
+    "upstream_only",
+    "fork_only"
+  ],
+  "repositories": [
+    {
+      "name": "advanced-ai-workflows",
+      "classification": "owned",
+      "origin": "https://github.com/MungoHarvey/Advanced-AI-Workflows.git",
+      "origin_head": "3422a8c2da1764344c5992612c4c572ba61d7945",
+      "upstream": null,
+      "upstream_head": null,
+      "strategy": "feature branches; repair packaging before multi-runtime release"
+    },
+    {
+      "name": "advanced-planning",
+      "classification": "owned",
+      "origin": "https://github.com/MungoHarvey/advanced-planning.git",
+      "origin_head": "02b4b86e020bcaccc843228603bf6911450fc2d2",
+      "origin_tag": "v0.16.0",
+      "upstream": null,
+      "upstream_head": null,
+      "strategy": "add runtime-neutral task/evidence contracts and host adapters"
+    },
+    {
+      "name": "gstack",
+      "classification": "mirror",
+      "origin": "https://github.com/MungoHarvey/gstack.git",
+      "origin_head": "a5dc03bdd64124b302cb56927f0866edc0c11879",
+      "upstream": "https://github.com/garrytan/gstack.git",
+      "upstream_head": "ad8400543cd9ce8d07641362db48d44a95417e33",
+      "upstream_release_subject": "v1.69.0.0",
+      "upstream_only": 89,
+      "fork_only": 3,
+      "fork_only_commits": [
+        "a5dc03bdd64124b302cb56927f0866edc0c11879",
+        "973fedc82604216f5c602452c6e072a4d1884404",
+        "584794658f27dc71acdff7727d1e2bc7554f691e"
+      ],
+      "net_patch_paths": [],
+      "strategy": "create reviewed sync branch from current upstream; retain no fork patch"
+    },
+    {
+      "name": "superpowers",
+      "classification": "patch_pending_boundary_migration",
+      "origin": "https://github.com/MungoHarvey/superpowers.git",
+      "origin_head": "fde9f972a2a49fcaa116f53d59444f002589c34a",
+      "upstream": "https://github.com/obra/superpowers.git",
+      "upstream_head": "b36e0829c6d0140e93cfef2ca599b1b07d4a7797",
+      "upstream_tag": "v6.3.0",
+      "upstream_only": 241,
+      "fork_only": 4,
+      "fork_only_commits": [
+        "fde9f972a2a49fcaa116f53d59444f002589c34a",
+        "b8748476d8853141ebabd52312ee0475e35fdafb",
+        "f2d65a607f6310c1db9bac9b752b08910f21ed3b",
+        "dfd7ff5f33bed9bd23531afce548b7eadfd76db9"
+      ],
+      "net_patch_paths": [
+        "skills/brainstorming/SKILL.md",
+        "skills/using-superpowers/SKILL.md"
+      ],
+      "strategy": "start from current upstream and reimplement only tested AAW behaviour; prefer moving it to the AAW boundary"
+    },
+    {
+      "name": "plannotator",
+      "classification": "mirror",
+      "origin": "https://github.com/MungoHarvey/plannotator.git",
+      "origin_head": "4db7fcc5dabb3136da45afb301e0d354a213f555",
+      "upstream": "https://github.com/backnotprop/plannotator.git",
+      "upstream_head": "b381ecbe1200b07db8c050715c0f2c035a44b73a",
+      "upstream_tag": "v0.27.8",
+      "upstream_only": 442,
+      "fork_only": 0,
+      "fork_only_commits": [],
+      "net_patch_paths": [],
+      "origin_is_ancestor_of_upstream": true,
+      "strategy": "fast-forward on a reviewed sync branch"
+    }
+  ]
+}

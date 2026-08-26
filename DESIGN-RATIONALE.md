@@ -4,6 +4,8 @@ This document explains the decisions behind Advanced AI Workflows — why these 
 
 It is the companion to [ARCHITECTURE.md](ARCHITECTURE.md), which describes *what* the system does. This document describes *why* it is built this way.
 
+> **Version scope:** this records the v0.1 Claude Code design rationale. The [v0.2 orchestration design](.advanced-plans/specs/2026-08-26-herdr-multi-runtime-orchestration-design.md) retains boundary integration while adding Herdr, explicit fork policy, deterministic packaging, and multi-runtime adapters. Its decisions supersede v0.1 statements about execution sessions, status ownership, and the absence of package patches.
+
 ---
 
 ## Why Four Tools?

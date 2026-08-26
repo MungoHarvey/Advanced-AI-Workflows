@@ -163,6 +163,88 @@ else
   sed 's/^/        /' "$TMP/liar.txt" | tail -8
 fi
 
+# Every component the healthy fixture installs must appear as installed. Without
+# this the audit could quietly stop knowing about gstack-to-plans entirely and the
+# fixture that creates it would still pass - a reviewer found exactly that gap.
+for component in gstack advanced-planning gstack-to-plans; do
+  if grep -qE "^  $component +installed" "$TMP/det-text-1.txt"; then
+    ok "healthy project reports $component installed"
+  else
+    bad "healthy project reports $component installed"
+    grep -E "^  $component" "$TMP/det-text-1.txt" | sed 's/^/        /'
+  fi
+done
+
+# --------------------------------------------------------------------------
+# 5b. a manifest that names the wrong file is a finding, not a pass
+# --------------------------------------------------------------------------
+# The stale check asks "does the file it names exist". That is not the same
+# question as "is it the file detection found", and a manifest can satisfy the
+# first while lying about the second. This is that case.
+LIAR2="$TMP/wrong-path-manifest"
+mkdir -p "$LIAR2/unrelated"
+mkskill "$LIAR2" phase-plan-creator
+mkskill "$LIAR2" gstack-to-plans
+printf 'not a planning skill\n' > "$LIAR2/unrelated/SKILL.md"
+"$PY" "$AUDIT" --project "$LIAR2" --home "$PROFILE" \
+      --write-manifest --now 2026-08-26T15:00:00Z >/dev/null 2>&1
+"$PY" - "$LIAR2" <<'PYEOF'
+import json, os, sys
+root = os.path.abspath(sys.argv[1])
+path = os.path.join(root, ".aaw", "installed.json")
+doc = json.load(open(path, encoding="utf-8"))
+doc["components"]["advanced-planning"]["install_path"] = os.path.join(root, "unrelated")
+doc["components"]["advanced-planning"]["sentinel"] = os.path.join(root, "unrelated", "SKILL.md")
+open(path, "w", encoding="utf-8", newline="\n").write(json.dumps(doc, indent=2) + "\n")
+PYEOF
+"$PY" "$AUDIT" --project "$LIAR2" --home "$PROFILE" > "$TMP/liar2.txt" 2>/dev/null
+code=$?
+if [ "$code" -eq 1 ] && grep -q "\[manifest-mismatch\]" "$TMP/liar2.txt"; then
+  ok "a manifest pointing at the wrong file is reported as a mismatch"
+else
+  bad "a manifest pointing at the wrong file is reported as a mismatch (exit $code)"
+  sed 's/^/        /' "$TMP/liar2.txt" | tail -8
+fi
+
+# --------------------------------------------------------------------------
+# 5c. a manifest the schema rejects is exit 1, not exit 2
+# --------------------------------------------------------------------------
+# "I could not check" and "I checked and it is wrong" are different answers. A
+# malformed components value used to raise inside the audit and come back as
+# exit 2, hiding a finding the validator had already produced.
+BROKEN="$TMP/broken-manifest"
+mkdir -p "$BROKEN/.aaw"
+mkskill "$BROKEN" phase-plan-creator
+"$PY" - "$BROKEN/.aaw/installed.json" <<'PYEOF'
+import json, sys
+json.dump({"schema_version": 1, "generated_at": "2026-08-26T15:00:00Z",
+           "generated_by": "test", "platform": "windows",
+           "project_root": "C:\\somewhere", "components": 1},
+          open(sys.argv[1], "w", encoding="utf-8"))
+PYEOF
+"$PY" "$AUDIT" --project "$BROKEN" --home "$PROFILE" > "$TMP/broken.txt" 2>"$TMP/broken.err"
+code=$?
+if [ "$code" -eq 1 ] && grep -q "\[manifest-invalid\]" "$TMP/broken.txt"; then
+  ok "a schema-invalid manifest exits 1 with [manifest-invalid], not 2"
+else
+  bad "a schema-invalid manifest exits 1 with [manifest-invalid], not 2 (exit $code)"
+  sed 's/^/        /' "$TMP/broken.err" | head -3
+  sed 's/^/        /' "$TMP/broken.txt" | tail -5
+fi
+
+# --------------------------------------------------------------------------
+# 5d. --now must be a real instant, not merely the right shape
+# --------------------------------------------------------------------------
+"$PY" "$AUDIT" --project "$HEALTHY" --home "$PROFILE" \
+      --write-manifest --now "2026-99-99T99:99:99Z" >/dev/null 2>"$TMP/month99.err"
+code=$?
+if [ "$code" -eq 2 ] && grep -q "not a real instant" "$TMP/month99.err"; then
+  ok "--now 2026-99-99T99:99:99Z is rejected as not a real instant"
+else
+  bad "--now 2026-99-99T99:99:99Z is rejected as not a real instant (exit $code)"
+  sed 's/^/        /' "$TMP/month99.err" | head -3
+fi
+
 # --------------------------------------------------------------------------
 # 6. cannot-run is exit 2, and is not confused with either of the others
 # --------------------------------------------------------------------------

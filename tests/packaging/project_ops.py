@@ -44,6 +44,7 @@ ROUTING_SOURCE = os.path.join(SKILL_DIR, "references", "claude-md-routing.md")
 SETTINGS_SOURCE = os.path.join(SKILL_DIR, "references", "settings-snippet.json")
 GLUE_SOURCE = os.path.join(REPO, ".claude", "skills", "gstack-to-plans")
 
+EXIT_NEEDS_HUMAN = 3   # a guard in the skill says to ask; a script cannot, so it stops
 OURS = "aaw-hook"   # the marker Step U6 uses to recognise the hook we added
 BEGIN = "<!-- aaw-routing:begin -->"
 END = "<!-- aaw-routing:end -->"
@@ -140,6 +141,18 @@ def _strip_annotations(value):
     return value
 
 
+def _survivors(post, matcher):
+    """The PostToolUse entries that would remain after our hook is removed."""
+    kept = []
+    for item in post:
+        if item.get("matcher") != matcher["matcher"]:
+            kept.append(item)
+            continue
+        if [h for h in item.get("hooks", []) if OURS not in (h.get("command") or "")]:
+            kept.append(item)
+    return kept
+
+
 def hook_commands(matcher):
     return [h.get("command") for h in matcher.get("hooks", [])]
 
@@ -178,19 +191,39 @@ def install_settings(project):
 
 
 def uninstall_settings(project):
+    """Step U6. Returns "removed", "absent", or "refused".
+
+    U6 ends with a guard: if removing our entries would leave an empty array that
+    another tool also uses, show the diff and ask rather than writing blindly. A
+    non-interactive script cannot ask, so it does the other half of that sentence -
+    it does not write - and says which array it would have emptied. Silently
+    deleting the key, which is what it did before review, is precisely the "writing
+    blindly" the step forbids.
+    """
     path = os.path.join(project, ".claude", "settings.json")
     if not os.path.isfile(path):
-        return
-    doc = json.loads(read(path))
+        return "absent"
+    original = read(path)
+    doc = json.loads(original)
     perms, matcher = snippet()
+
+    would_empty = []
+    allow = doc.get("permissions", {}).get("allow")
+    if isinstance(allow, list) and allow and not [a for a in allow if a not in perms]:
+        would_empty.append("permissions.allow")
+    post_check = doc.get("hooks", {}).get("PostToolUse")
+    if isinstance(post_check, list) and post_check and not _survivors(post_check, matcher):
+        would_empty.append("hooks.PostToolUse")
+    if would_empty:
+        sys.stderr.write(
+            "project_ops: refused to edit settings.json - removing our entries would "
+            "empty %s, which Step U6 says to confirm with the user first. Nothing was "
+            "changed.\n" % " and ".join(would_empty))
+        return "refused"
 
     allow = doc.get("permissions", {}).get("allow")
     if isinstance(allow, list):
         doc["permissions"]["allow"] = [a for a in allow if a not in perms]
-        if not doc["permissions"]["allow"]:
-            del doc["permissions"]["allow"]
-        if not doc["permissions"]:
-            del doc["permissions"]
 
     post = doc.get("hooks", {}).get("PostToolUse")
     if isinstance(post, list):
@@ -209,24 +242,30 @@ def uninstall_settings(project):
                 item["hooks"] = others
                 kept.append(item)
         doc["hooks"]["PostToolUse"] = kept
-        if not kept:
-            del doc["hooks"]["PostToolUse"]
-        if not doc["hooks"]:
-            del doc["hooks"]
 
-    if doc:
-        write(path, json.dumps(doc, indent=2) + "\n")
-    else:
-        os.remove(path)
+    result = json.dumps(doc, indent=2) + "\n"
+    if result == original:
+        # Nothing of ours was in there. Writing an identical file is harmless
+        # until the day it is not identical - a reformat, a changed newline -
+        # so do not write at all.
+        return "unchanged"
+    write(path, result)
+    return "removed"
 
 
 # ---------------------------------------------------------------- glue skill
 
 def install_glue(project, source=GLUE_SOURCE):
+    """Step 6. Case B - already installed - is "note it and continue"."""
     dest = os.path.join(project, ".claude", "skills", "gstack-to-plans")
     if os.path.isdir(dest):
-        shutil.rmtree(dest)
+        # It used to rmtree first. That is not what Step 6 says, and the difference
+        # is not cosmetic: a user who added a note or a second file to the glue skill
+        # directory would have lost it on the next refresh. Reviewed and corrected.
+        sys.stderr.write("project_ops: gstack-to-plans already installed - left as it is\n")
+        return "present"
     shutil.copytree(source, dest)
+    return "installed"
 
 
 def uninstall_glue(project):
@@ -262,9 +301,11 @@ def fingerprint(project):
             rel = os.path.relpath(full, project).replace(os.sep, "/")
             with open(full, "rb") as fh:
                 blob = fh.read()
-            # Compare content, not line endings: this test is about install logic,
-            # not about autocrlf, and conflating the two hides both.
-            blob = blob.replace(b"\r\n", b"\n")
+            # No line-ending normalisation. It used to fold CRLF to LF here, which
+            # made every "byte-identical" claim in the test one step weaker than it
+            # sounded: a change that only touched line endings was invisible. If the
+            # install rewrites a user file with different endings, that IS a change
+            # to the file and the test should say so.
             rows.append("%s  %s" % (hashlib.sha256(blob).hexdigest(), rel))
     return "\n".join(rows) + ("\n" if rows else "")
 
@@ -289,11 +330,14 @@ def main(argv=None):
         install_settings(project)
         install_glue(project, args.source)
     elif args.action == "uninstall":
+        # Step U1 is unambiguous: if either marker is absent, STOP, and do not
+        # proceed to the remaining uninstall steps until the user has said to. An
+        # earlier version of this file carried on and a comment claiming the skill
+        # said so. It does not. The comment was wrong and the behaviour with it.
         if uninstall_routing(project) == "refused":
-            # The other artefacts are still safe to remove, and the skill says so:
-            # a hand-edited CLAUDE.md does not block the rest of the uninstall.
-            pass
-        uninstall_settings(project)
+            return EXIT_NEEDS_HUMAN
+        if uninstall_settings(project) == "refused":
+            return EXIT_NEEDS_HUMAN
         uninstall_glue(project)
         uninstall_manifest(project)
     else:

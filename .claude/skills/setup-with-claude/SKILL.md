@@ -311,10 +311,17 @@ Report the manifest as written only after it validates.
 Superseded. Do not create it. Its paths were written with `~`, which is exactly the
 ambiguity `.aaw/installed.json` exists to remove.
 
-**Leave an existing one alone.** It is not this skill's file to delete, another tool may
-read it, and removing it silently is the kind of tidying that costs someone an afternoon.
-Report it under Step 1c as data. If the user asks, tell them it can go once nothing they
-use reads it.
+**Setup and `--refresh` leave an existing one alone.** Removing it silently, during a run
+the user asked for something else, is the kind of tidying that costs someone an afternoon;
+another tool may still read it. Report it under Step 1c as data. If the user asks, tell
+them it can go once nothing they use reads it.
+
+`--uninstall` is the exception, and deliberately so: this file is AAW's own v0.1
+bookkeeping, so removing it belongs in the mode whose whole job is removing AAW's
+artefacts, and Step U2 names it in the confirmation before anything is deleted. An
+earlier version of this section said flatly that it was "not this skill's file to
+delete", which contradicted Steps U2 and U5 four hundred lines further down. A reviewer
+found the contradiction; this is which half was wrong.
 
 ### Step 8: Verify and report
 

@@ -25,7 +25,9 @@ Determinism
 
 Two runs against unchanged inputs produce byte-identical output. Nothing here
 reads the clock, the process id, the environment beyond the profile it is told to
-use, or any iteration order that is not sorted. `--write-manifest` needs a
+use, or any iteration order that is not sorted. Note the shape of that claim: with
+`--home` the profile is an argument, and without it the live profile is read and
+becomes one of the inputs the determinism is relative to. Tests always pass it. `--write-manifest` needs a
 timestamp, so it takes one with `--now` and refuses to invent one in a run whose
 output is supposed to be reproducible.
 """
@@ -37,6 +39,7 @@ import json
 import os
 import re
 import sys
+from datetime import datetime
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)
@@ -49,6 +52,25 @@ EXIT_CANNOT_RUN = 2
 DEFAULT_REQUIRED = ["gstack", "advanced-planning"]
 
 ISO_UTC = re.compile(r"^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$")
+
+
+def bad_timestamp(value):
+    """Return a reason string if `value` is not a real UTC instant, else None.
+
+    The regex alone accepts 2026-99-99T99:99:99Z, which is the right shape and not
+    a date. A reviewer found that by reading the pattern rather than the intent, so
+    the calendar check is done here where it can be, rather than expressed as a
+    JSON Schema `format` the built-in validator does not implement.
+    """
+    if not isinstance(value, str):
+        return "generated_at must be a string, got %s" % type(value).__name__
+    if not ISO_UTC.match(value):
+        return "generated_at %r is not UTC ISO 8601 like 2026-08-26T15:00:00Z" % value
+    try:
+        datetime.strptime(value, "%Y-%m-%dT%H:%M:%SZ")
+    except ValueError as exc:
+        return "generated_at %r has the right shape but is not a real instant - %s" % (value, exc)
+    return None
 
 
 def load_detect():
@@ -160,13 +182,29 @@ def audit_manifest(project, result):
                     "detail": message,
                 })
 
+    reason = bad_timestamp(doc.get("generated_at"))
+    if reason:
+        findings.append({"id": "manifest-invalid", "component": "-", "detail": reason})
+
     # A manifest that claims something the filesystem denies is worse than none,
-    # because it is believed. Check every sentinel it names.
-    for name in sorted(doc.get("components", {})):
-        entry = doc["components"][name]
+    # because it is believed. Two separate questions are asked of every entry:
+    # does the file it names exist, and is it the file detection would have found?
+    # Only the first was asked before, and a reviewer showed what that missed: a
+    # manifest naming an unrelated SKILL.md as advanced-planning passed as HEALTHY.
+    components = doc.get("components")
+    if not isinstance(components, dict):
+        # The schema errors above already say the document is wrong. Stopping here
+        # keeps that an exit-1 finding instead of letting an iteration over a
+        # non-mapping raise and turn the whole run into "could not check".
+        return findings
+
+    for name in sorted(components):
+        entry = components[name]
         if not isinstance(entry, dict) or not entry.get("installed"):
             continue
+        live = result["components"].get(name)
         sentinel = entry.get("sentinel")
+
         if sentinel and not os.path.isfile(sentinel):
             findings.append({
                 "id": "manifest-stale",
@@ -174,14 +212,47 @@ def audit_manifest(project, result):
                 "detail": "the manifest says %s is installed, but its sentinel %s "
                           "does not exist" % (name, sentinel),
             })
-        live = result["components"].get(name)
-        if live is not None and not live["installed"] and sentinel is None:
+        elif live is not None and not live["installed"]:
             findings.append({
                 "id": "manifest-stale",
                 "component": name,
                 "detail": "the manifest says %s is installed and detection disagrees" % name,
             })
+
+        if live is None:
+            findings.append({
+                "id": "manifest-unknown-component",
+                "component": name,
+                "detail": "the manifest records %r, which this stack does not know" % name,
+            })
+            continue
+
+        # The sentinel existing is not the same as it being ours. Compare what the
+        # manifest recorded against what detection independently found.
+        for field in ("install_path", "sentinel", "scope"):
+            claimed = entry.get(field)
+            found = live.get(field)
+            if claimed is None or found is None:
+                continue
+            if _same(field, claimed, found):
+                continue
+            findings.append({
+                "id": "manifest-mismatch",
+                "component": name,
+                "detail": "the manifest records %s %s = %s, detection found %s"
+                          % (name, field, claimed, found),
+            })
     return findings
+
+
+def _same(field, a, b):
+    if field == "scope":
+        return a == b
+    try:
+        return os.path.normcase(os.path.realpath(a)) == os.path.normcase(os.path.realpath(b))
+    except OSError:
+        return a == b
+
 
 
 def render_text(findings, result, required):
@@ -242,8 +313,9 @@ def render_json(findings, result, required):
 
 
 def write_manifest(project, result, now, generated_by):
-    if not ISO_UTC.match(now):
-        raise ValueError("--now must be UTC ISO 8601 like 2026-08-26T15:00:00Z, got %r" % now)
+    reason = bad_timestamp(now)
+    if reason:
+        raise ValueError("--now: %s" % reason)
     doc = {k: v for k, v in result.items() if k != "data_directories"}
     doc["generated_at"] = now
     doc["generated_by"] = generated_by

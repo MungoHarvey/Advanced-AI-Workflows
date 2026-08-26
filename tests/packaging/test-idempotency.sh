@@ -299,24 +299,43 @@ fi
 echo ""
 
 # --------------------------------------------------------------------------
-# 5. a hand-edited CLAUDE.md is refused, not guessed at
+# 5. half a fence: Step U1 says STOP, and STOP means the whole uninstall
 # --------------------------------------------------------------------------
 echo "--- stage 5: half a fence ----------------------------------------"
 Q="$TMP/hand-edited"
 mkdir -p "$Q/.claude"
 printf '# Notes\n\n<!-- aaw-routing:begin -->\n## Routing\nsomebody deleted the end marker\n' \
   > "$Q/CLAUDE.md"
+"$PY" "$OPS" install --project "$Q" >/dev/null 2>&1
+"$PY" "$AUDIT" --project "$Q" --home "$PROFILE" --write-manifest --now "$NOW" >/dev/null 2>&1
+# Break the fence again: the install just repaired it.
+printf '# Notes\n\n<!-- aaw-routing:begin -->\n## Routing\nsomebody deleted the end marker\n' \
+  > "$Q/CLAUDE.md"
 cp "$Q/CLAUDE.md" "$TMP/hand-edited-before.md"
+
 "$PY" "$OPS" uninstall --project "$Q" >/dev/null 2>"$TMP/refuse.err"
-if cmp -s "$TMP/hand-edited-before.md" "$Q/CLAUDE.md"; then
-  ok "an incomplete fence leaves CLAUDE.md byte-identical"
-else
-  bad "an incomplete fence leaves CLAUDE.md byte-identical"
-  diff "$TMP/hand-edited-before.md" "$Q/CLAUDE.md" | head -6 | sed 's/^/        /'
-fi
+code=$?
+[ "$code" -eq 3 ] && ok "an incomplete fence exits 3 (needs a human)" \
+                  || bad "an incomplete fence exits 3 (needs a human), got $code"
+
+cmp -s "$TMP/hand-edited-before.md" "$Q/CLAUDE.md" \
+  && ok "and leaves CLAUDE.md byte-identical" \
+  || bad "and leaves CLAUDE.md byte-identical"
+
 grep -q 'refused to edit CLAUDE.md' "$TMP/refuse.err" \
   && ok "and says so instead of failing silently" \
   || bad "and says so instead of failing silently"
+
+# Step U1 says do not proceed to the remaining uninstall steps. Prove it did not.
+[ -f "$Q/.claude/skills/gstack-to-plans/SKILL.md" ] \
+  && ok "U1 STOP: the glue skill was not removed either" \
+  || bad "U1 STOP: the glue skill was not removed either"
+[ -f "$Q/.aaw/installed.json" ] \
+  && ok "U1 STOP: the manifest was not removed either" \
+  || bad "U1 STOP: the manifest was not removed either"
+grep -q 'advanced-plans' "$Q/.claude/settings.json" \
+  && ok "U1 STOP: settings.json was not edited either" \
+  || bad "U1 STOP: settings.json was not edited either"
 echo ""
 
 # --------------------------------------------------------------------------
@@ -353,6 +372,55 @@ else
   bad "every recorded path is inside the temp tree"
   sed 's/^/        /' "$TMP/paths.txt" | head -6
 fi
+echo ""
+
+# --------------------------------------------------------------------------
+# 7. an existing glue skill is left alone - Step 6 Case B
+# --------------------------------------------------------------------------
+echo "--- stage 7: an existing glue skill ------------------------------"
+G="$TMP/has-glue"
+mkdir -p "$G/.claude/skills/gstack-to-plans"
+printf -- '---\nname: gstack-to-plans\n---\nmy own edited copy\n' \
+  > "$G/.claude/skills/gstack-to-plans/SKILL.md"
+printf 'a note the user added next to the skill\n' \
+  > "$G/.claude/skills/gstack-to-plans/NOTES.md"
+"$PY" "$OPS" install --project "$G" >/dev/null 2>"$TMP/glue.err"
+
+[ -f "$G/.claude/skills/gstack-to-plans/NOTES.md" ] \
+  && ok "install did not delete a file the user added beside the glue skill" \
+  || bad "install did not delete a file the user added beside the glue skill"
+
+grep -q 'my own edited copy' "$G/.claude/skills/gstack-to-plans/SKILL.md" \
+  && ok "install did not overwrite an existing glue SKILL.md" \
+  || bad "install did not overwrite an existing glue SKILL.md"
+
+grep -q 'already installed' "$TMP/glue.err" \
+  && ok "and said it was already installed" || bad "and said it was already installed"
+echo ""
+
+# --------------------------------------------------------------------------
+# 8. removing our entries would empty an array - Step U6 says ask first
+# --------------------------------------------------------------------------
+echo "--- stage 8: uninstall that would empty an array -----------------"
+E="$TMP/ours-only"
+mkdir -p "$E/.claude"
+printf '{}\n' > "$E/.claude/settings.json"
+"$PY" "$OPS" install --project "$E" >/dev/null 2>&1
+cp "$E/.claude/settings.json" "$TMP/ours-only-before.json"
+
+"$PY" "$OPS" uninstall --project "$E" >/dev/null 2>"$TMP/empty.err"
+code=$?
+[ "$code" -eq 3 ] && ok "exits 3 rather than writing blindly" \
+                  || bad "exits 3 rather than writing blindly, got $code"
+cmp -s "$TMP/ours-only-before.json" "$E/.claude/settings.json" \
+  && ok "and leaves settings.json byte-identical" \
+  || bad "and leaves settings.json byte-identical"
+grep -q 'permissions.allow and hooks.PostToolUse' "$TMP/empty.err" \
+  && ok "and names both arrays it would have emptied" \
+  || { bad "and names both arrays it would have emptied"; sed 's/^/        /' "$TMP/empty.err"; }
+[ -d "$E/.claude/skills/gstack-to-plans" ] \
+  && ok "and stopped before removing the glue skill" \
+  || bad "and stopped before removing the glue skill"
 echo ""
 
 echo "--- after install ------------------------------------------------"

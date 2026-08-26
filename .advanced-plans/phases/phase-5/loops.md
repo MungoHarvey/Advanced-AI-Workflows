@@ -261,10 +261,13 @@ todos:
       - "the reviewing and implementing providers are named and differ — ACC-18"
       - "the reviewer is asked specifically whether the fenced block over-reaches into user instructions"
       - "if a fork patch remains, it is host-neutral, minimal, against current upstream, and justified in writing"
+      - "ADDED 2026-08-26, before the run. Rotate away from codex if a fresh kind can be started unattended, and if it cannot, say why in the evidence rather than quietly reusing the phase-4 reviewer."
+      - "ADDED 2026-08-26, after the run. Where two reviewers contradict each other, the controller reads the lines and records which one is right. A gate that averages its reviewers is not a gate."
     evidence: "Verdict, findings, reviewer model, the human resolution or waiver of each finding, and the mirror-or-patch outcome"
     gate: "human"
     outcome: "The higher-risk lane carries an independent verdict and an explicit statement of what the fork now is"
     status: pending
+    review: "REVIEWS COMPLETE 2026-08-26; the human gate is OPEN. Two providers, both different from the block's implementer (claude/Opus 5): codex on gpt-5.6-terra/medium (it self-reported gpt-5.6-sol and was wrong - argv, the pane banner and config.toml all say terra) and opencode on Qwen3.5-397B. Both returned PASS WITH FINDINGS. UNANIMOUS on the two questions this todo names: the block does NOT over-reach into user instructions, and the fork should be published as a PURE MIRROR retaining no patch. They CONTRADICTED each other on manifest gating; the controller read the lines and codex is right. Consolidated finding R1 (major, CONFIRMED): eight routes - front-door rules 1,2,3,4,6,7 plus Companion Tools :152-159 and the Closing Instruction :164-171 - name a companion command with no manifest gate, so F1 was fixed as an instance when it was really a class. R2 (minor/major, both reviewers): the precedence claim at :94-99 is broader than the three additions it protects. R3 (minor, cosmetic). R4: both independently reached the already-recorded limitation that the proofs cover one harness, and Qwen sharpened it - the fixtures' AGENTS.md was placed by hand, not by aaw init. Verdicts at .advanced-plans/gate-verdicts/phase-5-loop-002-7-{codex,qwen}.json; narrative in the evidence file. AWAITING the human resolution or waiver of R1-R4 and the authorisation to publish the mirror."
     complexity: medium
     priority: high
 

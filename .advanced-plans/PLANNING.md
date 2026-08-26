@@ -4,7 +4,7 @@ current_phase: 5
 phase_name: "Superpowers Behavioural Port"
 plan_file: .advanced-plans/phases/phase-5/plan.md
 loops_file: .advanced-plans/phases/phase-5/loops.md
-status: in progress — ralph-loop-001 COMPLETE 2026-08-26 (behaviour matrix written, cross-model design gate PASSED after a BLOCKED verdict was resolved). feat/aaw-packaging-repair merged into this branch (5524580), so the installation manifest is available; ralph-loop-002 todos 1-6 COMPLETE 2026-08-26. The ACC-04/ACC-05 behaviour proofs passed on the sixth round after catching two real defects in the routing block (rule 5 contradicted Brainstorming addition 3; the block never claimed precedence over a skill's own defaults). Both fixed and re-proven. The fork patch against upstream measures ZERO - mirror/upstream-2026-08-26 and upstream/main are the same commit. Only loop-002-7, the cross-model human gate, remains.
+status: in progress — ralph-loop-001 COMPLETE 2026-08-26 (behaviour matrix written, cross-model design gate PASSED after a BLOCKED verdict was resolved). feat/aaw-packaging-repair merged into this branch (5524580), so the installation manifest is available; ralph-loop-002 todos 1-6 COMPLETE 2026-08-26. The ACC-04/ACC-05 behaviour proofs passed on the sixth round after catching two real defects in the routing block (rule 5 contradicted Brainstorming addition 3; the block never claimed precedence over a skill's own defaults). Both fixed and re-proven. The fork patch against upstream measures ZERO - mirror/upstream-2026-08-26 and upstream/main are the same commit. loop-002-7 REVIEWED 2026-08-26 and its human gate is now OPEN - two providers different from the implementer (codex on gpt-5.6-terra/medium, opencode on Qwen3.5-397B) both returned PASS WITH FINDINGS, and both answered the two questions the todo names the same way - the block does not over-reach into user instructions, and the fork should be published as a pure mirror retaining no patch. They contradicted each other on manifest gating and the controller adjudicated by reading the lines. The consolidated major finding is that F1 was fixed as an instance when it was a class - EIGHT routes name a companion command with no manifest gate. Nothing is closed until the user resolves or waives R1-R4.
 current_loop: ralph-loop-002
 gate_status: loop-001 design gate PASSED 2026-08-26 (reviewer codex/GPT-5.6 Sol, author claude/Opus 5 — ACC-18 satisfied)
 loops_total: 2
@@ -31,6 +31,19 @@ blocking_decisions:
   - "none open"
 
 open_items:
+  - "R1, the loop-002-7 major finding, is UNRESOLVED and blocks nothing else: eight routes in
+    the fenced block name a companion tool's command without gating on the manifest
+    predicate - front-door rules 1, 2, 3, 4, 6 and 7, the Companion Tools section, and the
+    Closing Instruction. The block's own lines 32-34 say a missing or malformed manifest
+    means treat every component as not installed, and then these eight never consult it. The
+    six ACC rounds could not have caught it: every fixture had a well-formed manifest, so
+    the missing and malformed cases the block legislates for were never exercised."
+  - "Neither gemini nor cursor can be started unattended on this machine - gemini has no
+    stored API key at all, and cursor raises its workspace-trust modal even in an ordinary
+    long-used checkout, not just in a fresh worktree. Both report idle/interactive_ready
+    while sitting on the dialog. Recorded as B11 in herdr-ops/FINDINGS.md. Consequence for
+    the programme: rotate-the-reviewer has a real fleet of two, codex and opencode, until a
+    human clears those dialogs once."
   - "An instruction file is advisory: verified 2026-08-26 that opencode DOES auto-load a
     project AGENTS.md before the first user message (a context probe quoted the routing
     block back verbatim having run no tool at all), and that a worker with the block in

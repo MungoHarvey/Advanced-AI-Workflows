@@ -1,0 +1,48 @@
+{
+  "phase": "phase-5",
+  "loop": "ralph-loop-002",
+  "todo": "loop-002-7",
+  "attempt": 1,
+  "timestamp": "2026-08-26T16:19:57Z",
+  "agent": "rev-codex",
+  "backend": "codex",
+  "model_claimed": "gpt-5.6-sol",
+  "model_actual": "gpt-5.6-terra, reasoning effort medium",
+  "model_evidence": "argv was [codex] with no -m; the pane banner read 'model: gpt-5.6-terra medium'; ~/.codex/config.toml sets model=gpt-5.6-terra and model_reasoning_effort=medium. The reviewer's own closing line said gpt-5.6-sol and is wrong. The out-of-band evidence is what is recorded.",
+  "implementer": "claude / Opus 5 (the routing block); opencode / Qwen3.5-397B (the ACC behaviour runs)",
+  "differs_from_implementer": true,
+  "verdict": "pass_with_findings",
+  "confidence": 88,
+  "findings": [
+    {
+      "severity": "major",
+      "location": ".claude/skills/setup-with-claude/references/claude-md-routing.md:42",
+      "description": "Front-door rules 1, 2, 3, 4, 6 and 7 each invoke a companion tool's command without gating on the manifest predicate, so they can fire in a project where the manifest says the component is absent, or is missing or malformed - the case the block's own lines 32-34 say must be treated as not installed. Rule 5 was gated by the F1 fix; these were not.",
+      "evidence": "Cited /office-hours :42, /plan-and-phase :47, /new-phase :53, brainstorming :59, the gstack review commands :73, /run-gate :79.",
+      "recommendation": "Gate each route on components[<name>][installed] == true and give each one an upstream or fallback route."
+    },
+    {
+      "severity": "minor",
+      "location": ".claude/skills/setup-with-claude/references/claude-md-routing.md:94",
+      "description": "The sentence 'Where this section and the skill disagree about a default, this section wins.' is broader than necessary alongside the lines 7-10 user-content disclaimer. Consistent as written, but quotable out of context.",
+      "evidence": "Contrasted :7 ('the rest of this file wins') with :94, and noted that :95-99 already scopes it to a skill's built-in defaults.",
+      "recommendation": "Say explicitly that it wins over the upstream skill's built-in default and never over user-authored instructions outside the markers."
+    },
+    {
+      "severity": "minor",
+      "location": ".advanced-plans/evidence/2026-08-26-superpowers-port.md:336",
+      "description": "The ACC-04/ACC-05 behavioural evidence validates the opencode harness only, not both claimed installation targets.",
+      "evidence": "Cited the evidence file's own concession that an instruction file is advisory and that four of five productive with-AP rounds applied it (:471).",
+      "recommendation": "Run the same clean with-AP/without-AP fixture acceptance test through Claude Code using its installed CLAUDE.md block."
+    }
+  ],
+  "answers": {
+    "Q1_overreach": "Consistent, but the precedence sentence is unnecessarily categorical. It should not cause an agent to override a user instruction outside the markers.",
+    "Q2_predicate": "The predicate definition and the missing/malformed handling are sound, and the Advanced Planning redirects at :118-127 and :131-145 are correctly conditional. The front-door routes are not.",
+    "Q3_host_neutral": "Yes. No harness path, no host-specific permission syntax. AskUserQuestion is correctly an example with a stated fallback and should stay that way.",
+    "Q4_proofs": "Materially worth something - pre-run hash baselines, manifest-differing fixtures, an effective decoy, and six rounds that found two genuine defects and were rerun after the fixes. Not portable evidence beyond opencode.",
+    "Q5_mirror_or_patch": "Publish as a pure mirror; retain no patch. The four intents live in the AAW-owned block, and a patch would reintroduce the merge burden for nothing."
+  },
+  "loops_to_revert": [],
+  "failure_notes": []
+}

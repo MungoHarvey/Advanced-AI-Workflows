@@ -529,3 +529,148 @@ prompt places outside this session's authority — it stops at the `loop-002-7` 
 real defects in the deliverable — one a contradiction between two halves of the block, the
 other a missing precedence claim over the skills the block steers. Both are fixed and both
 fixes are re-proven, not asserted.
+
+---
+
+## loop-002-7 — the cross-model gate
+
+**Date**: 2026-08-26. **Status**: reviews complete, **findings awaiting human resolution**.
+This todo's gate is `human`, so nothing below is closed by the controller.
+
+### Who reviewed, and who could not
+
+`loop-002-7` asks for "a provider different from the implementer". The implementer of the
+artefact under review — the fenced routing block — is **`claude`/Opus 5**, the controller.
+`opencode`/Qwen3.5-397B ran the ACC-04/ACC-05 behaviour rounds but wrote none of the block.
+
+The intended rotation was away from `codex`, which had already served as the gate reviewer
+for phase 4 twice (`phase-4-attempt-1-codex.json`, `-attempt-2-codex.json`). **Both fresh
+kinds refused to start unattended**, in an ordinary long-used checkout rather than the fresh
+worktree the known hazard describes:
+
+| kind | dialog | herdr's report |
+|---|---|---|
+| `gemini` | "Please enter your Gemini API key" — no stored credential on this machine | `idle`, `interactive_ready: true` |
+| `cursor` | full-screen "Workspace Trust Required" for `~/Coding/Advanced-AI-Workflows` | `idle`, `interactive_ready: true` |
+
+Neither dialog was answered — a `blocked` agent is the user's to clear, and a trust
+decision is not the controller's to make. Both are recorded as **B11** in
+`~/Coding/herdr-ops/FINDINGS.md`, together with the fact that gemini now shows the same
+state mis-detection already logged for cursor in B2. The practical consequence is worth
+stating plainly: of five kinds, **only `opencode` and `codex` can be dispatched without a
+human at the keyboard**, so "rotate the reviewer across kinds" has a real fleet of two.
+
+So the gate ran on both of them, in parallel, from one envelope, byte-identical:
+
+| | reviewer 1 | reviewer 2 |
+|---|---|---|
+| kind | `codex` | `opencode` |
+| model **claimed** | `gpt-5.6-sol` | `Qwen/Qwen3.5-397B-A17B-FP8` |
+| model **actual** | `gpt-5.6-terra`, effort `medium` | `Qwen3.5-397B` via the Edinburgh ELM proxy |
+| verdict | PASS WITH FINDINGS | PASS WITH FINDINGS |
+
+**codex misreported its own model.** `argv` was `["codex"]` with no `-m`, the pane banner
+read `model: gpt-5.6-terra medium`, and `~/.codex/config.toml` pins
+`model = "gpt-5.6-terra"` / `model_reasoning_effort = "medium"`. Three independent
+out-of-band sources against one self-report; the self-report loses. This is the argument
+for reading `argv` rather than asking a worker what it is, demonstrated rather than
+asserted.
+
+The envelope asked five questions and forbade writing any file. It asked Q1 in the exact
+terms the loop requires — *whether the fenced block over-reaches into user instructions* —
+and Q5 in the terms the loop requires: *mirror, or a justified patch*.
+
+### Where they agree
+
+**Q3, host-neutrality — no change needed, unanimously.** No `.claude/`, `.cursor/` or
+`.opencode/` path; no host-specific permission syntax; and `AskUserQuestion` is correctly
+presented as *an example with a stated fallback* rather than a requirement. Qwen's verdict
+was "What should change: Nothing." That is the direct vindication of the SP-3 decision to
+put the structured-question preference in the block instead of patching the fork.
+
+**Q5, mirror or patch — publish as a pure mirror, retain nothing, unanimously.** codex
+independently re-ran the mirror comparison in the superpowers checkout and confirmed zero
+commits in either direction and an empty tree diff. Qwen made the sharper argument: the
+patch was never about code, it was about routing authority, and an instruction file read
+before any skill loads is exactly the right place for that — so a patch inside the fork
+would be redundant rather than merely burdensome. Neither could name an intent that could
+not be expressed as an instruction.
+
+**Q4, the proofs — sound method, one shared reservation.** Both credited the pre-run hash
+baselines over worker self-reporting, the two fixtures differing only in the manifest, the
+decoy that distinguishes data from an installation, and six rounds that found two genuine
+defects and were rerun after the fixes. Both then refused to believe the same thing, from
+different angles:
+
+- codex: the evidence covers **the opencode harness only**, so run the same fixtures under
+  Claude Code.
+- Qwen: the fixtures' `AGENTS.md` was **placed by the controller**, so what is proven is
+  that the block works when present — not that `aaw init` puts it there and that it
+  survives to a fresh session. Its demanded check is a fresh project initialised *by the
+  installer*, then a fresh agent given the same envelope with no controller intervention.
+
+Qwen's is the stronger check and it subsumes codex's: it tests the delivery mechanism
+end-to-end rather than the block's readability. Both corroborate the limitation already
+recorded as an open item after `loop-002-5`, which was reached independently here.
+
+### Where they disagree — and the disagreement is the finding
+
+On **Q2, the installed-or-not test**, the two reviewers contradict each other.
+
+- **codex**: front-door rules **1, 2, 3, 4, 6 and 7** invoke a companion tool's command with
+  no manifest gate at all, and can therefore fire where the manifest says absent, missing or
+  malformed. Only rule 5 is gated, and only because F1 forced it.
+- **Qwen**: "The Front-Door Rules (1-7) all either explicitly gate on *When Advanced
+  Planning is installed* (rules 2, 3, 5, 7) or are unconditional by design (rules 1, 4, 6)."
+
+They cannot both be right, so the controller read the lines rather than choosing a
+reviewer. **codex is correct and Qwen's sentence is false.** At
+`claude-md-routing.md:42-86`, rules 2, 3 and 7 invoke `/plan-and-phase`, `/new-phase` and
+`/run-gate` with no gate of any kind; rule 5 alone carries the predicate. Qwen's claim is
+recorded in its verdict file under `disputed_claims` with the check that refutes it.
+
+That is what a second and third pair of eyes is for, and it is also why one reviewer is not
+enough: taken alone, Qwen's Q2 would have closed this gate with a clean bill on the very
+thing that is wrong.
+
+Qwen was not merely wrong, though — it found a real instance **codex missed**: the
+**Companion Tools** section at `:152-159` reasons about "a project where Advanced Planning
+is installed and `superpowers` is not" without restating the manifest-read discipline, and
+ties it precisely to the `borrowed.md` decoy. It is a near-variant of the phrase line 36
+binds, so it is weaker than Qwen rates it, but it is real.
+
+**A third instance neither reviewer named**, found while checking theirs: the **Closing
+Instruction** at `:164-171` says "AFTER any gstack planning skill writes a design doc,
+invoke `/gstack-to-plans`" and points at `~/.gstack/projects/{slug}/` — unconditional, in a
+project that may have no gstack.
+
+So the finding is bigger than either reviewer stated, and it has a name: **F1 was fixed as
+an instance when it was really a class.** The block's own lines 32-34 say that a missing or
+malformed manifest means treat every component as not installed and follow plain upstream
+behaviour — and then eight separate routes never consult it.
+
+### The findings, consolidated
+
+| # | severity | location | finding | raised by | controller check |
+|---|---|---|---|---|---|
+| R1 | **major** | `:42, :47, :53, :59, :73, :79`, `:152-159`, `:164-171` | eight routes name a companion command with no manifest gate; F1 fixed the class's one known instance | codex (6 sites), Qwen (1 further site), controller (1 further site) | **CONFIRMED by reading the lines** |
+| R2 | minor / major | `:94-99` | the precedence claim over skill defaults is broader than the three additions it exists to protect | **both**, independently | real; the saving clause at `:95-99` already limits it, so the practical risk is low and the fix is one clause. codex rates minor, Qwen major |
+| R3 | minor | `:111` | cosmetic: name the harness-neutral equivalent alongside `AskUserQuestion` | Qwen (codex: leave as is) | optional; both agree the current shape is already host-neutral |
+| R4 | minor | evidence, method | the proofs cover one harness, and the fixture's instruction file was placed by hand rather than by `aaw init` | **both**, from different angles | already an open item; the reviewers reached it independently and Qwen sharpened it |
+
+R1 is the one that matters. It is the same defect class as F1, in eight more places, and it
+was invisible to the six ACC rounds because every fixture had all three components either
+installed or explicitly absent in a well-formed manifest — the malformed and missing-file
+cases the block legislates for were never exercised.
+
+### Verdict
+
+`loop-002-7` is **not closed**. Two providers different from the implementer are named and
+recorded, both returned PASS WITH FINDINGS, both answered the over-reach question the loop
+requires, and both answered the mirror-or-patch question the same way: **the fork ends as a
+pure mirror, retaining no patch, and the measured patch is zero**.
+
+What remains is the part the loop assigns to the human: the resolution or waiver of each
+finding, and the authorisation to publish the mirror — which needs
+`git push origin mirror/upstream-2026-08-26:main --force-with-lease` in the superpowers
+repository, outside this session's authorised set.

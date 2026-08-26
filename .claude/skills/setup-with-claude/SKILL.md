@@ -270,14 +270,22 @@ Check whether `.claude/skills/gstack-to-plans/SKILL.md` already exists in this p
 
 > "The gstack-to-plans glue skill is not installed in this project. It connects gstack
 > design docs to advanced-planning. Install it now?
-> (project-local at .claude/skills/gstack-to-plans/ / global at ~/.claude/skills/gstack-to-plans/ / skip)"
+> (project-local at .claude/skills/gstack-to-plans/ / global at
+> `<profile>\.claude\skills\gstack-to-plans\` / skip)"
 
 If project-local: copy the meta-project's `gstack-to-plans/SKILL.md` from wherever this
 skill is installed (check `.claude/skills/gstack-to-plans/SKILL.md` in the meta-project
-repo, or `~/.claude/skills/gstack-to-plans/SKILL.md`) to the active project's
+repo, or `<profile>\.claude\skills\gstack-to-plans\SKILL.md`) to the active project's
 `.claude/skills/gstack-to-plans/SKILL.md`.
 
-If global: copy to `~/.claude/skills/gstack-to-plans/SKILL.md`.
+If global: copy to `<profile>\.claude\skills\gstack-to-plans\SKILL.md`, resolving
+`<profile>` the way Step 1 requires.
+
+> This step named `~/.claude/...` here until the phase-4 gate. On a domain machine that
+> copy runs against a redirected `HOME`, reports success, and leaves the skill somewhere
+> detection will never look - the same wrong-profile deploy this stack has already had to
+> catch once. Step 1 forbade `~` and this step did it anyway; a reviewer found the
+> contradiction between the two.
 
 If skip: note it. The user can invoke `/gstack-to-plans` only if the skill is installed.
 
@@ -545,14 +553,18 @@ rather than writing blindly.
 **Step U7: Check for globally-installed glue**
 
 After removing the project-local glue, check whether any Advanced AI Workflows glue
-components are installed globally in `~/.claude/`:
+components are installed globally under `<profile>\.claude\`, resolving `<profile>` the
+way Step 1 requires. A removal step is the worst place in this file to resolve a path
+through `~`: against a redirected `HOME` it either reports components gone while leaving
+the real ones installed, or reaches into a directory the user did not mean.
 
-- `~/.claude/skills/setup-with-claude/` (the setup skill itself)
-- `~/.claude/skills/gstack-to-plans/` (the global glue skill, if installed globally)
+- `<profile>\.claude\skills\setup-with-claude\` (the setup skill itself)
+- `<profile>\.claude\skills\gstack-to-plans\` (the global glue skill, if installed globally)
 
 If EITHER path exists, ask the user:
 
-> "I found the following globally-installed Advanced AI Workflows components in ~/.claude/:
+> "I found the following globally-installed Advanced AI Workflows components in
+> [resolved profile]\.claude\:
 >
 > [list each found path]
 >
@@ -562,7 +574,8 @@ If EITHER path exists, ask the user:
 If yes: delete each found global path and its contents.
 If no: leave them in place and note that they remain active for other projects.
 
-If neither path exists: note "No globally-installed glue found in ~/.claude/" and
+If neither path exists: note "No globally-installed glue found under [resolved
+profile]\.claude\" and
 continue to the report.
 
 **Step U8: Report**
@@ -580,15 +593,15 @@ Removed (project-local):
   - settings.json: 4 .advanced-plans/** permission entries
   - settings.json: PostToolUse gstack hook
 
-Global components (~/.claude/):
-  [removed: ~/.claude/skills/setup-with-claude/  (if removed)]
-  [removed: ~/.claude/skills/gstack-to-plans/     (if removed)]
+Global components ([resolved profile]\.claude\):
+  [removed: [resolved profile]\.claude\skills\setup-with-claude\  (if removed)]
+  [removed: [resolved profile]\.claude\skills\gstack-to-plans\     (if removed)]
   [kept: no global components found / user chose to keep]
 
 Not touched:
-  - gstack (~/.claude/skills/gstack/)
+  - gstack ([resolved profile]\.claude\skills\gstack\)
   - advanced-planning (.claude/skills/...)
-  - superpowers (.claude/skills/brainstorming/ or ~/.claude/skills/brainstorming/)
+  - superpowers (.claude/skills/brainstorming/ or [resolved profile]\.claude\skills\brainstorming\)
 
 To reinstall: run /setup-with-claude
 ```
@@ -622,7 +635,10 @@ Say so and offer to install it, rather than carrying the old entry forward.
 This step updates the global `~/.claude/skills/setup-with-claude/SKILL.md` to the
 latest version from the meta-project.
 
-Present the following two methods to the user and ask which to use:
+Present the following two methods to the user and ask which to use. Both keep `~`, and
+they are the only place in this file that does: the user pastes them into their own
+shell, so the user's shell does the resolving. See "The tilde trap" below before
+copying that style into a step this skill performs itself.
 
 > **Method A — Local copy (recommended when the meta-project repo is cloned locally):**
 > ```bash
@@ -657,7 +673,7 @@ Sub-package re-install commands:
 | Sub-package | Re-install command (macOS / Linux) | Re-install command (Windows PowerShell) |
 |---|---|---|
 | **advanced-planning** | `sh setup/claude-code/install.sh --project /path/to/your/project` | `.\setup\claude-code\install.ps1 -Project C:\path\to\your\project` |
-| **gstack** | Follow `~/.claude/skills/gstack/INSTALL.md` for the update procedure | Same — check INSTALL.md |
+| **gstack** | Follow `<profile>\.claude\skills\gstack\INSTALL.md` for the update procedure | Same — check INSTALL.md |
 | **superpowers** | `/plugin install superpowers@claude-plugins-official` (in Claude Code) | Same |
 
 For each detected sub-package, ask:
@@ -724,10 +740,14 @@ ambiguous.
 
 ### The tilde trap
 
-Detection and manifest writes resolve the profile from `%USERPROFILE%` and never use
-`~`. The commands this skill hands the **user** to run in their own terminal are a
-separate matter and still contain `~`, because that is what a user typing into their
-own shell expects to see.
+Every path this skill resolves for itself takes the profile from `%USERPROFILE%` and
+never from `~` or `HOME`: detection, manifest writes, the global glue install in Step 6,
+and the global removal in Step U7. The only `~` left in this file is inside the fenced
+commands Step R2 hands the **user** to paste into their own terminal, because that is
+what a user typing into their own shell expects to see.
+
+The test when adding a step is not whether `~` reads nicely. It is who does the
+resolving: this skill, or the user.
 
 Be aware that this is not always safe. On a domain Windows machine, Git Bash expands
 `~` from `HOME`, which the AD home-folder attribute can point at a network drive, so a
@@ -746,7 +766,7 @@ check: ask which shell they used, and have them run
 - It does not modify sub-package files (gstack, advanced-planning, superpowers). It only
   installs meta-project artifacts: the routing block, the glue skill,
   the settings.json entries, and `.aaw/installed.json`.
-- It does not modify `~/.claude/` globally except when the user explicitly chooses global
+- It does not modify `<profile>\.claude\` globally except when the user explicitly chooses global
   glue-skill install.
 - It does not silently overwrite anything. Every write that touches existing content is
   gated by an AskUserQuestion.

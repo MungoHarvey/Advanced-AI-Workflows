@@ -17,7 +17,8 @@ Before starting, be aware of these files in `references/` (relative to this SKIL
 - `install-gstack.md` — canonical install commands for gstack
 - `install-advanced-planning.md` — canonical install commands for advanced-planning
 - `install-superpowers.md` — canonical install commands for superpowers
-- `claude-md-routing.md` — the routing block to insert into CLAUDE.md
+- `claude-md-routing.md` — the routing block to insert into CLAUDE.md and/or AGENTS.md.
+  Host-neutral: one text, and the same text goes into either file.
 - `settings-snippet.json` — the permissions and hook entry to merge into .claude/settings.json
 
 And these, in the repository root rather than in `references/`, because they are shipped
@@ -170,42 +171,53 @@ the detection check from Step 1. Update the status table. If any required packag
 missing after the user chose "do it manually", note it prominently but continue — the
 pipeline will still partially work.
 
-### Step 4: Wire CLAUDE.md routing
+### Step 4: Wire the routing block into the project's instruction file(s)
 
 Read `references/claude-md-routing.md` (the routing block bounded by
 `<!-- aaw-routing:begin -->` and `<!-- aaw-routing:end -->` markers).
 
-Check whether the project has a `CLAUDE.md` file.
+**Which files.** Two filenames are instruction files a harness reads before any skill
+loads: `CLAUDE.md` and `AGENTS.md`. The block is host-neutral — there is one version of
+it, and the same text goes into either.
 
-**Case A — No CLAUDE.md:** Ask the user:
+- If the project has **one or both** of them, install into **every one that exists**.
+  A project with an `AGENTS.md` has it because something reads it.
+- If the project has **neither**, offer to create `CLAUDE.md` only. Creating both leaves
+  a file in the project the user never had and no harness asked for.
+
+Apply Cases A, B and C below **per file**.
+
+**Case A — the file does not exist** (only reachable when the project has neither, and
+then only for `CLAUDE.md`). Ask the user:
 
 > "This project has no CLAUDE.md. May I create one and add the Advanced AI Workflows
 > routing block? (yes / no)"
 
 If yes: write `CLAUDE.md` with the routing block as its content. If no: skip this step.
 
-**Case B — CLAUDE.md exists, no aaw-routing markers:** Check whether a section named
+**Case B — the file exists, no aaw-routing markers:** Check whether a section named
 `## Advanced AI Workflows Routing` or the `<!-- aaw-routing:begin -->` marker is already
 present. If absent:
 
-> "I will append the Advanced AI Workflows routing block to your existing CLAUDE.md.
+> "I will append the Advanced AI Workflows routing block to your existing <FILE>.
 > The block will be added between `<!-- aaw-routing:begin -->` and `<!-- aaw-routing:end -->`
 > markers so it can be removed cleanly later. Proceed? (yes / no)"
 
 If yes: append the routing block (including both markers) to the end of the file.
 If no: skip.
 
-**Case C — CLAUDE.md exists, aaw-routing markers present:** Show the diff between
+**Case C — the file exists, aaw-routing markers present:** Show the diff between
 the current content inside the markers and the reference template. Ask:
 
-> "The routing block is already present. Would you like to refresh it with the current
-> template? (yes — replace / no — keep existing)"
+> "The routing block is already present in <FILE>. Would you like to refresh it with the
+> current template? (yes — replace / no — keep existing)"
 
 If yes: replace only the content between the markers (inclusive of marker lines) with
 the fresh template. If no: leave it as-is.
 
-Never overwrite content outside the fenced markers. Never remove or reformat CLAUDE.md
-content that belongs to other tools or the user.
+Never overwrite content outside the fenced markers. Never remove or reformat content that
+belongs to other tools or the user. The block itself says so — it disclaims precedence over
+everything outside its markers — and that disclaimer is only true if this step honours it.
 
 ### Step 5: Grant .advanced-plans/ permissions in .claude/settings.json
 
@@ -342,7 +354,7 @@ Present a final status table to the user:
 | gstack                          | OK     | C:\Users\me\.claude\skills\gstack |
 | advanced-planning               | OK     | <project>\.claude\skills\phase-plan-creator |
 | superpowers                     | OK     | <project>\.claude\skills\brainstorming |
-| CLAUDE.md routing block         | OK     | appended to CLAUDE.md |
+| routing block                   | OK     | appended to CLAUDE.md and/or AGENTS.md |
 | .claude/settings.json perms     | OK     | 4 entries added |
 | .claude/settings.json hook      | OK     | PostToolUse/Write matcher added |
 | gstack-to-plans glue skill      | OK     | <project>\.claude\skills\gstack-to-plans |
@@ -399,7 +411,8 @@ sub-package installs (gstack, advanced-planning, superpowers remain untouched). 
 never touches a pre-existing plannotator install, which is deprecated but left alone.
 
 **Artifacts removed by --uninstall:**
-1. The fenced routing block in `CLAUDE.md` (between `<!-- aaw-routing:begin -->` and `<!-- aaw-routing:end -->`)
+1. The fenced routing block in `CLAUDE.md` and/or `AGENTS.md` (between
+   `<!-- aaw-routing:begin -->` and `<!-- aaw-routing:end -->`)
 2. The `.claude/skills/gstack-to-plans/` directory (glue skill)
 3. `.aaw/` - the installation manifest and nothing else in it
 3b. `.claude/integrations.json`, if the superseded v0.1 file is still present
@@ -410,15 +423,20 @@ never touches a pre-existing plannotator install, which is deprecated but left a
 
 **Step U1: Check for fenced markers**
 
-Read `CLAUDE.md`. Search for both `<!-- aaw-routing:begin -->` and `<!-- aaw-routing:end -->`.
+Read **every instruction file the project has** — `CLAUDE.md` and `AGENTS.md` — and search
+each for both `<!-- aaw-routing:begin -->` and `<!-- aaw-routing:end -->`.
 
-Three cases, and they are not the same case.
+**Check all of them before writing any of them.** If `CLAUDE.md` is cleaned first and
+`AGENTS.md` then turns out to have a broken fence, the project is left half-uninstalled
+underneath an error message saying nothing was changed. Read both, decide, then act.
+
+Three cases per file, and they are not the same case.
 
 **Both markers present.** The block has both ends, so it is safe to remove. Continue to
 Step U2.
 
-**Neither marker present, or there is no `CLAUDE.md` at all.** The routing block is not
-installed. There is nothing to remove and nothing ambiguous about it: note it for the
+**Neither marker present, or the file does not exist.** The routing block is not installed
+in it. There is nothing to remove and nothing ambiguous about it: note it for the
 Step U8 report and continue to Step U2. The glue skill, the manifest and the
 settings.json entries may still be there, and refusing to remove them because of a file
 that was never written would leave them uninstallable.
@@ -430,34 +448,35 @@ that was never written would leave them uninstallable.
 > the first. A reviewer found the deadlock. This is the fix, and the fix is to this
 > step rather than to the code that already behaved this way.
 
-**Exactly one marker present.** STOP. Do not modify `CLAUDE.md`, and do not proceed to
-Steps U3–U8 until the user has said to — the other artefacts stay where they are. One
-marker without the other means the file has been edited by hand since setup and there is
-no longer a reliable end to the block, so anything removed on a guess might be the user's
-own writing. Print:
+**Exactly one marker present, in any of the files.** STOP. Do not modify that file, do not
+modify the other instruction file either, and do not proceed to Steps U3–U8 until the user
+has said to — the other artefacts stay where they are. One marker without the other means
+the file has been edited by hand since setup and there is no longer a reliable end to the
+block, so anything removed on a guess might be the user's own writing. Print, naming the
+file that is broken:
 
 ```
-ERROR: aaw-routing markers are incomplete in CLAUDE.md.
+ERROR: aaw-routing markers are incomplete in <FILE>.
 
 Cannot safely remove the routing block — one of the two fenced markers that delimit
-it is missing. This usually means CLAUDE.md was edited manually after setup.
+it is missing. This usually means <FILE> was edited manually after setup.
 
 Manual recovery instructions:
-1. Open CLAUDE.md in a text editor.
+1. Open <FILE> in a text editor.
 2. Find the "## Advanced AI Workflows Routing" section.
 3. Delete everything from the start of that section to the end of the routing
-   content (the routes, superpowers overrides, companion-detection reference,
-   and closing instruction).
+   content (the routes, the brainstorming additions, the spec/plan locations,
+   the companion-tools section, and the closing instruction).
 4. Save the file.
 
-The other meta-project artifacts (glue skill, .aaw/ manifest, settings.json
-additions) can still be removed by re-running /setup-with-claude --uninstall
-after you have completed the manual CLAUDE.md cleanup.
+Nothing else has been changed. The other meta-project artifacts (glue skill,
+.aaw/ manifest, settings.json additions) can still be removed by re-running
+/setup-with-claude --uninstall after you have completed the manual cleanup.
 ```
 
 Do not proceed to the remaining uninstall steps until the user has confirmed they have
-fixed CLAUDE.md manually (or if they ask to skip the CLAUDE.md step and remove only
-the other artifacts).
+fixed the file manually (or if they ask to skip the routing step and remove only the other
+artifacts).
 
 **Step U2: Confirm destructive removals**
 
@@ -465,7 +484,7 @@ Ask:
 
 > "I will remove the following meta-project artifacts from this project:
 >
-> - CLAUDE.md routing block (between aaw-routing markers)
+> - the routing block (between aaw-routing markers) from every instruction file that has it - CLAUDE.md, AGENTS.md, or both
 > - .claude/skills/gstack-to-plans/ (glue skill)
 > - .aaw/installed.json (and .aaw/ if it is then empty)
 > - .claude/integrations.json, if the superseded v0.1 file is present
@@ -477,22 +496,24 @@ Ask:
 
 If no: abort.
 
-**Step U3: Remove the routing block from CLAUDE.md**
+**Step U3: Remove the routing block from each instruction file**
 
-Delete the lines from `<!-- aaw-routing:begin -->` through `<!-- aaw-routing:end -->` inclusive.
-Do not modify any other content in CLAUDE.md.
+For each of `CLAUDE.md` and `AGENTS.md` that has both markers, delete the lines from
+`<!-- aaw-routing:begin -->` through `<!-- aaw-routing:end -->` inclusive. Do not modify
+any other content in either file.
 
 After removing the block, check whether the remaining content is empty or whitespace-only
 (blank lines, spaces, tabs — nothing visible to the user):
 
-- If CLAUDE.md is now **empty or whitespace-only**: delete the file entirely. Print:
-  `"CLAUDE.md was empty after block removal — deleted."`
-- If CLAUDE.md still has **non-whitespace content**: leave it in place. Print:
-  `"CLAUDE.md has remaining content — kept."`
+- If the file is now **empty or whitespace-only**: delete it entirely. Print:
+  `"<FILE> was empty after block removal — deleted."`
+- If it still has **non-whitespace content**: leave it in place. Print:
+  `"<FILE> has remaining content — kept."`
 
-**Guard:** never delete CLAUDE.md unless the only remaining content is whitespace. If
-there is any doubt (e.g. the content check is inconclusive), keep the file and inform
-the user.
+**Guard:** never delete an instruction file unless the only remaining content is
+whitespace. If there is any doubt (e.g. the content check is inconclusive), keep the file
+and inform the user. Deleting a file the user wrote, because our block happened to be the
+rest of it, is the worst thing this uninstall can do.
 
 **Step U4: Remove the glue skill**
 
@@ -552,7 +573,7 @@ Print a confirmation:
 Uninstall complete.
 
 Removed (project-local):
-  - CLAUDE.md routing block
+  - the routing block in CLAUDE.md and/or AGENTS.md
   - .claude/skills/gstack-to-plans/
   - .aaw/installed.json
   - .claude/integrations.json (if the superseded v0.1 file was present)

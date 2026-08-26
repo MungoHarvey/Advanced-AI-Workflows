@@ -478,6 +478,139 @@ grep -q '"matcher"' "$N/.claude/settings.json" \
   || bad "and a project with no CLAUDE.md is not treated as a hand-edited one"
 echo ""
 
+# --------------------------------------------------------------------------
+# 10. AGENTS.md is an instruction file too
+#
+# The design spec has `aaw init` merging the block into "existing AGENTS.md and/or
+# CLAUDE.md". Which of the two a harness reads is the harness's business; ours is
+# to put the block where it will be read and nowhere else. Two ways to get this
+# wrong: install into only CLAUDE.md and be invisible to an AGENTS.md harness, or
+# create both files and leave a file in the project the user never had.
+# --------------------------------------------------------------------------
+echo "--- stage 10: AGENTS.md ------------------------------------------"
+
+# 10a. AGENTS.md only.
+A="$TMP/agents-only"
+mkdir -p "$A"
+printf '# House rules\n\nUse tabs. Never rewrite git history.\n' > "$A/AGENTS.md"
+cp "$A/AGENTS.md" "$TMP/agents-only-before.md"
+"$PY" "$OPS" install --project "$A" >/dev/null 2>&1
+
+[ "$(grep -c 'aaw-routing:begin' "$A/AGENTS.md")" = "1" ] \
+  && ok "AGENTS.md-only project: the block lands in AGENTS.md" \
+  || bad "AGENTS.md-only project: the block lands in AGENTS.md"
+
+[ ! -f "$A/CLAUDE.md" ] \
+  && ok "and no CLAUDE.md is invented alongside it" \
+  || bad "and no CLAUDE.md is invented alongside it"
+
+head -3 "$A/AGENTS.md" > "$TMP/agents-only-head.md"
+cmp -s "$TMP/agents-only-before.md" "$TMP/agents-only-head.md" \
+  && ok "and the user's own AGENTS.md content survives verbatim" \
+  || bad "and the user's own AGENTS.md content survives verbatim"
+
+"$PY" "$OPS" fingerprint --project "$A" > "$TMP/fp-agents-1.txt" 2>/dev/null
+"$PY" "$OPS" install --project "$A" >/dev/null 2>&1
+"$PY" "$OPS" fingerprint --project "$A" > "$TMP/fp-agents-2.txt" 2>/dev/null
+cmp -s "$TMP/fp-agents-1.txt" "$TMP/fp-agents-2.txt" \
+  && ok "and a second install is byte-identical" \
+  || bad "and a second install is byte-identical"
+
+"$PY" "$OPS" uninstall --project "$A" >/dev/null 2>&1
+cmp -s "$TMP/agents-only-before.md" "$A/AGENTS.md" \
+  && ok "and uninstall returns AGENTS.md to the bytes it started with" \
+  || bad "and uninstall returns AGENTS.md to the bytes it started with"
+
+# 10b. Both files present.
+B="$TMP/both-files"
+mkdir -p "$B"
+printf '# Claude notes\n\nProject uses pnpm.\n' > "$B/CLAUDE.md"
+printf '# Agent notes\n\nProject uses pnpm.\n' > "$B/AGENTS.md"
+"$PY" "$OPS" install --project "$B" >/dev/null 2>&1
+
+if [ "$(grep -c 'aaw-routing:begin' "$B/CLAUDE.md")" = "1" ] \
+&& [ "$(grep -c 'aaw-routing:begin' "$B/AGENTS.md")" = "1" ]; then
+  ok "both-file project: each file gets the block exactly once"
+else
+  bad "both-file project: each file gets the block exactly once"
+fi
+
+"$PY" "$OPS" fingerprint --project "$B" > "$TMP/fp-both-1.txt" 2>/dev/null
+"$PY" "$OPS" install --project "$B" >/dev/null 2>&1
+"$PY" "$OPS" fingerprint --project "$B" > "$TMP/fp-both-2.txt" 2>/dev/null
+cmp -s "$TMP/fp-both-1.txt" "$TMP/fp-both-2.txt" \
+  && ok "and installing again changes neither file" \
+  || bad "and installing again changes neither file"
+
+# The two blocks must be the same text. One source file, so this is really a check
+# that nothing rewrote the block on its way into one of them.
+"$PY" - "$B" <<'EOF' > "$TMP/blocks-equal.txt" 2>&1
+import io, os, sys
+root = sys.argv[1]
+def block(name):
+    with io.open(os.path.join(root, name), encoding="utf-8", newline="") as fh:
+        t = fh.read().replace("\r\n", "\n")
+    i = t.index("<!-- aaw-routing:begin -->")
+    j = t.index("<!-- aaw-routing:end -->")
+    return t[i:j]
+print("same" if block("CLAUDE.md") == block("AGENTS.md") else "different")
+EOF
+grep -qx 'same' "$TMP/blocks-equal.txt" \
+  && ok "and the two files carry byte-identical block text" \
+  || bad "and the two files carry byte-identical block text"
+
+"$PY" "$OPS" uninstall --project "$B" >/dev/null 2>&1
+if ! grep -q 'aaw-routing' "$B/CLAUDE.md" && ! grep -q 'aaw-routing' "$B/AGENTS.md"; then
+  ok "and uninstall clears the block from both"
+else
+  bad "and uninstall clears the block from both"
+fi
+
+# 10c. Half a fence in AGENTS.md must stop CLAUDE.md being touched.
+#
+# This is the ordering bug worth a test of its own: check every file before
+# writing any file. Uninstall CLAUDE.md first and then refuse on AGENTS.md and
+# the project is left half-uninstalled, with an error message claiming nothing
+# was changed.
+H="$TMP/half-fence-agents"
+mkdir -p "$H"
+printf '# Claude notes\n\nkeep me\n' > "$H/CLAUDE.md"
+printf '# Agent notes\n\nkeep me\n' > "$H/AGENTS.md"
+"$PY" "$OPS" install --project "$H" >/dev/null 2>&1
+"$PY" - "$H" <<'EOF'
+import io, os, sys
+p = os.path.join(sys.argv[1], "AGENTS.md")
+with io.open(p, encoding="utf-8", newline="") as fh:
+    t = fh.read()
+with io.open(p, "w", encoding="utf-8", newline="") as fh:
+    fh.write(t.replace("<!-- aaw-routing:end -->", ""))
+EOF
+cp "$H/CLAUDE.md" "$TMP/half-fence-claude-before.md"
+
+"$PY" "$OPS" uninstall --project "$H" >/dev/null 2>"$TMP/refuse-agents.err"
+code=$?
+[ "$code" -eq 3 ] && ok "a half fence in AGENTS.md exits 3" \
+                  || bad "a half fence in AGENTS.md exits 3, got $code"
+
+grep -q 'refused to edit AGENTS.md' "$TMP/refuse-agents.err" \
+  && ok "and names AGENTS.md as the file it refused" \
+  || bad "and names AGENTS.md as the file it refused"
+
+cmp -s "$TMP/half-fence-claude-before.md" "$H/CLAUDE.md" \
+  && ok "and CLAUDE.md is byte-identical - checked before anything was written" \
+  || bad "and CLAUDE.md is byte-identical - checked before anything was written"
+
+# 10d. Neither file: CLAUDE.md is created, AGENTS.md is not.
+E="$TMP/no-instruction-file"
+mkdir -p "$E"
+"$PY" "$OPS" install --project "$E" >/dev/null 2>&1
+if [ -f "$E/CLAUDE.md" ] && [ ! -f "$E/AGENTS.md" ]; then
+  ok "a project with neither file gets CLAUDE.md only"
+else
+  bad "a project with neither file gets CLAUDE.md only"
+fi
+echo ""
+
 echo "--- after install ------------------------------------------------"
 sed 's/^/  /' "$TMP/fp-install-1.txt"
 echo ""

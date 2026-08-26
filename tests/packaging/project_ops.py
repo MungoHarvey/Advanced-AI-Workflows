@@ -15,7 +15,8 @@ survives.
 
 This module performs exactly the writes the skill documents:
 
-  1. append the fenced routing block to CLAUDE.md, between the aaw-routing markers;
+  1. append the fenced routing block to CLAUDE.md and/or AGENTS.md - whichever
+     instruction files the project already has - between the aaw-routing markers;
   2. merge the four `.advanced-plans/**` permissions and the PostToolUse Write hook
      into `.claude/settings.json`, without duplicating what is already there;
   3. copy the `gstack-to-plans` glue skill into the project.
@@ -61,7 +62,22 @@ def write(path, text):
         fh.write(text)
 
 
-# ---------------------------------------------------------------- CLAUDE.md
+# ------------------------------------------------- CLAUDE.md / AGENTS.md
+
+# The design spec says `aaw init` merges the routing block into "existing AGENTS.md
+# and/or CLAUDE.md". Both are instruction files a harness reads before any skill
+# loads; which one a given harness reads is not our business. So: install into every
+# one that already exists, and create CLAUDE.md only when the project has neither.
+# Creating both unasked would put a file in the project the user never had.
+INSTRUCTION_FILES = ("CLAUDE.md", "AGENTS.md")
+
+
+def instruction_targets(project):
+    """The files to install into: the existing ones, or CLAUDE.md if none exists."""
+    present = [n for n in INSTRUCTION_FILES
+               if os.path.isfile(os.path.join(project, n))]
+    return present or ["CLAUDE.md"]
+
 
 def routing_block():
     text = read(ROUTING_SOURCE)
@@ -79,8 +95,7 @@ def strip_block(text):
     return before.rstrip("\n") + ("\n" if before.strip() else "") + after.lstrip("\n")
 
 
-def install_routing(project):
-    path = os.path.join(project, "CLAUDE.md")
+def install_routing_file(path):
     existing = read(path) if os.path.isfile(path) else ""
     # Replace rather than append when a block is already there. Appending is how a
     # "refresh" ends up with two routing blocks and a user wondering which one wins.
@@ -90,31 +105,58 @@ def install_routing(project):
     write(path, "\n\n".join(parts) + "\n")
 
 
-def uninstall_routing(project):
-    """Return "removed", "absent", "kept", or "refused"."""
-    path = os.path.join(project, "CLAUDE.md")
+def install_routing(project):
+    for name in instruction_targets(project):
+        install_routing_file(os.path.join(project, name))
+
+
+def _markers_incomplete(path):
+    if not os.path.isfile(path):
+        return False
+    raw = read(path)
+    return (BEGIN in raw) != (END in raw)
+
+
+def uninstall_routing_file(path):
+    """Return "removed", "absent", or "kept" for one instruction file."""
     if not os.path.isfile(path):
         return "absent"
-
     raw = read(path)
-    if (BEGIN in raw) != (END in raw):
-        # Step U1. One marker without the other means somebody edited CLAUDE.md
-        # by hand and we no longer know where the block ends. Guessing here would
-        # delete the user's own writing, so refuse and leave the file alone.
-        sys.stderr.write(
-            "project_ops: refused to edit CLAUDE.md - aaw-routing markers are "
-            "incomplete. Nothing was changed.\n")
-        return "refused"
     if BEGIN not in raw:
         return "kept"
     text = strip_block(raw).rstrip("\n")
-    # Step U3's guard is "empty or whitespace-only", not "empty". A CLAUDE.md left
+    # Step U3's guard is "empty or whitespace-only", not "empty". A file left
     # holding three blank lines is still, to the user, a file they did not write.
     if text.strip():
         write(path, text + "\n")
         return "removed"
     os.remove(path)
     return "removed"
+
+
+def uninstall_routing(project):
+    """Return "removed", "absent", "kept", or "refused" across the instruction files.
+
+    Step U1. One marker without the other means somebody edited the file by hand and
+    we no longer know where the block ends. Guessing would delete the user's own
+    writing, so refuse and leave it alone.
+
+    Every file is checked before any file is written. A refusal on AGENTS.md must not
+    arrive after CLAUDE.md has already been rewritten - a half-done uninstall across
+    two instruction files is worse than one that did nothing.
+    """
+    paths = [os.path.join(project, n) for n in INSTRUCTION_FILES]
+    for path in paths:
+        if _markers_incomplete(path):
+            sys.stderr.write(
+                "project_ops: refused to edit %s - aaw-routing markers are "
+                "incomplete. Nothing was changed.\n" % os.path.basename(path))
+            return "refused"
+    results = [uninstall_routing_file(p) for p in paths]
+    for verdict in ("removed", "kept"):
+        if verdict in results:
+            return verdict
+    return "absent"
 
 
 # ---------------------------------------------------------------- settings.json

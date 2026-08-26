@@ -221,3 +221,112 @@ There is now exactly one routing block text in the repository.
 
 `loop-002-2` satisfied. All four intents are expressed in a file AAW owns and installs, so
 nothing needs to live inside the Superpowers fork.
+
+---
+
+## loop-002-3 — the installer merges the block idempotently, into both instruction files
+
+**Provider**: controller (`claude`/Opus 5). **Date**: 2026-08-26.
+**Files**: `.claude/skills/setup-with-claude/SKILL.md` (the specification),
+`tests/packaging/project_ops.py` (the executable form of what it documents),
+`tests/packaging/test-idempotency.sh` (stage 10, new).
+
+### What was already true, and what was missing
+
+Idempotency itself was already built and passing at 43/43 before this todo: install
+replaces the fenced block rather than appending a second one, uninstall restores the
+project to its starting bytes, and a half-fence exits 3 rather than guessing where the
+block ends. None of that needed rebuilding.
+
+What was missing was **`AGENTS.md`**. The design spec has `aaw init` merging the block into
+"existing `AGENTS.md` and/or `CLAUDE.md`", and the installer only ever knew about
+`CLAUDE.md`. On a harness that reads `AGENTS.md`, every rule in the block would simply not
+be read — which would have made ACC-04 and ACC-05 pass on Claude Code and mean nothing
+anywhere else. The block having just been made host-neutral is what made this worth
+fixing rather than deferring: there is one text, so serving two files costs nothing.
+
+### The rule chosen, and why
+
+```python
+INSTRUCTION_FILES = ("CLAUDE.md", "AGENTS.md")
+
+def instruction_targets(project):
+    present = [n for n in INSTRUCTION_FILES if os.path.isfile(os.path.join(project, n))]
+    return present or ["CLAUDE.md"]
+```
+
+Install into every instruction file the project already has; create `CLAUDE.md` only when
+it has neither. A project with an `AGENTS.md` has one because something reads it. A project
+with neither should not acquire two files it never asked for — that is an installer leaving
+litter, and it is also how an uninstall ends up deleting a file the user thinks is theirs.
+
+### The ordering bug, fixed before it existed
+
+Uninstall now checks **every** file for a broken fence before writing **any** of them. The
+naive shape — check and write in the same pass — cleans `CLAUDE.md`, then hits a half-fence
+in `AGENTS.md`, and prints "Nothing was changed." That message would be false, and the
+project would be left half-uninstalled. `uninstall_routing()` does the marker scan in a
+first pass and the writes in a second, and the docstring says why.
+
+### Checks
+
+```
+$ bash tests/packaging/run-all.sh | tail -4
+idempotency: PASS - 56/56 checks
+packaging:   PASS - 4/4 checks
+```
+
+43 → 56: thirteen new checks, all in stage 10.
+
+| Check | What it excludes |
+|---|---|
+| AGENTS.md-only project: the block lands in AGENTS.md | the block being invisible on a non-Claude harness |
+| and no CLAUDE.md is invented alongside it | the installer leaving litter |
+| and the user's own AGENTS.md content survives verbatim | clobbering someone's house rules |
+| and a second install is byte-identical | ACC-16, on the new path |
+| and uninstall returns AGENTS.md to the bytes it started with | a one-way install |
+| both-file project: each file gets the block exactly once | duplicate blocks, "which one wins" |
+| and installing again changes neither file | ACC-16, both files at once |
+| and the two files carry byte-identical block text | silent divergence between hosts |
+| and uninstall clears the block from both | a residue that reactivates on the next harness |
+| a half fence in AGENTS.md exits 3 | guessing where a hand-edited block ends |
+| and names AGENTS.md as the file it refused | an error the user cannot act on |
+| and CLAUDE.md is byte-identical — checked before anything was written | **the half-uninstall above** |
+| a project with neither file gets CLAUDE.md only | the same litter, from the other direction |
+
+### Mutation-verified, because thirteen new checks passing first time proves nothing
+
+Two mutants were applied to the implementation and the suite re-run:
+
+| Mutant | Change | Result |
+|---|---|---|
+| 1 | `instruction_targets` always returns `["CLAUDE.md"]` — i.e. the old behaviour | **6 of the 13 fail**, including the three headline AGENTS.md checks |
+| 2 | check-and-write in one pass instead of scan-then-write | **exactly 1 fails** — "CLAUDE.md is byte-identical — checked before anything was written" |
+
+Mutant 2 is the useful one: it kills precisely the check written for it and nothing else,
+which is what says that check is measuring the ordering and not something incidental. Both
+mutants were reverted and the suite re-run clean before committing; `grep -c MUTANT
+project_ops.py` returns 0.
+
+### The specification was updated too, not just the test
+
+`project_ops.py`'s own docstring says: *"If it and the skill disagree, that is a finding
+about one of them, and the skill is the specification."* So `SKILL.md` was updated to match
+rather than left behind:
+
+- **Step 4** is now "Wire the routing block into the project's instruction file(s)", states
+  the which-files rule, and applies Cases A/B/C per file. It also now says the block's own
+  precedence disclaimer is only true if this step honours it.
+- **Step U1** reads every instruction file and says, in bold, to check all of them before
+  writing any of them — with the half-uninstall spelled out as the reason.
+- **Steps U2 and U3** name both files, and U3's delete-if-empty guard now carries the
+  reason: deleting a file the user wrote, because our block happened to be the rest of it,
+  is the worst thing the uninstall can do.
+- Four further single-line mentions (the reference list, the report table, the removal
+  inventory, the uninstall summary) were updated in the same pass.
+
+### Verdict
+
+`loop-002-3` satisfied. Idempotency and content preservation hold on both instruction
+files, the delimitation is proven by an uninstall that restores starting bytes, and the
+skill and its executable form agree.

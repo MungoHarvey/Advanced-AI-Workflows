@@ -185,7 +185,7 @@ todos:
     evidence: "The fixture diffs, the byte-identical proof, and the suite output"
     gate: "none"
     outcome: "Design section 7.2 idempotency holds in practice, not just on paper"
-    status: pending
+    status: completed
     complexity: high
     priority: high
   - id: "loop-002-4"

@@ -823,3 +823,82 @@ measured. Re-measuring adherence on `claude` and on `codex` remains on the list.
 Also unchanged: publishing the mirror needs
 `git push origin mirror/upstream-2026-08-26:main --force-with-lease` in the superpowers
 repository, which is outside this session's authorised set and is the user's to run.
+
+
+---
+
+## The phase-5 boundary gate, attempt 1
+
+Three reviewers, three backends, none of them the implementer:
+
+| Reviewer | Backend | Verdict | Confidence | Criteria |
+|---|---|---|---|---|
+| `codex` | codex, `gpt-5.6-terra` / medium | `pass_with_findings` | 91 | 12 met, 3 n/a, 0 failed |
+| `code-review-agent` | opencode, Qwen3.5-397B | `pass_with_findings` | 78 | 18 met, 0 failed |
+| `phase-goals-agent` | claude, Opus | `pass_with_findings` | 84 | 13 met, 2 n/a, 0 failed |
+
+No reviewer failed a criterion and none named a loop to revert. Aggregate: **pass**.
+
+codex again **self-reported the wrong model** — `gpt-5.6-sol` in its summary, against
+`model = "gpt-5.6-terra"` in `~/.codex/config.toml` and the `argv` echoed at start. That is
+the second time in this programme, and it is the reason ACC-18 checks the started `--kind`
+and the observable pane rather than the agent's word.
+
+### The one major finding, and what it was
+
+The Claude reviewer found something the other two missed entirely, because both of them
+looked only where the phase had been working:
+
+> A second, tracked, stale copy of the fenced routing block still ships at the repository
+> root — `references/claude-md-routing.md`.
+
+Confirmed by the controller rather than taken on trust. The file was real: 87 lines, CRLF,
+last touched at `2f17deb`, and carrying **three `.claude/` probes and seven ungated route
+arrows** — precisely the two defect classes this phase exists to eliminate, preserved intact
+in a file nobody had looked at.
+
+Its provenance explains it. `references/claude-md-routing.md` and
+`references/settings-snippet.json` were **phase-1 loop-001 outputs**, written when the repo
+root was where reference material lived. Phase 4's packaging repair moved the canonical
+copies under `.claude/skills/setup-with-claude/references/` and made those the shipped,
+tested, `required-sources.txt`-enforced ones. The originals were never removed. The snippet
+stayed byte-identical to its twin; the routing block diverged, because every improvement
+from the port landed on the canonical copy and none landed on the orphan.
+
+That is the general shape worth remembering: **an unreferenced duplicate does not stay a
+duplicate.** The settings snippet is what the routing block looked like before it drifted,
+and it would have drifted next.
+
+Both superseded copies are removed. `references/upstream-baseline-2026-08-26.json` stays —
+it is live evidence, cited by `CHANGELOG.md:50` and by the baseline audit. After the
+removal, `grep` finds no ungated route arrow in any tracked file except the evidence file
+quoting the old text as a before-example, and the shipped block contains zero `.claude/`,
+`.cursor/`, `.opencode/` or `.agents/` paths. Packaging 4/4 and idempotency 56/56 still pass.
+
+The finding is worth recording as a review result as much as a defect: three reviewers on
+three backends, and the one that found it was the one whose brief was *the criteria* rather
+than *the artefact*. A reviewer told to check that each criterion is satisfied went looking
+for every file the criterion could be about. The two told to review the work reviewed the
+work that had been done.
+
+### The other findings, all minor or informational
+
+- **The single-harness limitation** was named independently by all three. All three judged
+  it non-disqualifying, and the Claude reviewer went further and named the five criteria it
+  touches (SP-1, SP-2, ACC-05, the amended Architectural-path-only criterion, and ACC-04 by
+  extension), arguing it weakens confidence in each without failing any. It stays open.
+- **The behavioural evidence is not independently re-derivable.** The fixtures, the
+  `ACC-RESULT.md` reports and the worker transcripts live in the session scratchpad, so a
+  later reviewer has the narrative and not the artefacts. This restates an open item already
+  on `PLANNING.md` and is the strongest argument yet for tracking the fixtures under
+  `tests/`.
+- **Two acceptance checks were reinterpreted after the run they judge, by the party that
+  produced the result** (loop-002-5's grep scope, loop-002-4's assertion), and one was
+  amended mid-loop (loop-002-2's Plannotator check). The reviewer judged each legitimate on
+  its merits and flagged the pattern rather than the instances. The pattern is the finding.
+- **`SP-4a is absent from the fork` is satisfied on the prepared mirror branch, not on the
+  fork as it stands.** `origin/main` is still `fde9f97` and still carries all four intents.
+  This is true, known, and gated: publishing needs a force-push the controller is not
+  authorised to make.
+- **The AskUserQuestion naming point** was raised again by the opencode reviewer, having
+  been declined earlier in this file with its reason. Declined again, same reason.

@@ -1,0 +1,128 @@
+{
+  "phase": "phase-5",
+  "attempt": 1,
+  "timestamp": "2026-08-26T20:38:36Z",
+  "agent": "code-review-agent",
+  "backend": "opencode",
+  "verdict": "pass_with_findings",
+  "confidence": 78,
+  "phase_title": "Phase 5: Superpowers Behavioural Port",
+  "findings": [
+    {
+      "severity": "info",
+      "location": ".advanced-plans/evidence/2026-08-26-superpowers-port.md:819-825",
+      "description": "Behavioural evidence covers opencode harness only; Claude Code and codex harnesses remain unmeasured",
+      "evidence": "Evidence file section 'loop-002-7 — the human resolution' states: 'All of this behavioural evidence — seven ACC rounds now — comes from the opencode harness. The block is installed for Claude Code and for AGENTS.md readers alike, and only one of those has been measured.'",
+      "recommendation": "Run the same ACC fixtures under Claude Code and codex harnesses to verify cross-harness adherence, as both reviewers independently noted"
+    },
+    {
+      "severity": "info",
+      "location": ".advanced-plans/evidence/2026-08-26-superpowers-port.md:810-814",
+      "description": "Fixture instruction files were placed by controller rather than by aaw init installer",
+      "evidence": "Qwen reviewer finding: 'the fixtures' AGENTS.md was placed by the controller, so what is proven is that the block works when present — not that aaw init puts it there and that it survives to a fresh session.' This was folded into the re-prove (section starting line 681) which used installer-built fixtures.",
+      "recommendation": "The re-prove section (lines 681+) addresses this by building fixtures via project_ops.py install; verify this is sufficient for the gate"
+    },
+    {
+      "severity": "minor",
+      "location": ".claude/skills/setup-with-claude/references/claude-md-routing.md:100",
+      "description": "AskUserQuestion named without explicit harness-neutral equivalent in the same clause",
+      "evidence": "Line 100 reads: 'the harness's structured question tool (AskUserQuestion in Claude Code)' with fallback stated separately. Qwen reviewer suggested naming equivalents for other harnesses; this was declined with reason (finding R3 resolution table, line 696).",
+      "recommendation": "Consider adding explicit equivalents (e.g., 'codex ask', 'cursor question tool') if they exist, or leave as-is since the fallback clause is present"
+    }
+  ],
+  "loops_to_revert": [],
+  "failure_notes": [],
+  "criteria_outcomes": [
+    {
+      "criterion": "The behaviour matrix is written and reviewed before any implementation todo starts",
+      "status": "met",
+      "evidence": ".advanced-plans/evidence/2026-08-26-superpowers-behaviour-matrix.md exists; loops.md loop-001 todos 1-4 all show status: completed; evidence file section 'loop-002-7' confirms cross-model review completed"
+    },
+    {
+      "criterion": "git diff upstream/main..<mirror branch> is empty. A non-empty diff is a failed port",
+      "status": "met",
+      "evidence": ".advanced-plans/evidence/2026-08-26-superpowers-port.md:509-516: 'git rev-parse mirror/upstream-2026-08-26' and 'git rev-parse upstream/main' both return b36e0829c6d0; 'git diff --quiet' exits 0; 'git rev-list --count' is 0 in both directions"
+    },
+    {
+      "criterion": "SP-1 holds: an approved design lands in .advanced-plans/specs/ when Advanced Planning is present, and in the upstream default location when it is not",
+      "status": "met",
+      "evidence": ".advanced-plans/evidence/2026-08-26-superpowers-port.md:480-499: Round 6 with-ap produced spec at '.advanced-plans/specs/2026-08-26-formatter-plugin-system-design.md'; without-ap produced spec at 'docs/superpowers/specs/2026-08-26-plugin-system-design.md' (the upstream default at skills/brainstorming/SKILL.md:100 and :206)"
+    },
+    {
+      "criterion": "SP-2 holds: the terminal state routes to phase planning when Advanced Planning is present, and to upstream writing-plans when it is not",
+      "status": "met",
+      "evidence": ".advanced-plans/evidence/2026-08-26-superpowers-port.md:483-488, 492-499: Round 6 with-ap terminal step was '/new-phase' (phase planning); without-ap terminal step was 'writing-plans'. Both verified by hash-diff against baseline."
+    },
+    {
+      "criterion": "SP-4 (AP half only) holds: the companion-tools recommendation names Advanced Planning and does not name Plannotator",
+      "status": "met",
+      "evidence": ".claude/skills/setup-with-claude/references/claude-md-routing.md:194-196: 'Plannotator is not part of this stack. It was deprecated on 2026-08-26... Do not recommend, detect, install, or route to it' - explicit do-not-use instruction; lines 186-192 recommend Advanced Planning when superpowers is absent"
+    },
+    {
+      "criterion": "The upstream Three Paths router present at current upstream head is intact — verified by diffing the section, not by asserting it",
+      "status": "met",
+      "evidence": ".advanced-plans/evidence/2026-08-26-superpowers-port.md:512-515: 'The Three Paths router is present verbatim at upstream/main:22-52, and both skills/brainstorming/SKILL.md and skills/writing-plans/SKILL.md in both ACC fixtures are byte-identical to it'"
+    },
+    {
+      "criterion": "ACC-05: with Advanced Planning absent, no AAW path is fabricated anywhere in the output",
+      "status": "met",
+      "evidence": ".advanced-plans/evidence/2026-08-26-superpowers-port.md:495-498: '0 hits in both files' for .advanced-plans grep; '.advanced-plans/specs/borrowed.md decoy did not read as an installation — untouched, never cited'"
+    },
+    {
+      "criterion": "Detection is host-neutral: no .claude/… probe remains in any ported logic",
+      "status": "met",
+      "evidence": ".advanced-plans/evidence/2026-08-26-superpowers-port.md:183-187: 'grep -n \\.claude/\\|\\.cursor/\\|\\.opencode/\\|\\.agents/ claude-md-routing.md (no output)'; block reads manifest at .aaw/installed.json instead"
+    },
+    {
+      "criterion": "A provider different from the implementer reviewed the port and its verdict is recorded",
+      "status": "met",
+      "evidence": ".advanced-plans/evidence/2026-08-26-superpowers-port.md:570-579: Two providers different from implementer (claude/Opus 5): codex on gpt-5.6-terra/medium and opencode on Qwen3.5-397B; both returned PASS WITH FINDINGS; verdict files at .advanced-plans/gate-verdicts/phase-5-loop-002-7-{codex,qwen}.json"
+    },
+    {
+      "criterion": "SP-3 is present in the fenced block",
+      "status": "met",
+      "evidence": ".claude/skills/setup-with-claude/references/claude-md-routing.md:99-103 (Brainstorming addition 1): 'Clarifying questions — all three paths... ask them with the harness's structured question tool (AskUserQuestion in Claude Code)'"
+    },
+    {
+      "criterion": "SP-2 attaches to the Architectural path only. Spike- and Bounded-classified requests must produce no spec file and must not invoke phase planning",
+      "status": "met",
+      "evidence": ".advanced-plans/evidence/2026-08-26-superpowers-port.md:486-488, 498: Round 6 with-ap: 'a Spike-classified request produced no spec file and no phase planning — PASS'; 'a Bounded-classified request produced no spec file and no phase planning — PASS'; same for without-ap"
+    },
+    {
+      "criterion": "Detection reads .aaw/installed.json → components[advanced-planning][installed]. A .advanced-plans/ directory is data, not an installation, and does not satisfy the predicate",
+      "status": "met",
+      "evidence": ".claude/skills/setup-with-claude/references/claude-md-routing.md:15-27 defines the predicate; lines 26-27: 'Do not test for a directory. A .advanced-plans/ folder is data'; evidence file lines 496-498: without-ap fixture had '.advanced-plans/specs/borrowed.md decoy' which was 'untouched, never cited'"
+    },
+    {
+      "criterion": "The installer merges the block idempotently — a second run leaves the instruction file byte-identical, and user-authored content survives verbatim",
+      "status": "met",
+      "evidence": ".advanced-plans/evidence/2026-08-26-superpowers-port.md:274-297: 'bash tests/packaging/run-all.sh | tail -4' returns 'idempotency: PASS - 56/56 checks'; stage 10 added 13 new checks for AGENTS.md support; mutant testing verified the checks measure what they claim"
+    },
+    {
+      "criterion": "Every route that names a companion tool's command is gated on the manifest predicate components[<name>][installed] == true, with a stated fallback for the ungated case",
+      "status": "met",
+      "evidence": ".claude/skills/setup-with-claude/references/claude-md-routing.md lines 48-212: All seven front-door rules (1-7) now have explicit 'When <tool> is installed' / 'When it is not' branches; Companion Tools section (181-197) gated on manifest; Closing Instruction (200-212) gated on gstack; default-deny catch-all (39-44) treats any ungated route as gated anyway"
+    },
+    {
+      "criterion": "Fallback branches are actually usable — a gate that says 'when it is not installed' and then gives no usable alternative is a gate in name only",
+      "status": "met",
+      "evidence": ".claude/skills/setup-with-claude/references/claude-md-routing.md: Rule 1 fallback 'Work the ambiguity out in conversation'; Rule 2-3 fallback 'explore the codebase first, then plan — with the writing-plans skill if superpowers is installed, and in conversation if it is not'; Rule 4 fallback 'explore the approaches in conversation'; Rule 5 fallback 'use the writing-plans skill if superpowers is installed, and write the plan in conversation if neither tool is'; Rule 6 fallback 'review the work directly'; Rule 7 fallback 'Review the completed work directly and do not manufacture a phase to hold the review'"
+    },
+    {
+      "criterion": "The block is ONE host-neutral file installed into both CLAUDE.md and AGENTS.md, not two variants",
+      "status": "met",
+      "evidence": ".advanced-plans/evidence/2026-08-26-superpowers-port.md:130-144: 'the block was made fully host-neutral instead and a single file now serves both hosts'; lines 558-560: 'both files carry byte-identical block text' check in test-idempotency.sh stage 10b"
+    },
+    {
+      "criterion": "The test suites under tests/packaging/ test what the criteria claim they test — an idempotency suite that never exercises the failure path is weaker than its pass count suggests",
+      "status": "met",
+      "evidence": ".advanced-plans/evidence/2026-08-26-superpowers-port.md:289-297: 'Two mutants were applied to the implementation and the suite re-run' — Mutant 1 (always returns CLAUDE.md) failed 6 of 13 new checks; Mutant 2 (check-and-write in one pass) failed exactly 1 check for the ordering bug; 'Both mutants were reverted and the suite re-run clean before committing'"
+    },
+    {
+      "criterion": "Nothing in the block would cause a reader to invent a command, a path or a tool that this project has given it no evidence exists",
+      "status": "met",
+      "evidence": ".advanced-plans/evidence/2026-08-26-superpowers-port.md:770-789: broken-manifest fixture with all sentinels on disk and global gstack visible returned NONE for all three requests; worker reasoning states 'Global gstack skills exist at ~/.claude/skills/gstack/ but the project manifest does not confirm installation, so per the routing rules I cannot treat them as installed for this project'"
+    }
+  ],
+  "summary": "Phase 5 delivers a zero-patch mirror of the Superpowers fork with all four intents (SP-1, SP-2, SP-3, SP-4a) expressed in a fenced AAW-owned routing block. The block is host-neutral, manifest-gated, and installed idempotently into both CLAUDE.md and AGENTS.md. Behaviour proofs (ACC-04, ACC-05) passed on round 6 after catching two real defects (F1: contradictory routing rules; F2: missing precedence claim over skill defaults). Cross-model review by codex and opencode returned unanimous PASS WITH FINDINGS, both recommending pure mirror publication. The idempotency suite was strengthened with 13 new checks and mutant-verified. MODEL: Qwen/Qwen3.5-397B-A17B-FP8. Three minor findings remain: (1) behavioural evidence covers opencode harness only, (2) original fixtures had instruction files placed by controller (addressed in re-prove), (3) AskUserQuestion naming without explicit equivalents (declined with reason). The human gate resolved all major findings; publishing the mirror requires force-push authorization outside this session's scope."
+}

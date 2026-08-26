@@ -1,14 +1,16 @@
 # Advanced AI Workflows
 
-**An integrated planning-review-execution system built from four composable open-source tools — gstack, advanced-planning, superpowers, and plannotator.**
+**An integrated planning-review-execution system built from three composable open-source tools — gstack, advanced-planning, and superpowers.**
 
 > **Current implementation: Claude Code only in v0.1.** The CLAUDE.md routing, `.claude/skills/` install paths, and `.claude/settings.json` permission grants are Claude Code-specific. The implementation-ready v0.2 design adds Herdr-managed Claude Code, Codex, OpenCode, and Cursor sessions, but those capabilities remain planned until their acceptance suite passes.
 >
 > **Known packaging blocker on current `main`:** the repository documents and installer reference `.claude/skills/gstack-to-plans/SKILL.md`, but that source file is not tracked. The v0.2 programme repairs this before publishing a new installer. Treat the existing Quick Start as the v0.1 flow, not a verified fresh-install guarantee at this head.
+>
+> **Plannotator was deprecated on 2026-08-26.** v0.1 shipped as a four-tool stack including plannotator for visual plan review. From v0.2 the human review gate is a cross-model gate reviewer instead, and plannotator is no longer installed, detected, or routed to. Existing installs keep working; nothing is uninstalled. See [docs/plannotator-deprecation.md](docs/plannotator-deprecation.md).
 
 ---
 
-## The Four Tools
+## The Three Tools
 
 ### gstack
 
@@ -28,11 +30,18 @@ Hierarchical multi-agent planning framework that decomposes complex programmes i
 
 Composable development methodology skills. Provides brainstorming, TDD, subagent-driven development, and code review as modular skills injected contextually. Tactical helper invoked throughout execution — not the main planning engine. When installed alongside advanced-planning, brainstorming and writing-plans output lands in `.advanced-plans/specs/` via a CLAUDE.md preference override.
 
-### plannotator
+### The review gate
 
-[`MungoHarvey/plannotator`](https://github.com/MungoHarvey/plannotator) (fork of [`backnotprop/plannotator`](https://github.com/backnotprop/plannotator))
+Not a fourth tool — a property of `/run-gate`. At every phase boundary the gate reviewer runs on a
+**different model from the implementer**, reads the changed paths, diff, check output, and the
+phase plan's success criteria, and writes a structured verdict to `.advanced-plans/gate-verdicts/`.
+Every finding is then resolved or explicitly waived by a human before the phase advances.
 
-Browser-based visual plan review and annotation UI. When a phase plan is ready, plannotator opens an interactive interface where you can approve, deny, or annotate with structured feedback. Integration is **automatic** — advanced-planning's `/plan-and-phase` Step 5b auto-invokes `/plannotator-annotate` when plannotator is detected, and plannotator's own `EnterPlanMode`/`ExitPlanMode` hooks fire on every plan-mode event.
+This replaces plannotator's browser-based annotation UI, which v0.1 used for the same purpose.
+Cross-model review is adversarial rather than visual, works identically on all four target
+runtimes, and produces machine-readable evidence. See
+[docs/plannotator-deprecation.md](docs/plannotator-deprecation.md) for the rationale and the
+migration path.
 
 ---
 
@@ -40,8 +49,8 @@ Browser-based visual plan review and annotation UI. When a phase plan is ready, 
 
 ```mermaid
 flowchart TB
-    accTitle: Four-Tool Integration Flow
-    accDescr: gstack at the top produces design docs; the gstack-to-plans glue copies them into .advanced-plans/specs/; advanced-planning consumes them to build phase plans; plannotator and superpowers provide review and methodology.
+    accTitle: Three-Tool Integration Flow
+    accDescr: gstack at the top produces design docs; the gstack-to-plans glue copies them into .advanced-plans/specs/; advanced-planning consumes them to build phase plans; superpowers injects methodology skills per todo; a cross-model reviewer gates each phase boundary.
 
     subgraph gstack_layer["gstack (strategy + review)"]
         gh["/office-hours<br/>/plan-ceo-review<br/>/plan-eng-review"]
@@ -57,17 +66,18 @@ flowchart TB
         rg["/run-gate"]
     end
 
-    subgraph review_layer["plannotator + superpowers"]
-        pn["plannotator<br/>(visual review — automatic)"]
+    subgraph review_layer["review + methodology"]
+        xm["cross-model reviewer<br/>(different model to implementer)"]
         sp["superpowers<br/>(skill injection per todo)"]
     end
 
     gh -->|"design doc written to<br/>~/.gstack/projects/{slug}/"| gl
     gl -->|"archived to<br/>.advanced-plans/specs/"| pp
-    pp -->|"phase plan<br/>.advanced-plans/phases/N/plan.md"| pn
     pp --> rl
     rl -->|"SKILL.md per todo"| sp
     rl --> rg
+    rg -->|"diff + checks + criteria"| xm
+    xm -->|"verdict →<br/>.advanced-plans/gate-verdicts/"| rg
     rg -->|"pass → next phase"| pp
 
     classDef gstack fill:#dbeafe,stroke:#2563eb,color:#1e3a5f
@@ -78,12 +88,12 @@ flowchart TB
     class gh gstack_layer
     class gl glue_layer
     class pp,rl,rg ap_layer
-    class pn,sp review_layer
+    class xm,sp review_layer
 ```
 
-The four tools are unaware of each other. The meta-project owns the glue — a single `gstack-to-plans` skill and a CLAUDE.md routing template that routes user intent to the right tool at the right moment. No tool needs to know the other's internals; they communicate through files.
+The three tools are unaware of each other. The meta-project owns the glue — a single `gstack-to-plans` skill and a CLAUDE.md routing template that routes user intent to the right tool at the right moment. No tool needs to know the other's internals; they communicate through files.
 
-**The full cycle:** `/office-hours` (gstack) → `/gstack-to-plans` (glue) → `/plan-and-phase` (advanced-planning) → visual review (plannotator, automatic) → `/next-loop` (advanced-planning + superpowers skills) → `/run-gate` → `/next-phase`.
+**The full cycle:** `/office-hours` (gstack) → `/gstack-to-plans` (glue) → `/plan-and-phase` (advanced-planning) → `/next-loop` (advanced-planning + superpowers skills) → `/run-gate` (cross-model review) → `/next-phase`.
 
 ### Herdr execution layer (v0.2 design)
 
@@ -120,8 +130,11 @@ Claude will walk you through detecting and installing each sub-package, wiring t
 | [SETUP.md](SETUP.md) | Installation, version compatibility matrix, configuration, and first-run walkthrough |
 | [ROADMAP.md](ROADMAP.md) | v0.1 status and v0.2 Herdr/multi-runtime delivery order |
 | [Herdr Windows operations](docs/herdr-windows-operations.md) | Native-Windows Herdr pilot, worktrees, provider sessions, evidence, and safe cleanup |
-| [Upstream sync playbook](docs/upstream-sync-playbook.md) | Current fork divergence and reviewed update procedures for gstack, Superpowers, and Plannotator |
-| [Upstream baseline snapshot](references/upstream-baseline-2026-08-26.json) | Machine-readable repository heads, divergence, fork-only commits, and intended sync strategy |
+| [Upstream sync playbook](docs/upstream-sync-playbook.md) | Current fork divergence and reviewed update procedures for gstack and Superpowers |
+| [Upstream baseline snapshot](references/upstream-baseline-2026-08-26.json) | Machine-readable repository heads, divergence, fork-only commits, and intended sync strategy (dated snapshot — not updated in place) |
+| [Baseline audit](.advanced-plans/evidence/2026-08-26-baseline-audit.md) | Verified environment and five-repository audit at full SHAs, with deltas from the design snapshot |
+| [Plannotator deprecation](docs/plannotator-deprecation.md) | Why plannotator was removed from the stack, what replaces the review gate, and the migration path |
+| [Releasing](docs/releasing.md) | Versioning scheme, release procedure, and the push/tag human gate |
 | [v0.2 orchestration design](.advanced-plans/specs/2026-08-26-herdr-multi-runtime-orchestration-design.md) | Implementation-ready architecture, contracts, workstreams, and acceptance criteria |
 | [Herdr kickoff prompt](docs/herdr-kickoff-prompt.md) | Prompt to start the programme in a Herdr controller session |
 

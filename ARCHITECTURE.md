@@ -1,8 +1,10 @@
 # Architecture
 
-This document is the technical centrepiece of the Advanced AI Workflows meta-repository. It explains how four independent tools — gstack, advanced-planning, superpowers, and plannotator — connect to form an integrated planning-review-execution system, without any tool needing to know the internals of the others.
+This document is the technical centrepiece of the Advanced AI Workflows meta-repository. It explains how independent tools — gstack, advanced-planning, and superpowers — connect to form an integrated planning-review-execution system, without any tool needing to know the internals of the others.
 
-> **Scope: Claude Code only in v0.1.** CLAUDE.md routing, `.claude/skills/` install paths, Claude plugin install for plannotator/superpowers, and `.claude/settings.json` permission grants are all Claude Code-specific. Multi-runtime support is a v0.2+ ROADMAP item.
+> **Scope: Claude Code only in v0.1.** CLAUDE.md routing, `.claude/skills/` install paths, Claude plugin installs, and `.claude/settings.json` permission grants are all Claude Code-specific. Multi-runtime support is a v0.2+ ROADMAP item.
+>
+> **Plannotator deprecated 2026-08-26.** v0.1 shipped with plannotator as the visual review gate, and this document describes what v0.1 actually did — so plannotator remains in the diagrams and tables below, marked *(v0.1, deprecated)*. It is no longer installed, detected, or routed to. The review gate is now a cross-model gate reviewer at `/run-gate`. See [docs/plannotator-deprecation.md](docs/plannotator-deprecation.md).
 >
 > **Successor design:** this document remains the implemented v0.1 architecture. The planned Herdr execution layer, controller/worker state boundary, and Claude Code/Codex/OpenCode/Cursor adapters are specified in [the v0.2 orchestration design](.advanced-plans/specs/2026-08-26-herdr-multi-runtime-orchestration-design.md). Where the two differ, v0.1 describes current behaviour and the v0.2 spec describes the implementation target.
 
@@ -16,8 +18,8 @@ The design philosophy is deliberate: by keeping tools independent and integratio
 
 ```mermaid
 flowchart TB
-    accTitle: Four-Tool System Overview
-    accDescr: gstack at the strategic layer produces design docs; the glue layer copies them into the project; advanced-planning runs execution; plannotator and superpowers provide review and methodology.
+    accTitle: System Overview
+    accDescr: gstack at the strategic layer produces design docs; the glue layer copies them into the project; advanced-planning runs execution; superpowers provides methodology; a cross-model reviewer gates each phase. Plannotator is shown as the v0.1 review path and is deprecated.
 
     subgraph routing["CLAUDE.md routing (installed by setup-with-claude)"]
         rt["Routes: ambiguous → /office-hours<br/>clear scope → /plan-and-phase<br/>stuck → superpowers brainstorming<br/>second opinion → gstack reviews"]
@@ -42,7 +44,7 @@ flowchart TB
         gate["gate review<br/>/run-gate"]
     end
 
-    subgraph pn["plannotator (automatic)"]
+    subgraph pn["plannotator (v0.1, deprecated)"]
         prv["plan review (ExitPlanMode hook)"]
         ann["/plannotator-annotate (Step 5b)"]
     end
@@ -67,7 +69,7 @@ flowchart TB
     classDef pn fill:#fff8e6,stroke:#f5a623,color:#1a1a1a
 ```
 
-The arrows represent data flows, not function calls. Gstack produces design docs that the glue skill copies into the project. Superpowers brainstorming and writing-plans write directly to `.advanced-plans/specs/` via a CLAUDE.md preference override — no glue needed. Advanced-planning produces phase plans that plannotator renders for review. Plannotator produces structured approval or denial that advanced-planning reads to decide whether to proceed.
+The arrows represent data flows, not function calls. Gstack produces design docs that the glue skill copies into the project. Superpowers brainstorming and writing-plans write directly to `.advanced-plans/specs/` via a CLAUDE.md preference override — no glue needed. Advanced-planning produces phase plans, and `/run-gate` passes each phase's diff and check output to a reviewer running on a different model, which returns a structured verdict that advanced-planning reads to decide whether to proceed. *(In v0.1 this role was plannotator's, rendering the plan in a browser for approval or denial.)*
 
 ---
 
@@ -101,7 +103,7 @@ flowchart LR
         gate["gate review"]
     end
 
-    subgraph pn["plannotator"]
+    subgraph pn["plannotator (v0.1, deprecated)"]
         prv["plan review"]
     end
 
@@ -120,8 +122,9 @@ flowchart LR
 | Strategy → Archive | gstack `/office-hours` etc. | project repo | Design doc copied to `.advanced-plans/specs/{filename}.md` | `gstack-to-plans` glue skill |
 | Archive → Execution input | user/model (after glue runs) | advanced-planning `/plan-and-phase` or `/new-phase` | Design doc content passed as `$ARGUMENTS` | CLAUDE.md routing instruction |
 | Tactical planning → Archive | superpowers `brainstorming` / `writing-plans` | shared archive | Plan/spec markdown written directly to `.advanced-plans/specs/` | CLAUDE.md preference override (no glue) |
-| Phase plan → Visual review | advanced-planning `/plan-and-phase` Step 5b | plannotator | `.advanced-plans/phases/phase-N/plan.md` | advanced-planning (already implements this) |
-| Plan-mode review | Claude Code `EnterPlanMode`/`ExitPlanMode` | plannotator | Plan content in transient memory | plannotator plugin hooks (automatic on install) |
+| ~~Phase plan → Visual review~~ | ~~advanced-planning `/plan-and-phase` Step 5b~~ | ~~plannotator~~ | ~~`.advanced-plans/phases/phase-N/plan.md`~~ | **Deprecated 2026-08-26** — superseded by the row below |
+| ~~Plan-mode review~~ | ~~Claude Code `EnterPlanMode`/`ExitPlanMode`~~ | ~~plannotator~~ | ~~Plan content in transient memory~~ | **Deprecated 2026-08-26** |
+| Phase boundary → Cross-model review | advanced-planning `/run-gate` | reviewer agent on a different model to the implementer | Changed paths, diff, check output, phase success criteria | advanced-planning `/run-gate`; verdict written to `.advanced-plans/gate-verdicts/`, findings resolved or explicitly waived by a human |
 | In-loop methodology | superpowers skill library | advanced-planning worker | `SKILL.md` injected per todo | advanced-planning (already exists) |
 | Gate → Second opinion (deferred) | advanced-planning `/run-gate` | gstack `/plan-eng-review` or `/codex` | Gate verdict + artifacts | Future `gate-to-gstack-review` glue — ROADMAP v0.2 |
 
@@ -160,7 +163,7 @@ A markdown block installed between fenced markers (`<!-- aaw-routing:begin -->` 
 ### What the glue does NOT do
 
 - No exploration-notes.md integration. The design doc reaches `phase-plan-creator` via `$ARGUMENTS` to `/plan-and-phase` or `/new-phase` — not via `.advanced-plans/exploration-notes.md`.
-- No plannotator glue. Advanced-planning's `/plan-and-phase` Step 5b already auto-detects plannotator and invokes `/plannotator-annotate` on the phase plan. The meta-project's only responsibility is ensuring `setup-with-claude` installs plannotator as a Claude Code plugin.
+- No plannotator glue. In v0.1, advanced-planning's `/plan-and-phase` Step 5b auto-detected plannotator and invoked `/plannotator-annotate` on the phase plan, and `setup-with-claude` installed the Claude Code plugin. Both were removed when plannotator was deprecated on 2026-08-26; `setup-with-claude` no longer installs or detects it.
 - No gate-to-gstack-review glue in v0.1. Deferred to ROADMAP v0.2.
 
 ---
@@ -171,8 +174,8 @@ A full planning-review-execution cycle begins with a user's idea and ends with r
 
 ```mermaid
 sequenceDiagram
-    accTitle: Complete Four-Tool Workflow Sequence
-    accDescr: Shows the handoff sequence from gstack strategy through glue, advanced-planning execution, and plannotator review.
+    accTitle: Complete Workflow Sequence
+    accDescr: Shows the handoff sequence from gstack strategy through glue, advanced-planning execution, and review. Plannotator steps reflect the v0.1 flow and are deprecated.
 
     actor User
     participant GS as gstack
@@ -305,7 +308,7 @@ flowchart TB
         PTU["PostToolUse Write"]
     end
 
-    subgraph pnh["plannotator hooks"]
+    subgraph pnh["plannotator hooks (v0.1, deprecated)"]
         pnh1["PermissionRequest on ExitPlanMode<br/>(opens review UI)"]
     end
 
@@ -322,13 +325,13 @@ flowchart TB
     ENPM -.->|"prompt-level routing<br/>defers to AP when AP detected"| sph1
 ```
 
-**Plannotator** registers a `PermissionRequest` hook on `ExitPlanMode`. This intercepts the plan, opens the browser review UI, and waits for user approval or denial. Additionally, advanced-planning's `/plan-and-phase` Step 5b directly invokes `/plannotator-annotate` on the written plan file — a second integration point that does not require the ExitPlanMode hook.
+**Plannotator** *(v0.1, deprecated)* registered a `PermissionRequest` hook on `ExitPlanMode`, intercepting the plan, opening the browser review UI, and waiting for approval or denial; advanced-planning's `/plan-and-phase` Step 5b was a second integration point that did not need the hook. Neither is installed from v0.2 onward — the review gate no longer depends on a host hook, which is much of why it was replaced.
 
 **The meta-project's `PostToolUse` hook** fires when a `Write` targets a path under `~/.gstack/projects/`. It checks the filename against the gstack design-doc pattern and surfaces the `/gstack-to-plans` suggestion in Claude's next turn. The hook is scoped strictly — writes elsewhere produce no output.
 
 **Superpowers** uses a prompt-level `EnterPlanMode` interception in the `using-superpowers` bootstrap skill. When advanced-planning is detected, this defers to advanced-planning's planning flow rather than asserting control.
 
-### Known Gap: plannotator ExitPlanMode popups
+### Known Gap (v0.1, resolved by deprecation): plannotator ExitPlanMode popups
 
 When plannotator is installed, the `ExitPlanMode` hook fires on every plan-mode exit — including short planning sequences. Users may see the plannotator review UI open more frequently than expected. This is a known behaviour gap documented in SETUP.md. There is no workaround in v0.1 without disabling the hook entirely.
 

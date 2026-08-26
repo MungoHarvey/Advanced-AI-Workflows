@@ -6,6 +6,9 @@
 
 **Four-tool integration: gstack + advanced-planning + superpowers + plannotator (Claude Code only)**
 
+> Released as **v0.1.0**, tagged retrospectively on 2026-08-26 at `3422a8c`. See [CHANGELOG.md](CHANGELOG.md).
+> Plannotator was deprecated on 2026-08-26 and is not part of the stack from v0.2 onward; the list below records what v0.1 actually shipped.
+
 - **gstack-to-plans glue skill** — pure markdown `SKILL.md` with no executable helpers. Copies gstack design docs from `~/.gstack/projects/{slug}/` to `.advanced-plans/specs/`. Ask-when-unsure semantics at every ambiguous branch (multiple source matches, destination exists, unexpected filename pattern).
 - **PostToolUse auto-trigger hook** — `PostToolUse Write` matcher scoped strictly to `~/.gstack/projects/`. Surfaces `/gstack-to-plans` suggestion in Claude's next turn when a gstack design doc is written. Fallback: manual `/gstack-to-plans` command + CLAUDE.md closing instruction.
 - **CLAUDE.md routing template** — four-tool front-door rules with superpowers preference overrides (brainstorming and writing-plans save to `.advanced-plans/specs/`). Fenced begin/end markers for clean install/uninstall.
@@ -55,10 +58,10 @@ flowchart TD
 | # | Workstream | Principal deliverables | Exit gate (abridged) |
 |---|---|---|---|
 | 0 | Safety baseline and Herdr pilot | Herdr stable installed natively on Windows; integrations for `claude`, `codex`, `opencode`, `cursor`; recorded repository heads; branch/tag/push policy | Herdr reports `working`, `idle/done`, `blocked` correctly; Windows paths with spaces work; a clean Herdr worktree removes without `--force` |
-| 1A | Synchronise component forks | gstack synced from upstream; Plannotator fast-forwarded; Superpowers rebranched from upstream with integration intent reimplemented (preferably as AAW-owned routing) | Upstream/fork relationships recorded at full SHAs; upstream suites pass; Superpowers behaviour matrix passes with and without Advanced Planning |
+| 1A | Synchronise component forks | gstack synced from upstream; Superpowers rebranched from upstream with integration intent reimplemented (preferably as AAW-owned routing). *Plannotator fast-forward removed — deprecated 2026-08-26.* | Upstream/fork relationships recorded at full SHAs; upstream suites pass; Superpowers behaviour matrix passes with and without Advanced Planning |
 | 1B | Repair AAW packaging | Restore and track `gstack-to-plans/SKILL.md`; packaging test that fails on any missing documented install source; installation manifest replacing stale-directory detection; deterministic non-interactive audit/install; generated compatibility manifest | Fresh checkout contains every documented source artifact; stale `.advanced-plans/` alone no longer counts as installed; install/refresh/audit/uninstall are idempotent |
-| 2 | Advanced Planning multi-runtime adapters | Host-neutral skills/schemas moved to core; Claude Code, Codex, OpenCode, Cursor adapter installers; immutable external-task and collected-evidence schemas; per-host human-review fallback text | All four hosts discover the same named core skills; only the control checkout updates programme state; evidence advances a loop only after schema and gate validation |
-| 3 | AAW multi-host routing and installer | Tracked `.aaw/project.toml`; fenced `AGENTS.md` block shared by Codex/OpenCode/Cursor; updated fenced `CLAUDE.md`; skills installed to `.agents/skills/` and `.claude/skills/`; manifest-driven component detection; runtime-specific Plannotator fallbacks | No host detected only by another host's private path; install/refresh preserve user-authored content outside fenced blocks; four-tool flow works on Claude, planning-to-task works on the other three |
+| 2 | Advanced Planning multi-runtime adapters | Host-neutral skills/schemas moved to core; Claude Code, Codex, OpenCode, Cursor adapter installers; immutable external-task and collected-evidence schemas; cross-model gate reviewer contract | All four hosts discover the same named core skills; only the control checkout updates programme state; evidence advances a loop only after schema and gate validation |
+| 3 | AAW multi-host routing and installer | Tracked `.aaw/project.toml`; fenced `AGENTS.md` block shared by Codex/OpenCode/Cursor; updated fenced `CLAUDE.md`; skills installed to `.agents/skills/` and `.claude/skills/`; manifest-driven component detection | No host detected only by another host's private path; install/refresh preserve user-authored content outside fenced blocks; the three-tool flow works on Claude, planning-to-task works on the other three |
 | 4 | AAW registry and dispatcher | Zero-dependency Python package and `aaw` entry point; SQLite migrations; Herdr CLI adapter; run state machine; `doctor`, `dispatch`, `list`, `inspect`, `prompt`, `attach`, `collect`, `review`, `stop`, `resume`, `clean`; redaction and retention policy | Interruption does not corrupt the registry; a restored session rebinds to its run; collector catches writes outside `allowed_paths`; `clean` refuses a dirty or non-terminal worktree |
 | 5 | End-to-end release | Windows-native compatibility matrix; fixture repos and recorded commands for all four hosts; fork/update and install/refresh/uninstall regression suites; full design-to-gate scenario across two providers | All critical acceptance scenarios pass from fresh clones; docs claim no integration that was only simulated; release commits match manifest SHAs |
 
@@ -88,6 +91,9 @@ v0.2 is complete only when the three forks are current through reviewed branches
 - [Upstream sync playbook](docs/upstream-sync-playbook.md) — Workstream 1A procedures and current fork divergence.
 - [Upstream baseline snapshot](references/upstream-baseline-2026-08-26.json) — machine-readable heads, divergence, and sync strategy.
 - [Herdr kickoff prompt](docs/herdr-kickoff-prompt.md) — paste-ready controller prompt to start the programme.
+- [Baseline audit](.advanced-plans/evidence/2026-08-26-baseline-audit.md) — verified environment and repository heads at full SHAs.
+- [Plannotator deprecation](docs/plannotator-deprecation.md) — rationale, replacement review gate, and migration.
+- [Releasing](docs/releasing.md) — versioning scheme and the push/tag human gate.
 
 ---
 
@@ -109,7 +115,7 @@ Dropped from the v0.2 runtime set in favour of Codex and Cursor. The adapter pat
 
 ## Skipped (will not happen)
 
-- `/aaw-status` cross-tool status command — companion-detection in advanced-planning already handles superpowers + plannotator detection at natural trigger points. gstack is implicit when gstack commands run. No need for parallel command.
+- `/aaw-status` cross-tool status command — companion-detection in advanced-planning already handles superpowers detection at natural trigger points. gstack is implicit when gstack commands run. No need for parallel command.
 - `/aaw-flow` umbrella command — rebuilds what individual tools already do well.
-- Plannotator-on-design-doc glue — plannotator's plan-mode hooks already cover review needs.
+- Plannotator-on-design-doc glue — moot: plannotator was deprecated on 2026-08-26. See [docs/plannotator-deprecation.md](docs/plannotator-deprecation.md).
 - First-run guided tour skill — scope creep without clear payoff.

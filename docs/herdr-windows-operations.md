@@ -35,11 +35,15 @@ Only install Herdr integrations for CLIs that are present and authenticated. AAW
 Use absolute paths throughout this guide. Resolve each repository once:
 
 ```powershell
-$AawRoot = (Resolve-Path 'C:\src\Advanced-AI-Workflows').Path
-$GstackRoot = (Resolve-Path 'C:\src\gstack').Path
-$PlanningRoot = (Resolve-Path 'C:\src\advanced-planning').Path
-$SuperpowersRoot = (Resolve-Path 'C:\src\superpowers').Path
-$PlannotatorRoot = (Resolve-Path 'C:\src\plannotator').Path
+# Adjust to your checkout locations. These are the audited paths on the reference machine.
+$AawRoot = (Resolve-Path 'C:\Users\mharvey2\Coding\Advanced-AI-Workflows').Path
+$GstackRoot = (Resolve-Path 'C:\Users\mharvey2\Coding\gstack-fork').Path
+$PlanningRoot = (Resolve-Path 'C:\Users\mharvey2\Coding\advanced-planning').Path
+$SuperpowersRoot = (Resolve-Path 'C:\Users\mharvey2\Coding\superpowers').Path
+
+# Global locations MUST resolve from USERPROFILE, never HOME/HOMEDRIVE/~ - on a managed
+# Windows profile those can point at a mapped network drive. See baseline audit section 7.
+$GlobalRoot = (Resolve-Path $env:USERPROFILE).Path
 ```
 
 Do not use Git Bash `~` for global install or cleanup targets. The v0.1 smoke exercise demonstrated that its home can differ from `%USERPROFILE%`.

@@ -10,6 +10,7 @@ You are the controller for the Advanced AI Workflows v0.2 update programme.
 
 Read these files completely before changing anything:
 
+0. `.advanced-plans/evidence/2026-08-26-baseline-audit.md` — the verified baseline; read this before the design spec
 1. `.advanced-plans/specs/2026-08-26-herdr-multi-runtime-orchestration-design.md`
 2. `docs/upstream-sync-playbook.md`
 3. `docs/herdr-windows-operations.md`
@@ -88,11 +89,15 @@ Resolve absolute paths for:
 
 - Advanced AI Workflows;
 - Advanced Planning;
-- gstack;
-- Superpowers; and
-- Plannotator.
+- gstack; and
+- Superpowers.
 
-Prefer configured or sibling checkouts. If any path cannot be established unambiguously, ask one concise question listing only the missing repositories.
+Plannotator was deprecated on 2026-08-26 and is no longer part of the programme. Do not audit,
+sync, install, or route to it. See `docs/plannotator-deprecation.md`.
+
+Prefer configured or sibling checkouts. Note that the audit already resolved these: use
+`C:\Users\mharvey2\Coding\gstack-fork` for gstack (**not** `Coding\gstack`, which is a shallow
+dirty clone of upstream) and `C:\Users\mharvey2\Coding\superpowers` for Superpowers. If any path cannot be established unambiguously, ask one concise question listing only the missing repositories.
 
 For each repository:
 
@@ -110,7 +115,6 @@ Expected baseline when the spec was written:
 
 - gstack: upstream-only 89, fork-only 3, no net fork tree patch;
 - Superpowers: upstream-only 241, fork-only 4, net patch in two skill files;
-- Plannotator: upstream-only 442, fork-only 0, clean ancestor;
 - Advanced Planning: owned repo at v0.16.0, no external upstream identified;
 - AAW: owned repo at `3422a8c`.
 
@@ -125,7 +129,7 @@ Use the current Advanced Planning framework if its skills are genuinely installe
 Create a phase plan that follows the design's dependency order:
 
 1. safety baseline and Herdr pilot;
-2. gstack and Plannotator syncs plus AAW packaging repair;
+2. gstack sync plus AAW packaging repair;
 3. Superpowers behavioural port;
 4. Advanced Planning multi-runtime adapters;
 5. AAW multi-host routing and deterministic installer;
@@ -134,7 +138,7 @@ Create a phase plan that follows the design's dependency order:
 
 Every todo must specify repository, base SHA, allowed paths, forbidden planning-state paths, provider, worktree owner, checks, evidence, and decision gates. Mark push/PR/merge as human gates, not implementation todos an agent can self-approve.
 
-Present the phase plan for review using Plannotator where the current host supports it. Otherwise use the explicit manual fallback in the design.
+Present the phase plan for human review before execution, and gate each phase boundary with `/run-gate` running a reviewer on a different model from the implementer. Record which model reviewed. Do not treat a same-model review as an independent one.
 
 ## Step 4 — run a disposable Herdr pilot
 
@@ -163,14 +167,6 @@ Follow `docs/upstream-sync-playbook.md` exactly.
 - Confirm the old fork-only commits still have no net tree patch.
 - Run upstream tests/build plus Windows install smoke.
 - Make no AAW-specific product changes.
-
-### Plannotator
-
-- Create `sync/upstream-<current-date>` from `origin/main` in a Herdr worktree.
-- Require `git merge --ff-only upstream/main`; stop if it is no longer a fast-forward.
-- Run upstream tests/build and the Windows host smoke matrix.
-
-Gstack and Plannotator may run concurrently because they use separate repositories and worktrees.
 
 ### Superpowers
 

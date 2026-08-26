@@ -12,7 +12,7 @@ The same snapshot is available in machine-readable form at [`references/upstream
 |---|---|---|---|---:|---:|---|
 | `MungoHarvey/gstack` | `garrytan/gstack` | `a5dc03b` | `ad84005` | 89 | 3 | replace tree from upstream; fork-only commits are merges with no net patch |
 | `MungoHarvey/superpowers` | `obra/superpowers` | `fde9f97` | `b36e082` (`v6.3.0`) | 241 | 4 | re-port behaviour onto current upstream |
-| `MungoHarvey/plannotator` | `backnotprop/plannotator` | `4db7fcc` | `b381ecb` (`v0.27.8`) | 442 | 0 | clean fast-forward |
+| ~~`MungoHarvey/plannotator`~~ | ~~`backnotprop/plannotator`~~ | ~~`4db7fcc`~~ | ~~`b381ecb` (`v0.27.8`)~~ | ~~442~~ | ~~0~~ | **deprecated 2026-08-26 — no longer synced** |
 | `MungoHarvey/advanced-planning` | none identified | `02b4b86` (`v0.16.0`) | n/a | n/a | n/a | owned package; normal feature branches |
 | `MungoHarvey/Advanced-AI-Workflows` | none | `3422a8c` | n/a | n/a | n/a | owned meta-project; normal feature branches |
 
@@ -36,7 +36,7 @@ In the divergence columns, `git rev-list --left-right --count upstream/main...or
 Run this in each normal fork checkout. Replace the upstream URL for the repository being audited.
 
 ```powershell
-$Repo = (Resolve-Path 'C:\src\gstack').Path
+$Repo = (Resolve-Path 'C:\Users\mharvey2\Coding\gstack-fork').Path
 Set-Location $Repo
 
 git status --short
@@ -94,7 +94,7 @@ Run Herdr directly in Windows Terminal rather than nesting the managed agent ins
 Example for a branch based on upstream:
 
 ```powershell
-$Repo = (Resolve-Path 'C:\src\gstack').Path
+$Repo = (Resolve-Path 'C:\Users\mharvey2\Coding\gstack-fork').Path
 $Created = herdr worktree create `
     --cwd $Repo `
     --branch 'sync/upstream-2026-08-26' `
@@ -161,59 +161,17 @@ After merge and a fresh fetch, this must be empty:
 git diff --exit-code upstream/main...origin/main
 ```
 
-## 5. Plannotator procedure
+## 5. Plannotator procedure — withdrawn
 
-### Why
+**Plannotator was deprecated on 2026-08-26.** It is no longer a component of this project, so
+there is no sync to perform. The fast-forward procedure that stood here has been withdrawn.
 
-At the audited baseline, `origin/main` is an ancestor of `upstream/main`. There are no fork-only commits, so this is a normal fast-forward.
+The `MungoHarvey/plannotator` fork is left as it is on GitHub — deprecation is a decision about
+this project's dependencies, not a deletion. If it is ever reinstated, re-derive the procedure from
+a fresh audit rather than from this document's history: the fork was 442 commits behind upstream at
+the last audit and that gap only grows.
 
-### Branch
-
-Create a Herdr worktree from the fork head:
-
-```powershell
-$Repo = (Resolve-Path 'C:\src\plannotator').Path
-$Created = herdr worktree create `
-    --cwd $Repo `
-    --branch 'sync/upstream-2026-08-26' `
-    --base origin/main `
-    --label 'plannotator upstream sync' `
-    --no-focus | ConvertFrom-Json
-
-$WorkspaceId = $Created.result.workspace.workspace_id
-$PaneId = $Created.result.root_pane.pane_id
-```
-
-In that worktree:
-
-```powershell
-git merge --ff-only upstream/main
-```
-
-If fast-forward fails, stop. A new fork-only commit or changed history requires a fresh audit; do not switch to a normal merge automatically.
-
-### Validation
-
-Give the worker the repository's current validation task and require:
-
-- upstream build and test suite;
-- install command smoke test on native Windows;
-- Claude Code plan/annotation commands;
-- OpenCode plugin discovery;
-- Codex direct `!plannotator`/skill commands on native Windows;
-- confirmation that AAW documentation does not claim automatic native-Windows Codex hooks; and
-- direct CLI annotation as the Cursor fallback.
-
-Then review:
-
-```powershell
-git status --short
-git diff --check origin/main...HEAD
-git merge-base --is-ancestor origin/main HEAD
-git diff --exit-code upstream/main..HEAD
-```
-
-Push the branch and open a PR after human review. Link the backup tag and upstream release/tag tested.
+See [plannotator-deprecation.md](plannotator-deprecation.md).
 
 ## 6. Superpowers procedure
 
@@ -237,7 +195,6 @@ Before editing, turn the local intent into tests/fixtures:
 | stale `.advanced-plans/` only | treat Advanced Planning as absent |
 | Claude Code | use host-appropriate human question/review UI without hard-coding that mechanism into core content |
 | Codex/OpenCode/Cursor | detect through the portable manifest/skills, not `.claude/` paths |
-| Plannotator unavailable | show explicit review fallback; do not block normal Superpowers workflow |
 | all cases | retain upstream v6.3.0 three-path brainstorming router and session/worktree handling |
 
 ### Preferred implementation
@@ -257,7 +214,7 @@ Only retain a Superpowers fork patch if a required behaviour cannot be expressed
 Create from current upstream, not from the stale fork head:
 
 ```powershell
-$Repo = (Resolve-Path 'C:\src\superpowers').Path
+$Repo = (Resolve-Path 'C:\Users\mharvey2\Coding\superpowers').Path
 $Created = herdr worktree create `
     --cwd $Repo `
     --branch 'sync/upstream-2026-08-26' `
@@ -309,7 +266,7 @@ Advanced Planning should release its adapter changes first. The AAW integration 
 
 Recommended merge order:
 
-1. gstack sync PR and Plannotator sync PR, in parallel;
+1. gstack sync PR;
 2. AAW packaging repair PR;
 3. Superpowers upstream sync/boundary-routing PR;
 4. Advanced Planning multi-runtime adapter PRs;

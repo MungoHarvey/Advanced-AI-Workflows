@@ -1,6 +1,6 @@
 ---
 name: setup-with-claude
-description: Use when setting up the Advanced AI Workflows four-tool integration (gstack + advanced-planning + superpowers + plannotator) in a project. Invoke when the user says "set up planning", "install advanced planning", "bootstrap the planning stack", "prepare this project for planning", "install gstack integration", or "wire up the four-tool flow". Also use when the user passes --uninstall (tear down meta-project artifacts) or --refresh (re-detect installed tools). This skill guides Claude through every step interactively — it is not a script, it is a set of instructions Claude reads and executes with the user present.
+description: Use when setting up the Advanced AI Workflows integration (gstack + advanced-planning + superpowers) in a project. Invoke when the user says "set up planning", "install advanced planning", "bootstrap the planning stack", "prepare this project for planning", "install gstack integration", or "wire up the planning flow". Also use when the user passes --uninstall (tear down meta-project artifacts) or --refresh (re-detect installed tools). This skill guides Claude through every step interactively — it is not a script, it is a set of instructions Claude reads and executes with the user present.
 ---
 
 # Setup Advanced AI Workflows
@@ -17,7 +17,6 @@ Before starting, be aware of these files in `references/` (relative to this SKIL
 - `install-gstack.md` — canonical install commands for gstack
 - `install-advanced-planning.md` — canonical install commands for advanced-planning
 - `install-superpowers.md` — canonical install commands for superpowers
-- `install-plannotator.md` — canonical install commands for plannotator
 - `claude-md-routing.md` — the routing block to insert into CLAUDE.md
 - `settings-snippet.json` — the permissions and hook entry to merge into .claude/settings.json
 
@@ -47,7 +46,6 @@ filesystem directly.
 | **gstack** | `~/.claude/skills/gstack/` exists (global install — gstack is always global) |
 | **advanced-planning** | `.claude/skills/phase-plan-creator/SKILL.md` exists in this project, OR `.advanced-plans/` exists at the project root |
 | **superpowers** | `.claude/skills/brainstorming/SKILL.md` exists in this project, OR `~/.claude/skills/brainstorming/SKILL.md` exists globally |
-| **plannotator** | `.claude/commands/plannotator-annotate.md` exists in this project |
 
 On Windows, `~` resolves to `%USERPROFILE%` (e.g. `C:\Users\<name>`). Use `os.homedir()` or
 the platform-appropriate equivalent when constructing paths. On macOS/Linux, `~` resolves
@@ -61,7 +59,6 @@ Report findings to the user in a table:
 | gstack             | installed  | ~/.claude/skills/gstack/ |
 | advanced-planning  | MISSING    | — |
 | superpowers        | installed  | .claude/skills/brainstorming/ |
-| plannotator        | MISSING    | — |
 ```
 
 If everything is installed, tell the user and ask if they want to skip to Step 5 (wire
@@ -88,8 +85,12 @@ Wait for the user's response before proceeding.
   anything still missing.
 
 Repeat for each missing sub-package. Install order: gstack (1st), advanced-planning (2nd),
-superpowers (3rd), plannotator (4th, optional). Tell the user plannotator is optional —
-the integration works without it.
+superpowers (3rd).
+
+> **Plannotator was deprecated on 2026-08-26.** Do not install, detect, or route to it.
+> If the user already has it, leave it alone — it still works standalone, it is simply not
+> part of this stack. The human review gate is now the cross-model reviewer in `/run-gate`.
+> See `docs/plannotator-deprecation.md`.
 
 After presenting install instructions for advanced-planning, note: "After installing
 advanced-planning, you may also need to grant Claude permissions on `.advanced-plans/`.
@@ -237,7 +238,8 @@ Write this structure (fill in actual detected values):
     },
     "plannotator": {
       "installed": false,
-      "notes": "Optional. Install if you want visual plan review."
+      "deprecated": "2026-08-26",
+      "notes": "Deprecated. Not installed or detected by this stack. The review gate is the cross-model reviewer in /run-gate. A pre-existing install is left untouched."
     }
   },
   "glue": {
@@ -267,7 +269,6 @@ Present a final status table to the user:
 | gstack                          | OK     | ~/.claude/skills/gstack/ |
 | advanced-planning               | OK     | .claude/skills/phase-plan-creator/ |
 | superpowers                     | OK     | .claude/skills/brainstorming/ |
-| plannotator                     | SKIP   | optional; not installed |
 | CLAUDE.md routing block         | OK     | appended to CLAUDE.md |
 | .claude/settings.json perms     | OK     | 4 entries added |
 | .claude/settings.json hook      | OK     | PostToolUse/Write matcher added |
@@ -305,9 +306,10 @@ GLUE
   /gstack-to-plans     Copy latest gstack design doc to .advanced-plans/specs/
                        (also fires automatically via the PostToolUse hook)
 
-VISUAL (plannotator — if installed)
-  Fires automatically on plan-mode entry/exit via hooks
-  /plannotator-annotate  Annotate a plan file and send feedback back
+REVIEW GATE (built in — nothing to install)
+  /run-gate  Cross-model reviewer: a different model to the implementer reads the
+             diff, checks, and success criteria, and writes a verdict to
+             .advanced-plans/gate-verdicts/. You resolve or waive each finding.
 ```
 
 > **Session restart required for the PostToolUse hook:** The PostToolUse hook is read by
@@ -320,8 +322,8 @@ VISUAL (plannotator — if installed)
 ## --uninstall
 
 Remove all meta-project artifacts from the current project. This mode never touches
-sub-package installs (gstack, advanced-planning, superpowers, plannotator remain
-untouched).
+sub-package installs (gstack, advanced-planning, superpowers remain untouched). It also
+never touches a pre-existing plannotator install, which is deprecated but left alone.
 
 **Artifacts removed by --uninstall:**
 1. The fenced routing block in `CLAUDE.md` (between `<!-- aaw-routing:begin -->` and `<!-- aaw-routing:end -->`)
@@ -373,8 +375,8 @@ Ask:
 > - 4 .advanced-plans/** permission entries in .claude/settings.json
 > - PostToolUse Write hook (gstack trigger) in .claude/settings.json
 >
-> Sub-package installs (gstack, advanced-planning, superpowers, plannotator) will NOT
-> be touched. Proceed? (yes / no)"
+> Sub-package installs (gstack, advanced-planning, superpowers) will NOT be touched.
+> A pre-existing plannotator install is also left untouched. Proceed? (yes / no)"
 
 If no: abort.
 
@@ -460,7 +462,6 @@ Not touched:
   - gstack (~/.claude/skills/gstack/)
   - advanced-planning (.claude/skills/...)
   - superpowers (.claude/skills/brainstorming/ or ~/.claude/skills/brainstorming/)
-  - plannotator (.claude/commands/plannotator-annotate.md)
 
 To reinstall: run /setup-with-claude
 ```
@@ -526,7 +527,6 @@ Sub-package re-install commands:
 | **advanced-planning** | `sh setup/claude-code/install.sh --project /path/to/your/project` | `.\setup\claude-code\install.ps1 -Project C:\path\to\your\project` |
 | **gstack** | Follow `~/.claude/skills/gstack/INSTALL.md` for the update procedure | Same — check INSTALL.md |
 | **superpowers** | `/plugin install superpowers@claude-plugins-official` (in Claude Code) | Same |
-| **plannotator** | `bun install && bun run build` (in the plannotator directory) | Same |
 
 For each detected sub-package, ask:
 
@@ -559,7 +559,6 @@ setup-with-claude skill:  [refreshed via Method A / refreshed via Method B / ski
 advanced-planning:        [re-installed / skipped / not detected]
 gstack:                   [re-installed / skipped / not detected]
 superpowers:              [re-installed / skipped / not detected]
-plannotator:              [re-installed / skipped / not detected]
 integrations.json:        [updated / written (new) / no change]
 
 Not modified: CLAUDE.md, .claude/settings.json
@@ -587,8 +586,8 @@ ambiguous.
 
 - It does not run shell commands autonomously. Install commands are presented to the user
   to run in their terminal.
-- It does not modify sub-package files (gstack, advanced-planning, superpowers,
-  plannotator). It only installs meta-project artifacts: the routing block, the glue skill,
+- It does not modify sub-package files (gstack, advanced-planning, superpowers). It only
+  installs meta-project artifacts: the routing block, the glue skill,
   the settings.json entries, and integrations.json.
 - It does not modify `~/.claude/` globally except when the user explicitly chooses global
   glue-skill install.

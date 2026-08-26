@@ -62,4 +62,5 @@ OR if `.advanced-plans/` exists at the project root.
 - The meta-project uses `.advanced-plans/` as the runtime root (v0.11.0 canonical path).
 - After install, grant Claude read/edit/write permissions on `.advanced-plans/` via `.claude/settings.json`
   (the `setup-with-claude` skill handles this step automatically).
-- advanced-planning's `/plan-and-phase` auto-detects plannotator and superpowers — no extra wiring needed.
+- advanced-planning's `/plan-and-phase` auto-detects superpowers — no extra wiring needed.
+- Plannotator was deprecated on 2026-08-26; do not install or detect it.

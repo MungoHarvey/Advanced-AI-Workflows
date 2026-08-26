@@ -1,6 +1,8 @@
 # Setup Guide
 
-This guide walks you through installing the full Advanced AI Workflows stack for the four-tool flow: gstack, advanced-planning, superpowers, and plannotator.
+This guide walks you through installing the full Advanced AI Workflows stack: gstack, advanced-planning, and superpowers.
+
+> **Changed 2026-08-26:** plannotator was deprecated and is no longer installed. v0.1 was a four-tool stack; from v0.2 the review gate is a cross-model reviewer built into `/run-gate`. See [docs/plannotator-deprecation.md](docs/plannotator-deprecation.md).
 
 > **Claude Code only in v0.1.** This guide assumes Claude Code. The CLAUDE.md routing, `.claude/skills/` install paths, and `.claude/settings.json` permission grants are Claude Code-specific. Multi-runtime support is a v0.2+ ROADMAP item.
 >
@@ -17,7 +19,6 @@ Each tool can be installed independently — you only need the ones relevant to 
 | advanced-planning | ≥ v0.11.0 | v0.11.0 | v0.11.0 moved the runtime root to `.advanced-plans/`. Earlier versions used `plans/` and are not compatible with this meta-project. |
 | gstack | ≥ v1.0.0 | current main | Requires `~/.claude/skills/gstack/` install path and the `~/.gstack/projects/` write convention. |
 | superpowers | ≥ v1.0.0 | current main | Requires the `brainstorming` skill to support the user-preference override in CLAUDE.md (free-prose override syntax). |
-| plannotator | ≥ v0.1.0 | current main | Requires Claude Code plugin install (`.claude/commands/plannotator-annotate.md` must be present for advanced-planning's auto-detection in `/plan-and-phase` Step 5b). |
 
 ---
 
@@ -26,8 +27,7 @@ Each tool can be installed independently — you only need the ones relevant to 
 | Requirement | Needed For | Install Guide |
 |---|---|---|
 | git | Cloning repositories | [git-scm.com](https://git-scm.com/) |
-| Claude Code | Running the integrated four-tool flow | [claude.ai/code](https://claude.ai/code) |
-| Bun | Plannotator build and runtime | [bun.sh](https://bun.sh/) |
+| Claude Code | Running the integrated flow | [claude.ai/code](https://claude.ai/code) |
 | Node.js (any recent LTS) | PostToolUse hook script | [nodejs.org](https://nodejs.org/) |
 
 ---
@@ -133,55 +133,26 @@ Start a new Claude Code session and describe something you want to build. If sup
 
 ---
 
-### Step 5: Install plannotator
+### Step 5: The review gate (nothing to install)
 
-Plannotator requires Bun. Install it from [bun.sh](https://bun.sh/) if you haven't already.
+> **Plannotator was deprecated on 2026-08-26.** v0.1 installed it here as a Claude Code plugin for
+> browser-based plan review. It is no longer part of the stack — there is nothing to install at this
+> step. See [docs/plannotator-deprecation.md](docs/plannotator-deprecation.md) for the rationale and
+> the migration path if you installed it previously.
 
-#### Claude Code (Plugin Marketplace)
+The human review gate is now a **cross-model gate reviewer**, provided by advanced-planning's
+`/run-gate`. It needs no separate install, no plugin, no Bun, and no browser.
 
-**macOS / Linux / WSL:**
+What it does at each phase boundary:
 
-```bash
-curl -fsSL https://plannotator.ai/install.sh | bash
-```
+1. Spawns a reviewer agent on a **different model from the one that implemented the work**.
+2. Gives it the phase's changed paths, diff, check output, and the phase plan's success criteria.
+3. Writes a structured verdict to `.advanced-plans/gate-verdicts/`.
+4. Requires every finding to be resolved or **explicitly waived by you** before the phase advances.
 
-**Windows PowerShell:**
-
-```powershell
-irm https://plannotator.ai/install.ps1 | iex
-```
-
-Then in Claude Code:
-
-```
-/plugin marketplace add backnotprop/plannotator
-/plugin install plannotator@plannotator
-```
-
-Restart Claude Code after plugin install for the hooks to take effect.
-
-#### Local Development
-
-```bash
-cd plannotator
-bun install
-bun run build
-```
-
-Run Claude Code with the plugin directory pointed at the hook app:
-
-```bash
-claude --plugin-dir ./plannotator/apps/hook
-```
-
-#### Plannotator integration is automatic
-
-Once plannotator is installed as a Claude Code plugin, integration with advanced-planning is fully automatic:
-
-- **`/plan-and-phase` Step 5b** auto-detects plannotator by checking for `.claude/commands/plannotator-annotate.md`. If detected, it invokes `/plannotator-annotate .advanced-plans/phases/phase-N/plan.md` after writing the phase plan — you will see the plannotator review UI open in your browser.
-- **`EnterPlanMode`/`ExitPlanMode` hooks** fire automatically on every plan-mode event when plannotator is installed.
-
-You do not need to invoke plannotator manually for the standard workflow. See [Critical Gap 2](#critical-gap-2-plannotator-exitplanmode-popup-noise) below for a known behaviour gap.
+**Prerequisite:** a second runtime must be configured for the reviewer to run on — Codex, OpenCode,
+or Cursor alongside Claude Code. If only one provider is available, the gate falls back to
+same-model review, which must be recorded as such in the verdict rather than silently accepted.
 
 ---
 
@@ -301,15 +272,15 @@ If the hook misfires or is disabled, the manual fallback still works: run `/gsta
 
 ## Verify the Full Pipeline
 
-With all four tools installed, the complete workflow chains together:
+With all three tools installed, the complete workflow chains together:
 
 1. **Strategy session:** run `/office-hours` in Claude Code. Describe the problem. Gstack walks through a structured session and writes a design doc to `~/.gstack/projects/{slug}/`.
 
 2. **Archive:** the auto-trigger hook surfaces `/gstack-to-plans`. Run it. Claude copies the design doc to `.advanced-plans/specs/` and prints the next-step suggestion.
 
-3. **Phase planning:** run `/plan-and-phase` with the design doc as the description argument. Advanced-planning enters exploration mode, then calls `phase-plan-creator` to produce `.advanced-plans/phases/phase-1/plan.md`. If plannotator is installed, the review UI opens automatically (Step 5b).
+3. **Phase planning:** run `/plan-and-phase` with the design doc as the description argument. Advanced-planning enters exploration mode, then calls `phase-plan-creator` to produce `.advanced-plans/phases/phase-1/plan.md`.
 
-4. **Review:** approve or annotate the phase plan in plannotator.
+4. **Review:** read the phase plan and approve it, or send it back with changes. At the phase's end, `/run-gate` runs the cross-model reviewer and you resolve or waive each finding.
 
 5. **Loop execution:** run `/next-loop`. The orchestrator prepares the first loop; the worker executes todos with targeted superpowers skill injection. Repeat with `/next-loop` or chain with `/next-loop --auto`.
 
@@ -327,24 +298,32 @@ If the four `.advanced-plans/**` entries are absent from `.claude/settings.json`
 
 **Workaround:** run `setup-with-claude` to have Claude add the permissions automatically, or add the four entries manually as shown in Step 6 above.
 
-### Critical Gap 2: plannotator ExitPlanMode popup noise
+### Critical Gap 2 (resolved): plannotator ExitPlanMode popup noise
 
-When plannotator is installed, the `ExitPlanMode` hook fires on every plan-mode exit — including short or incidental planning sequences, not just full phase-plan creation sessions. Users may see the plannotator review UI open more frequently than expected.
+**Resolved by deprecation on 2026-08-26.** Plannotator is no longer installed, so the hook no longer fires.
 
-**Impact:** no data loss or correctness issue. The popup can be dismissed. But it adds friction for users who are not expecting a visual review for every brief plan-mode session.
-
-**Workaround in v0.1:** none without disabling the ExitPlanMode hook entirely, which removes plannotator's automatic review integration. Programmatic detection to suppress the hook for short sessions is on the ROADMAP (v0.2+).
+For the record: when plannotator was installed, its `ExitPlanMode` hook fired on every plan-mode exit — including short or incidental planning sequences, not just full phase-plan creation sessions, so the review UI opened more often than users expected. There was no workaround short of disabling the hook, which removed the automatic review integration entirely. The cross-model gate reviewer that replaced it runs once per phase boundary, on demand, and never opens a browser.
 
 ---
 
 ## Troubleshooting
 
-### Plannotator doesn't open in the browser
+### The gate reviewer runs on the same model as the implementer
 
-- Verify Bun is installed: `bun --version`
-- Rebuild: `cd plannotator && bun install && bun run build`
-- Check for port conflicts — plannotator uses random ports by default. Set `PLANNOTATOR_PORT` to a specific port if needed.
-- In remote/SSH environments, set `PLANNOTATOR_REMOTE=1` and forward the port manually.
+The gate is only as good as its independence. If `/run-gate` reports a same-model review:
+
+- Confirm a second runtime is installed and on `PATH` (`codex --version`, `opencode --version`, `cursor-agent --version`).
+- Confirm the phase config names a reviewer distinct from the implementer.
+- If only one provider is genuinely available, the verdict must say so. A same-model pass recorded as an independent one is worse than no gate.
+
+### Global paths resolve to the wrong drive
+
+On Windows, `HOME`, `HOMEDRIVE`, and `~` can point somewhere other than `%USERPROFILE%` — a redirected or mapped network home is common on managed machines. Tools then install to one root and look for themselves in another, reporting components as missing when they are present.
+
+- Check for disagreement: compare `$env:USERPROFILE` with `$env:HOME` and `$HOME`.
+- Resolve every global path from `USERPROFILE`, never from `HOME`/`HOMEDRIVE`/`~`.
+- If they disagree, pin them for the session before launching agents:
+  `$env:HOME=$env:USERPROFILE; $env:HOMEDRIVE="C:"; $env:HOMEPATH=$env:USERPROFILE.Substring(2)`
 
 ### Superpowers skills don't trigger
 

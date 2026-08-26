@@ -1,6 +1,6 @@
 # Design Rationale
 
-This document explains the decisions behind Advanced AI Workflows — why these four tools, why this integration approach, and the key trade-offs accepted along the way.
+This document explains the decisions behind Advanced AI Workflows — why these tools, why this integration approach, and the key trade-offs accepted along the way.
 
 It is the companion to [ARCHITECTURE.md](ARCHITECTURE.md), which describes *what* the system does. This document describes *why* it is built this way.
 
@@ -8,9 +8,9 @@ It is the companion to [ARCHITECTURE.md](ARCHITECTURE.md), which describes *what
 
 ---
 
-## Why Four Tools?
+## Why These Tools?
 
-No single tool covers the full think, plan, review, execute, review cycle. Each of the four tools solves a distinct problem well and stops where the next tool begins.
+No single tool covers the full think, plan, review, execute, review cycle. Each tool solves a distinct problem well and stops where the next begins.
 
 **gstack** is the high-level strategic planner and reviewer. Commands like `/office-hours`, `/plan-ceo-review`, `/plan-eng-review`, and `/codex` front the pipeline. Gstack writes design docs to `~/.gstack/projects/{slug}/` — durable, project-independent, kept across machine sessions. It does not decompose work into phases or todos; it produces the strategic input that feeds the execution machinery.
 
@@ -18,21 +18,23 @@ No single tool covers the full think, plan, review, execute, review cycle. Each 
 
 **superpowers** is a tactical helper, not the main planning engine. Brainstorming, TDD, systematic debugging, and code review as modular skills. Invoked contextually throughout execution — each skill injects focused instructions for exactly one todo, then gets out of the way. Superpowers' skill library is the integration currency that advanced-planning consumes: any skill file in `.claude/skills/` or `~/.claude/skills/` can be assigned to a todo.
 
-**plannotator** is the human-in-the-loop checkpoint. Browser-based annotation UI for visual plan and code review. When plannotator is installed as a Claude Code plugin, review integration is entirely automatic — no glue, no extra configuration.
+**The cross-model gate reviewer** is the human-in-the-loop checkpoint. Not a tool but a property of `/run-gate`: the reviewer runs on a different model from the implementer and writes a structured verdict that a human resolves or explicitly waives.
 
-### Why not three tools?
+> **Superseded framing.** Through v0.1 this role belonged to **plannotator**, a browser-based annotation UI installed as a Claude Code plugin. It was deprecated on 2026-08-26 — its integration degraded to a manual terminal command on half the v0.2 target runtimes, and the cross-model reviewer was already required by ACC-18 and is stronger. See [docs/plannotator-deprecation.md](docs/plannotator-deprecation.md). The rationale below is preserved as written, with plannotator's role noted where it applied.
 
-The prior three-tool framing (advanced-planning + superpowers + plannotator) left a gap at the strategic layer. There was no dedicated high-level planner with review commands (`/plan-ceo-review`, `/plan-eng-review`, `/codex`). Design docs were produced by superpowers brainstorming and written to a non-standard path that advanced-planning could not reliably consume. Adding gstack fills the strategic gap cleanly and gives the four-tool system a single front door for ambiguous problems.
+### Why gstack, and not planning alone?
+
+An earlier framing (advanced-planning + superpowers) left a gap at the strategic layer. There was no dedicated high-level planner with review commands (`/plan-ceo-review`, `/plan-eng-review`, `/codex`). Design docs were produced by superpowers brainstorming and written to a non-standard path that advanced-planning could not reliably consume. Adding gstack fills the strategic gap cleanly and gives the system a single front door for ambiguous problems.
 
 ---
 
 ## Why Boundary Integration?
 
-The deliberate choice was to integrate at boundaries — file handoffs, hook protocols, markdown documents — rather than merging the four codebases into one or forking sub-packages.
+The deliberate choice was to integrate at boundaries — file handoffs, hook protocols, markdown documents — rather than merging the codebases into one or forking sub-packages.
 
 ### Benefits
 
-**Independent utility.** Each tool works alone. A team that only wants visual plan review uses plannotator. A team that only wants hierarchical planning uses advanced-planning. The integrated workflow is the highest-value configuration, but it is not the only valid one.
+**Independent utility.** Each tool works alone. A team that only wants strategic design sessions uses gstack. A team that only wants hierarchical planning uses advanced-planning. The integrated workflow is the highest-value configuration, but it is not the only valid one.
 
 **No patches required.** The integration is entirely via routing, preference overrides, and one glue skill. The sub-packages are unmodified — this is a locked design decision (Tension 1: pure markdown SKILL.md, no executable helpers, no sub-package patches). This means upstream improvements pull cleanly with zero merge conflict overhead.
 
@@ -40,7 +42,7 @@ The deliberate choice was to integrate at boundaries — file handoffs, hook pro
 
 ### Trade-offs
 
-**Configuration surface.** Four tools means four detections, four optional installs, and more things that can be misconfigured. The `setup-with-claude` skill mitigates this by walking Claude through detection and install interactively.
+**Configuration surface.** Three tools means three detections, three optional installs, and more things that can be misconfigured. The `setup-with-claude` skill mitigates this by walking Claude through detection and install interactively.
 
 **Best-effort compliance.** The glue skill (gstack-to-plans) instructs Claude to perform file operations. Claude reads the SKILL.md and executes the steps. When Claude is unsure — multiple matches, destination exists, unexpected pattern — it invokes `AskUserQuestion` for permission rather than guessing. This trades deterministic file-tool semantics for a contract Claude can actually honour turn-to-turn.
 
@@ -54,7 +56,7 @@ The deliberate choice was to integrate at boundaries — file handoffs, hook pro
 
 **Decision.** gstack is the front door for ambiguous problems and quality reviews. It sits at the top of the pipeline and at quality gates. All other tools are downstream of a gstack design session.
 
-**Rationale.** The pipeline now has a clear shape: gstack produces strategic input → glue copies it to the project → advanced-planning structures execution → superpowers provides methodology → plannotator reviews output. Each tool has a non-overlapping role. The system's "single front door" property comes from gstack, not from the meta-project itself.
+**Rationale.** The pipeline now has a clear shape: gstack produces strategic input → glue copies it to the project → advanced-planning structures execution → superpowers provides methodology → a cross-model reviewer gates the output. Each tool has a non-overlapping role. The system's "single front door" property comes from gstack, not from the meta-project itself.
 
 **Trade-off.** gstack requires a separate install and writes to `~/.gstack/projects/` outside the project repo. Users who do not have gstack can still use advanced-planning directly; the glue layer is just bypassed. The dual-write property (gstack origin immutable, `.advanced-plans/specs/` is the project-resident copy) means the design doc travels with the repo even though gstack itself is global.
 
@@ -98,19 +100,19 @@ The deliberate choice was to integrate at boundaries — file handoffs, hook pro
 
 ### Benefits
 
-**Independent utility.** Each tool works alone. A team that only wants visual plan review uses plannotator. A team that only wants hierarchical planning uses advanced-planning. A team that only wants methodology skills uses superpowers. The integrated workflow is the highest-value configuration, but it is not the only valid one.
+**Independent utility.** Each tool works alone. A team that only wants strategic design and review uses gstack. A team that only wants hierarchical planning uses advanced-planning. A team that only wants methodology skills uses superpowers. The integrated workflow is the highest-value configuration, but it is not the only valid one.
 
-**Upstream sync without pain.** No sub-package patches are required for v0.1. All integration is via routing, preference overrides, and one glue skill. This means upstream improvements from advanced-planning, superpowers, plannotator, and gstack pull cleanly with zero fork-maintenance overhead.
+**Upstream sync without pain.** No sub-package patches are required for v0.1. All integration is via routing, preference overrides, and one glue skill. This means upstream improvements from advanced-planning, superpowers, and gstack pull cleanly with zero fork-maintenance overhead.
 
-**Contributor isolation.** Contributing to advanced-planning requires understanding its planning model. Contributing to superpowers requires understanding markdown skill design. Contributing to plannotator requires understanding the hook protocol. Contributing to the meta-project requires understanding how to wire tools together. These are different skill sets; boundary integration preserves the separation so contributors do not need to understand all four domains to make a change in one.
+**Contributor isolation.** Contributing to advanced-planning requires understanding its planning model. Contributing to superpowers requires understanding markdown skill design. Contributing to gstack requires understanding its command surface. Contributing to the meta-project requires understanding how to wire tools together. These are different skill sets; boundary integration preserves the separation so contributors do not need to understand all three domains to make a change in one.
 
 **Testability.** Each integration boundary is a well-defined interface: a markdown file, a JSON payload, a `SKILL.md`. These interfaces can be tested in isolation.
 
 ### Trade-offs
 
-**Configuration surface.** Four tools means four detections, four optional installs, and more things that can be misconfigured. `setup-with-claude` mitigates this by walking Claude through all of it interactively.
+**Configuration surface.** Three tools means three detections, three optional installs, and more things that can be misconfigured. `setup-with-claude` mitigates this by walking Claude through all of it interactively.
 
-**Hook conflicts.** Multiple tools interact with Claude Code's hook system. The meta-project's `PostToolUse` hook is scoped strictly to `~/.gstack/projects/` writes to avoid spurious invocations. Plannotator's `ExitPlanMode` hook fires more broadly. The known gap (plannotator popup noise on short planning sequences) is documented in SETUP.md.
+**Hook conflicts.** Multiple tools interact with Claude Code's hook system. The meta-project's `PostToolUse` hook is scoped strictly to `~/.gstack/projects/` writes to avoid spurious invocations. This was a sharper problem in v0.1, when plannotator's broadly-firing `ExitPlanMode` hook produced popup noise on short planning sequences; deprecating plannotator removed that conflict entirely.
 
 **Conceptual overlap.** Both gstack and superpowers have opinions about what a design document should contain. The meta-project resolves this by assigning non-overlapping roles: gstack produces strategic design docs (front of pipeline, quality gates), superpowers produces tactical plans and explorations (during execution). They write to the same archive (`.advanced-plans/specs/`) for unified discoverability.
 
@@ -122,6 +124,6 @@ The deliberate choice was to integrate at boundaries — file handoffs, hook pro
 
 2. **Gate-to-gstack-review glue.** Deferred to v0.2. When `/run-gate` produces a verdict, invoking gstack's `/plan-eng-review` or `/codex` for a second opinion is the natural next step. This requires a `gate-to-gstack-review` glue skill analogous to `gstack-to-plans`.
 
-3. **Programmatic plannotator detection refinement.** Currently detection relies on checking for `.claude/commands/plannotator-annotate.md`. A more robust detection mechanism is on the ROADMAP.
+3. **Programmatic component detection.** v0.1 detection relied on probing for a host-specific path — `.claude/commands/plannotator-annotate.md` for plannotator, `.advanced-plans/` for advanced-planning. Both are unreliable: the first is Claude-only, the second false-positives on a stale data directory. v0.2 Workstream 1B replaces them with an installation manifest.
 
 These questions are tracked in [ROADMAP.md](ROADMAP.md).

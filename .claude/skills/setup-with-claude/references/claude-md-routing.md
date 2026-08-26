@@ -40,12 +40,14 @@ When a user presents a new request, route to the right tool using these rules �
    Use when: a phase plan or design is ready for structured review before execution begins,
    or after execution for a retrospective quality check.
 
-7. **Visual review of a plan or diff**
-   → Invoke `/plannotator-annotate` (plannotator, if installed)
-   Use when: plannotator is installed (`.claude/commands/plannotator-annotate.md` exists)
-   and the user wants a visual annotation of the phase plan or a code diff.
-   Note: plannotator also fires automatically via its `EnterPlanMode`/`ExitPlanMode` hooks
-   whenever Claude Code enters or exits plan mode — no explicit invocation needed for that.
+7. **Review at a phase boundary**
+   → Invoke `/run-gate` (advanced-planning)
+   Use when: a phase's work is complete and it must be reviewed before advancing.
+   The gate reviewer runs on a different model from the implementer, reads the diff,
+   check output, and phase success criteria, and writes a verdict to
+   `.advanced-plans/gate-verdicts/`. Every finding is resolved or explicitly waived
+   by the user before the phase advances.
+   Note: plannotator was deprecated on 2026-08-26. Do not route to it or detect it.
 
 ### Superpowers Preference Overrides
 
@@ -65,7 +67,7 @@ place to look.
 ### Companion-Detection Reference
 
 Advanced-planning's companion-detection skill (invoked during `/plan-and-phase`) already
-detects whether superpowers and plannotator are installed and recommends them where
+detects whether superpowers is installed and recommends it where
 appropriate. This meta-project does NOT replicate that logic — it relies on
 companion-detection's existing behaviour.
 

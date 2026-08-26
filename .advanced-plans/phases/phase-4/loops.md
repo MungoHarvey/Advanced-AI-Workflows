@@ -44,7 +44,7 @@ todos:
     evidence: "Fresh full SHAs and divergence counts, with any delta from the baseline called out explicitly"
     gate: "none"
     outcome: "The sync starts from measured reality rather than from a three-week-old snapshot"
-    status: pending
+    status: completed
     complexity: low
     priority: high
   - id: "loop-001-2"
@@ -61,7 +61,7 @@ todos:
     evidence: "The empty diff output, and the three commit SHAs listed"
     gate: "none"
     outcome: "The replace-the-fork-tree strategy is re-justified at execution time"
-    status: pending
+    status: completed
     complexity: low
     priority: high
   - id: "loop-001-3"

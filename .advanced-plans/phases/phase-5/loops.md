@@ -39,7 +39,7 @@ todos:
     evidence: "Fresh SHAs, divergence, and the net-patch path list, with any delta from the baseline called out"
     gate: "none"
     outcome: "The matrix describes the patch as it is now, not as it was three weeks ago"
-    status: pending
+    status: completed
     complexity: low
     priority: high
   - id: "loop-001-2"

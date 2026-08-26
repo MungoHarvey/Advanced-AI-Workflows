@@ -4,12 +4,12 @@ current_phase: 4
 phase_name: "gstack Sync and AAW Packaging Repair"
 plan_file: .advanced-plans/phases/phase-4/plan.md
 loops_file: .advanced-plans/phases/phase-4/loops.md
-status: not started — phase 3 passed with one open item (ACC-10); phase 4 loops decomposed and ready
-current_loop: (none started)
+status: in progress — loop 001 read-only audit done (todos 1-2); next write is the sync branch and backup tag
+current_loop: 001 — gstack-sync
 loops_total: 3
 todos_total: 15
-todos_done: 0
-todos_pending: 15
+todos_done: 2
+todos_pending: 13
 last_updated: 2026-08-26
 
 programme: "AAW v0.2 — Herdr-managed multi-runtime orchestration"

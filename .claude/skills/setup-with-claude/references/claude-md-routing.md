@@ -63,7 +63,11 @@ When a user presents a new request, route to the right tool using these rules �
    below for the three additions this project makes to it.
 
 5. **Need a structured implementation plan from a spec**
-   → Use the `writing-plans` skill (superpowers)
+   → **When Advanced Planning is installed:** invoke `/new-phase` (or `/plan-and-phase`
+   for a codebase not yet explored), passing the spec as the description. Phase planning
+   is this project's route from an approved spec to executable work, and for that job it
+   **supersedes** `writing-plans` — see *Brainstorming*, addition 3.
+   → **When it is not installed:** use the `writing-plans` skill (superpowers).
    Use when: a spec or design doc is approved and a detailed task-by-task plan is needed.
 
 6. **Need a second opinion on a plan, design, or completed work**
@@ -125,6 +129,13 @@ The intent is one archive: design docs from gstack, specs from `brainstorming`, 
 from `writing-plans` all land under `.advanced-plans/specs/` in a project that has Advanced
 Planning — one place to look. In a project that does not, nothing is redirected anywhere,
 and no `.advanced-plans/` path is invented.
+
+This section says where `writing-plans` writes **if it runs**. It is not an instruction to
+run it. In a project with Advanced Planning, the step after an approved architectural spec
+is phase planning, not `writing-plans` — rule 5 above and addition 3 under *Brainstorming*
+both say so, and this section does not reopen the question. `writing-plans` still runs when
+a user asks for it directly, or when a phase loop injects it as a todo's skill; that is the
+output being redirected here.
 
 Both skills honour user-stated preferences, so this is a preference and not a patch — no
 change to superpowers is required for any of it.

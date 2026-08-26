@@ -167,10 +167,10 @@ todos:
     worktree_owner: "herdr"
     checks:
       - "git check-ignore -v .claude/skills/gstack-to-plans/SKILL.md -> names the excluding rule and its line"
-    evidence: "The check-ignore output naming the exact rule"
+    evidence: "The check-ignore output naming the exact rule. Result: `.gitignore:12:.claude/skills/*` is the sole cause. Line 11 re-includes the directory, line 12 excludes its contents, line 13 whitelists only setup-with-claude/. Confirmed further: the file is absent from this checkout AND from the whole history (`git log --all -- .claude/skills/gstack-to-plans/*` is empty), so it was never tracked rather than deleted. The deployed copy is ~/.claude/skills/gstack-to-plans/SKILL.md, 3912 bytes, 2026-06-16. .claude/skills holds only setup-with-claude locally, so there is no local skill collection at risk of leaking."
     gate: "none"
     outcome: "The fix targets the actual cause rather than the symptom"
-    status: pending
+    status: completed
     complexity: low
     priority: high
   - id: "loop-002-2"

@@ -89,7 +89,7 @@ todos:
     evidence: "Verdict, findings, reviewer model, and the human resolution or waiver of each finding"
     gate: "human"
     outcome: "The design gate the spec requires before the port begins is actually observed"
-    status: pending
+    status: completed
     complexity: medium
     priority: high
 

@@ -1,0 +1,14 @@
+{
+  "loop_name": "ralph-loop-001",
+  "loop_file": ".advanced-plans/phases/phase-5/loops.md",
+  "phase": "phase-5",
+  "status": "completed",
+  "todos_done": 4,
+  "todos_failed": 0,
+  "completed_at": "2026-08-26T00:00:00Z",
+  "handoff": {
+    "done": "Superpowers behaviour matrix written and passed its cross-model design gate. SP-1..SP-4 each have a port/do-not-port verdict with a named destination. loop-001-3 (opencode/Qwen3.5 397B, controller-verified) established that upstream v6.3.0 added a three-path router (Spike/Bounded/Architectural) with three terminal states, so SP-2 attaches to the Architectural path only; upstream skills/ has zero references to Advanced Planning or Plannotator. loop-001-4 (codex/GPT-5.6 Sol) returned BLOCKED and was right: the matrix's claim that the fork's companion-tools patch was the only hook for AAW routing was unfounded, because the design spec already mandates a fenced routing block in AGENTS.md/CLAUDE.md merged by aaw init, read before any skill loads. Corrected. At the human gate SP-3 was routed through that same fenced block, so the fork patch goes to zero and Superpowers reaches section 13.1 mirror state with nothing pending on upstream.",
+    "failed": "",
+    "needed": "ralph-loop-002 is unblocked on design grounds but blocked on the manifest dependency: .aaw/detect.py, .aaw/installed.schema.json and tools/aaw-audit.py exist only on origin/feat/aaw-packaging-repair and must be merged into docs/herdr-v0.2-import first. Also: loop-002's todos predate the matrix and contradict it — loop-002-3 still says 'port the Advanced Planning half of SP-4', which the gate reversed to do-not-port. Revise loop-002's todos against the matrix before executing them. Three entry criteria must be settled first: the manifest predicate, fenced-block precedence against user-authored content, and the with/without-AP acceptance tests."
+  }
+}

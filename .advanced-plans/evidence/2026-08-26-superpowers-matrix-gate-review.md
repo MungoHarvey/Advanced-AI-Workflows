@@ -1,7 +1,7 @@
 # Cross-model design gate — Superpowers behaviour matrix
 
 **Loop**: `phase-5` / `ralph-loop-001` — todo `loop-001-4`
-**Gate**: human (ACC-18 cross-model review). **Status: awaiting human resolution.**
+**Gate**: human (ACC-18 cross-model review). **Status: PASSED 2026-08-26** — reviewer verdict was BLOCKED; both blocking findings resolved and the major finding decided at the human gate.
 
 | Role | Provider | Model |
 |---|---|---|
@@ -163,15 +163,32 @@ The matrix as reviewed is recoverable at tag `checkpoint/loop-001`.
 
 ---
 
-## Human resolution
-
-*To be completed at the gate. Each finding requires an explicit resolution or a
-recorded waiver before `ralph-loop-002` may start (design §13.3; phase-5 plan).*
+## Human resolution — 2026-08-26
 
 | Finding | Severity | Proposed | Human resolution |
 |---|---|---|---|
 | F1 coverage | none | — | — |
-| F2 hook-point claim | blocking | Accept — corrected | *pending* |
+| F2 hook-point claim | blocking | Accept — corrected | **Accepted.** Matrix Finding 1 rewritten; SP-4a's verdict reversed to do-not-port |
 | F3 consistency | none | — | — |
-| F4 SP-3 disposition | major | Human decision | *pending* |
-| F5 integration contract | blocking | Accept — partly corrected, rest to loop-002 | *pending* |
+| F4 SP-3 disposition | major | Human decision | **Resolved: put SP-3 in the fenced routing block.** See below |
+| F5 integration contract | blocking | Accept — partly corrected, rest to loop-002 | **Accepted.** Discovery/loading/precedence answered in Finding 1; manifest predicate, precedence rule and with/without-AP acceptance tests written into the matrix as explicit `ralph-loop-002` entry criteria |
+
+### F4 as decided
+
+SP-3's substance — *present choices as structured options rather than prose* — is
+an instruction about how to talk to a user, and the host instruction file is where
+AAW is entitled to say that. It goes in the fenced `AGENTS.md` / `CLAUDE.md`
+block, the same mechanism as SP-1, SP-2 and SP-4a's pointer. No deadline, no
+owner, no dependency on a third party, because nothing is being held anywhere.
+
+An upstream PR to `obra/superpowers` remains worth offering — the improvement is
+genuinely general — but it is now optional generosity. Nothing in AAW waits on it.
+
+**Consequence: the fork patch goes to zero.** All four intents are delivered by
+AAW-owned mechanisms; Superpowers becomes a §13.1 `mirror` with no holding
+position. That is the design's stated preferred end state (§13.3), reached
+without needing upstream to accept anything.
+
+**Gate status: PASSED.** Both blocking findings resolved, the major finding
+decided. `ralph-loop-002` is unblocked on design grounds — it remains blocked on
+the packaging-repair merge (the manifest dependency), which is a separate matter.

@@ -91,19 +91,33 @@ fork commit `f2d65a6`.
 
 **Detection.** None. It is unconditional.
 
-**Verdict: DO NOT PORT into AAW-owned routing.**
+**Verdict: DO NOT PORT into the fork — and do not hold it there either.**
 
-**Where it goes instead: upstream, as a standalone contribution to
-`obra/superpowers`.** It is not an Advanced Planning integration and never was —
-it improves brainstorming for every Superpowers user, conditional on nothing.
-Carrying it in AAW-owned routing would be a category error: AAW routing exists to
-say what AAW wants, and this says nothing about AAW.
+**Where it goes instead: the fenced routing block in the host instruction file**
+(`AGENTS.md` / `CLAUDE.md`), as an AAW instruction to the agent — *when
+brainstorming, present choices as structured options rather than prose*. Same
+mechanism as SP-1, SP-2 and the SP-4a pointer.
 
-**Interim position.** It stays in the fork patch until upstream accepts or
-declines it. That is the one and only intent for which `patch` state is a holding
-position rather than a design decision, and it should be recorded as such in the
-compatibility manifest (§13.1) so it is not later mistaken for AAW behaviour. If
-upstream declines, re-open the verdict — do not silently keep it.
+**Reason, and the decision it settles.** The first draft parked SP-3 in the fork
+"pending upstream", which the `loop-001-4` reviewer correctly called an
+indefinite non-decision (F4): it named no deadline, no owner, and no rule for
+what happens if upstream never replies. That mattered more than it first
+appeared, because once Finding 1 removes SP-1, SP-2 and SP-4a from the patch,
+**SP-3 alone is what stops the fork being a pure mirror.**
+
+The fenced block dissolves the dilemma. SP-3's substance is an instruction about
+how to talk to a user; the host instruction file is exactly where AAW may say
+that, and saying it there requires no patch on anybody's repository. So:
+
+- **The fork reaches `mirror` state immediately** (§13.1) — no patch, no holding
+  position, nothing pending on a third party.
+- **AAW users keep the behaviour**, delivered by AAW's own installer.
+- **An upstream PR to `obra/superpowers` remains worth offering**, because the
+  improvement is genuinely general — but it is now optional generosity rather
+  than a dependency. Nothing in AAW waits on the answer.
+
+*(Decision taken at the `loop-001-4` human gate, 2026-08-26. See
+`2026-08-26-superpowers-matrix-gate-review.md` F4.)*
 
 ---
 
@@ -195,9 +209,14 @@ Two consequences, both inverting the original conclusion:
   patch on another project's repository to duplicate a mechanism AAW already
   installs. Its verdict flips to do-not-port.
 
-After this correction the fork patch reduces to **SP-3 alone** — an
-unconditional brainstorming improvement with no AAW content. See F4 of the gate
-review: SP-3 is now the entire remaining obstacle to `mirror` state.
+After this correction the fork patch reduced to **SP-3 alone** — an unconditional
+brainstorming improvement with no AAW content — which is what made the gate
+review's F4 decisive rather than cosmetic. F4 was then resolved at the human gate
+by routing SP-3 through the same fenced block.
+
+**Net result: the fork patch goes to zero.** All four intents are delivered by
+AAW-owned mechanisms, and Superpowers becomes a `mirror` in §13.1's terms with no
+holding position and nothing pending on a third party.
 
 ### Finding 2 — the patch uses two different AP detection probes
 
@@ -239,7 +258,7 @@ Two consequences:
 |---|---|---|---|---|
 | SP-1 design-doc location | `brainstorming` | `.claude/skills/phase-plan-creator/SKILL.md` | **Port** | Fenced routing block in `AGENTS.md` / `CLAUDE.md`; manifest detection |
 | SP-2 terminal state | `brainstorming` | `.claude/skills/phase-plan-creator/SKILL.md` | **Port — Architectural path only** | Fenced routing block; manifest detection. Spike and Bounded paths untouched (`loop-001-3`) |
-| SP-3 AskUserQuestion | `brainstorming` | none (unconditional) | **Do not port** | Upstream `obra/superpowers` contribution; held in the fork patch until upstream rules |
+| SP-3 AskUserQuestion | `brainstorming` | none (unconditional) | **Do not port** | Fenced routing block, as an AAW instruction. Fork reaches `mirror` at once; an upstream PR stays optional |
 | SP-4a AP companion entry | `using-superpowers` | two probes (Finding 2) | **Do not port** | Superseded by the fenced routing block, which is read earlier and is AAW-owned (Finding 1) |
 | SP-4b Plannotator entry | `using-superpowers` | `.claude/commands/plannotator-annotate.md` OR plugin | **Do not port** | Nowhere — dropped; Plannotator deprecated 2026-08-26. Upstream AP's `companion-detection` still names it: separate defect |
 

@@ -4,13 +4,13 @@ current_phase: 5
 phase_name: "Superpowers Behavioural Port"
 plan_file: .advanced-plans/phases/phase-5/plan.md
 loops_file: .advanced-plans/phases/phase-5/loops.md
-status: not started — phase 4 CLOSED on 2026-08-26 (gate PASSED, attempt 2, unanimous across codex and both in-house reviewers, zero critical findings, one criterion waived by human decision)
-current_loop: null
-gate_status: pending
+status: in progress — ralph-loop-001 COMPLETE 2026-08-26 (behaviour matrix written, cross-model design gate PASSED after a BLOCKED verdict was resolved). ralph-loop-002 blocked on the packaging-repair merge.
+current_loop: ralph-loop-002
+gate_status: loop-001 design gate PASSED 2026-08-26 (reviewer codex/GPT-5.6 Sol, author claude/Opus 5 — ACC-18 satisfied)
 loops_total: 2
-todos_total: 0
-todos_done: 0
-todos_pending: 0
+todos_total: 11
+todos_done: 4
+todos_pending: 7
 previous_phase: 4 — gate PASSED attempt 2, closed and compacted 2026-08-26
 last_updated: 2026-08-26
 
@@ -41,6 +41,7 @@ open_items:
   - "browse/test/build.test.ts:16 interpolates an unquoted path into execSync and breaks on any checkout path containing a space. Upstream bug, worth reporting to garrytan/gstack."
   - "sync/upstream-2026-08-26 and pre-upstream-sync-2026-08-26 are local only and need a push gate."
   - "feat/aaw-packaging-repair is pushed (origin, 3b19a49) but not merged. Until it lands, main still ships an incomplete install set, and README:7 and SETUP.md:9 need one further edit when it does. A pull request and a merge are each a separate authorisation and neither has been given."
+  - "ralph-loop-002 todos predate the behaviour matrix and now contradict it. loop-002-3 still reads 'Port the Advanced Planning half of SP-4 (companion-tools recommendation)', which the loop-001-4 gate reversed to do-not-port: the fenced AGENTS.md/CLAUDE.md routing block supersedes it. loop-002-2 also assumes AAW routing lives in .claude/skills/ or .agents/skills/, which Finding 1 showed is not read unless something points at it. Revise loop-002 against the matrix before executing any of its todos."
   - "The gstack-to-plans glue skill has zero AskUserQuestion callouts although phase 1 accepted it on having them at three ambiguous branches. Committed verbatim to preserve provenance; the packaging test checks presence, not correctness, so it cannot catch this."
   - "An agent self-reported model id is not evidence — a codex reviewer named a model that contradicted its own pane footer, then retracted it. ACC-18 checks must use the started --kind and the observable pane, not the agent word."
   - "Phase-4 Key Deliverables names two evidence files that were produced under different names (<date>-gstack-sync.md and <date>-packaging-repair.md against the actual ...-phase-4-loop-001-gstack-sync.md and ...-phase-4-loop-003-installation-state.md). Both gate attempts flagged it at info level. The plan was left as gated and the reconciliation is recorded in phases/phase-4/complete.md instead of editing an artefact the reviewers had already seen."

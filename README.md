@@ -4,7 +4,7 @@
 
 > **Current implementation: Claude Code only in v0.1.** The CLAUDE.md routing, `.claude/skills/` install paths, and `.claude/settings.json` permission grants are Claude Code-specific. The implementation-ready v0.2 design adds Herdr-managed Claude Code, Codex, OpenCode, and Cursor sessions, but those capabilities remain planned until their acceptance suite passes.
 >
-> **Known packaging blocker on current `main`:** the repository documents and installer reference `.claude/skills/gstack-to-plans/SKILL.md`, but that source file is not tracked. The v0.2 programme repairs this before publishing a new installer. Treat the existing Quick Start as the v0.1 flow, not a verified fresh-install guarantee at this head.
+> **Packaging blocker fixed on this branch.** The repository documented and installed `.claude/skills/gstack-to-plans/SKILL.md` without tracking it, so a fresh clone did not contain the documented install source. The skill is now tracked, and `tests/packaging/test-fresh-clone.sh` fails the build if any documented install source goes missing from a fresh clone again. **`main` is still affected** until this work lands there, so clone `main` for a fresh install only if you already have the skill.
 >
 > **Plannotator was deprecated on 2026-08-26.** v0.1 shipped as a four-tool stack including plannotator for visual plan review. From v0.2 the human review gate is a cross-model gate reviewer instead, and plannotator is no longer installed, detected, or routed to. Existing installs keep working; nothing is uninstalled. See [docs/plannotator-deprecation.md](docs/plannotator-deprecation.md).
 

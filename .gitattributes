@@ -10,3 +10,10 @@
 *.ps1 text eol=crlf
 *.cmd text eol=crlf
 *.bat text eol=crlf
+
+# Data files that shell scripts parse line-by-line must check out with LF too. This pin
+# states that requirement explicitly. It is not load-bearing today: the reader's
+# trailing-whitespace sed already strips a carriage return, and an unguarded reader was
+# tested against a deliberately CRLF'd manifest and passed. The pin exists so the next
+# parser added here does not have to depend on that side effect.
+tests/packaging/*.txt text eol=lf

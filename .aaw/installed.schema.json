@@ -1,0 +1,136 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/mungoharvey/Advanced-AI-Workflows/.aaw/installed.schema.json",
+  "title": "AAW installation manifest",
+  "description": "The source of truth for what Advanced AI Workflows has installed into a project, where, and at what version. Written by setup-with-claude; read by --refresh, by the audit, and by any tool that needs to know whether a component is present. It exists because path probing lies in both directions: a stale .advanced-plans/ directory is not an installation, and a component installed under a global profile is invisible to a project-local probe. Every path here is absolute and free of ~ and of environment-variable references, because on some machines HOME and USERPROFILE disagree and a manifest that records ~ records nothing.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "generated_at",
+    "generated_by",
+    "platform",
+    "project_root",
+    "components"
+  ],
+  "properties": {
+    "schema_version": {
+      "description": "Integer, incremented only on a breaking change to this schema. A reader that does not recognise the value must refuse to interpret the file rather than guess.",
+      "type": "integer",
+      "const": 1
+    },
+    "generated_at": {
+      "description": "UTC ISO 8601 instant, seconds precision, trailing Z. Local times are not accepted: two manifests written on either side of a DST boundary must remain comparable. The pattern below fixes the shape only - 2026-99-99T99:99:99Z matches it and is not a date. JSON Schema cannot express the calendar check here (format is an annotation a validator need not enforce), so readers do it: tools/aaw-audit.py before writing, tests/packaging/validate-manifest.py when validating.",
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$"
+    },
+    "generated_by": {
+      "description": "Name and version of whatever wrote the file, so a bad manifest can be traced to the writer that produced it.",
+      "type": "string",
+      "minLength": 1
+    },
+    "platform": {
+      "description": "The operating-system family whose path conventions the absolute paths in this file follow.",
+      "type": "string",
+      "enum": ["windows", "macos", "linux"]
+    },
+    "project_root": {
+      "description": "Absolute path to the project this manifest describes. The manifest itself lives at <project_root>/.aaw/installed.json.",
+      "$ref": "#/$defs/absolutePath"
+    },
+    "components": {
+      "description": "One entry per component the stack knows about, keyed by its canonical name. A component that has never been considered is absent; a component that was considered and is not present is recorded with installed: false, which is information a missing key cannot carry.",
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/component"
+      }
+    }
+  },
+  "$defs": {
+    "absolutePath": {
+      "description": "An absolute path in native form for the manifest's platform: a Windows drive-letter path such as C:\\Users\\name\\project, or a POSIX path beginning with /. A tilde, a $VAR, or a %VAR% is rejected outright — those are the ambiguity this manifest exists to remove.",
+      "type": "string",
+      "minLength": 2,
+      "pattern": "^(?:[A-Za-z]:[\\\\/]|/)[^~$%]*$"
+    },
+    "component": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["installed", "scope"],
+      "properties": {
+        "installed": {
+          "description": "Whether the component is present. This is the answer, not a hint: it is written after a sentinel file was confirmed to exist, never inferred from a data directory.",
+          "type": "boolean"
+        },
+        "scope": {
+          "description": "Where the component lives. 'global' is the user profile, 'project' is this project's tree, 'none' is used when the component is not installed and therefore has no location.",
+          "type": "string",
+          "enum": ["global", "project", "none"]
+        },
+        "install_path": {
+          "description": "Absolute path to the installed component's root directory.",
+          "$ref": "#/$defs/absolutePath"
+        },
+        "sentinel": {
+          "description": "Absolute path to the single file whose existence was checked. Recording it makes the claim falsifiable: a reader can check the same path and disagree.",
+          "$ref": "#/$defs/absolutePath"
+        },
+        "version": {
+          "description": "The component's version as reported by its own VERSION file or manifest, or the literal 'unknown' when it does not publish one. 'unknown' is a real answer and is preferred to omitting the field or inventing a number.",
+          "type": "string",
+          "minLength": 1
+        },
+        "deprecated": {
+          "description": "ISO date on which this component was deprecated by the programme. Present only for deprecated components, which are recorded rather than deleted so that a pre-existing install is not silently re-detected as wanted.",
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+        },
+        "notes": {
+          "type": "string"
+        }
+      },
+      "allOf": [
+        {
+          "description": "An installed component must say where it is, what proved it, and what version it is. Without those three the entry is an assertion rather than a record.",
+          "if": {
+            "properties": { "installed": { "const": true } },
+            "required": ["installed"]
+          },
+          "then": {
+            "required": ["install_path", "sentinel", "version"]
+          }
+        },
+        {
+          "description": "A component that is not installed has no location, and must not carry a stale one from a previous run.",
+          "if": {
+            "properties": { "installed": { "const": false } },
+            "required": ["installed"]
+          },
+          "then": {
+            "properties": { "scope": { "const": "none" } },
+            "not": {
+              "anyOf": [
+                { "required": ["install_path"] },
+                { "required": ["sentinel"] }
+              ]
+            }
+          }
+        },
+        {
+          "description": "Conversely, scope 'none' is reserved for components that are not installed.",
+          "if": {
+            "properties": { "scope": { "const": "none" } },
+            "required": ["scope"]
+          },
+          "then": {
+            "properties": { "installed": { "const": false } }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -54,6 +54,60 @@ into AAW-owned routing and the fork becomes a pure mirror with zero patch.
 - ✓ Detection is host-neutral: no `.claude/…` probe remains in any ported logic.
 - ✓ A provider different from the implementer reviewed the port and its verdict is recorded.
 
+## Amendment — 2026-08-26, after the loop-001 design gate
+
+The behaviour matrix and its cross-model gate (reviewer `codex`/GPT-5.6 Sol, author `claude`/Opus 5)
+changed three things this plan had assumed. The original text above is left intact for provenance;
+where the two disagree, **this amendment governs, and it is what the phase-5 gate checks.**
+
+**1. There is no port branch, because there is no patch.** The plan assumed SP-4a had to be carried
+as a fork patch so that something inside Superpowers would point at AAW's routing. Design spec
+lines 206-209, 281 and 598-599 already mandate a fenced routing block that `aaw init` merges into
+`AGENTS.md` and/or `CLAUDE.md`, read before any skill loads, in every supported harness. That block
+is the hook, AAW owns it, and it makes the fork patch zero. `port/aaw-routing-<date>` is therefore
+replaced by a local mirror branch plus a backup tag on the pre-port fork head `fde9f97`.
+
+**2. SP-3 is delivered, not given away.** "Explicitly NOT included" above is superseded by the
+gate's F4 resolution and the operator's decision: the `AskUserQuestion` instruction goes into the
+same fenced block. It is an instruction about how an agent talks to a user, and the host instruction
+file is exactly where AAW may say that. An upstream PR to `obra/superpowers` becomes optional
+generosity rather than a dependency.
+
+**3. SP-4a is not ported.** "the Advanced Planning half of SP-4" is reversed to do-not-port for the
+same reason as (1) — the fenced block is read earlier than any Superpowers skill, so a companion
+pointer inside the fork is redundant. Upstream Advanced Planning already ships its own
+`core/skills/companion-detection/SKILL.md`, which is the mirror image of SP-4 and still names the
+deprecated Plannotator; that is a defect to report against `advanced-planning`, not something to
+duplicate here.
+
+### Amended deliverables
+
+| Deliverable | Format | Location |
+|-------------|--------|----------|
+| Backup tag + local mirror branch | Git refs | `superpowers`, local only — no remote write in this phase |
+| AAW-owned routing | Fenced block, two host variants | `.claude/skills/setup-with-claude/references/` in AAW |
+| With/without-AP test evidence | Markdown | `.advanced-plans/evidence/<date>-superpowers-port.md` |
+
+### Amended success criteria
+
+- ✓ Supersedes "the port branch's first commit is current `upstream/main`":
+  `git diff upstream/main..<mirror branch>` is **empty**. A non-empty diff is a failed port.
+- ✓ Supersedes "SP-4 (AP half only) holds": SP-4a is **absent** from the fork, and the fenced block
+  carries the companion recommendation instead, naming Advanced Planning and not Plannotator.
+- ✓ Added: SP-3 is present in the fenced block.
+- ✓ Added: SP-2 attaches to the **Architectural** path only. Spike- and Bounded-classified requests
+  must produce no spec file and must not invoke phase planning — tested, not asserted.
+- ✓ Added: detection reads `.aaw/installed.json` → `components["advanced-planning"]["installed"]`.
+  A `.advanced-plans/` directory is data, not an installation, and does not satisfy the predicate.
+- ✓ Added: the installer merges the block idempotently — a second run leaves the instruction file
+  byte-identical, and user-authored content survives verbatim.
+- ✓ Unchanged and still binding: SP-1, SP-2 with/without AP (ACC-04, ACC-05), the Three Paths router
+  intact, host-neutral detection, and a different-provider review (ACC-18).
+
+**Not authorised by this amendment.** Publishing the mirror requires force-pushing `origin/main` in
+the Superpowers fork, which the kickoff prompt places outside the controller's authority. Phase 5
+prepares and proves the mirror locally and stops at a human gate.
+
 ## Dependencies
 
 ### Must complete before this phase
@@ -104,4 +158,4 @@ into AAW-owned routing and the fork becomes a pure mirror with zero patch.
 | Loop | Name | Type | Key Outputs |
 |------|------|------|-------------|
 | 001 | behaviour-matrix | Investigation | The four intents documented and reviewed, with an explicit port/do-not-port verdict and the reason for each |
-| 002 | routing-port | Implementation | Port branch from current upstream; SP-1, SP-2, and SP-4-AP reimplemented as AAW-owned routing; with/without-AP behaviour proven; cross-model review recorded |
+| 002 | routing-port | Implementation | SP-1, SP-2, SP-3 and the companion pointer delivered through the fenced AGENTS.md/CLAUDE.md block; fork taken to a zero-patch mirror locally; with/without-AP behaviour proven; cross-model review recorded (see the 2026-08-26 amendment) |

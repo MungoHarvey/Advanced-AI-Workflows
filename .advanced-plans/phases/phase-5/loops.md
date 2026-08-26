@@ -121,7 +121,7 @@ prompt: |
 ```yaml
 ---
 name: "ralph-loop-002"
-task_name: "Reimplement the integration intent as AAW-owned routing"
+task_name: "Deliver the integration intent through the fenced routing block, and take the fork to mirror"
 max_iterations: 3
 on_max_iterations: escalate
 
@@ -132,58 +132,64 @@ handoff_summary:
 
 todos:
   - id: "loop-002-1"
-    content: "Create port/aaw-routing-<date> from current upstream/main in a Herdr worktree, and tag the pre-port fork head as a backup"
+    content: "Back up the fork head and prepare the mirror locally — annotated tag on the pre-port fork head, plus a local branch that matches upstream/main exactly. No remote write of any kind."
     repository: "superpowers"
-    base_sha: "upstream/main, re-fetched"
-    allowed_paths: ["the port worktree only"]
-    forbidden_paths: ["origin/main", "<standard programme forbidden set>"]
+    base_sha: "origin/main fde9f97 (backup); upstream/main, re-fetched (mirror)"
+    allowed_paths: ["local refs in the superpowers checkout only"]
+    forbidden_paths: ["any remote ref", "<standard programme forbidden set>"]
     provider: "controller"
     worktree_owner: "herdr"
     checks:
-      - "git log -1 on the new branch matches upstream/main exactly — prove the branch point"
-      - "git tag -n99 on the backup tag shows the pre-port fork head fde9f97..."
-    evidence: "Branch name, head SHA, backup tag, worktree absolute path"
+      - "git tag -n99 on the backup tag shows the pre-port fork head fde9f97"
+      - "git diff upstream/main..<mirror branch> -> completely empty, proving the tree is a mirror"
+      - "git log --oneline origin/main..<mirror branch> and the reverse -> recorded, so the operator sees exactly what publishing would change"
+    evidence: "Backup tag, mirror branch name and head SHA, both diff outputs, and the exact command that would publish it"
     gate: "none"
-    outcome: "The port starts from current upstream, and the old fork state is recoverable"
+    outcome: "The fork can be taken to mirror by one reviewed command, and the old state is recoverable"
     status: pending
     complexity: low
     priority: high
   - id: "loop-002-2"
-    content: "Implement SP-1 and SP-2 as AAW-owned routing that reads the Phase 4 installation manifest, with no .claude/ path probe anywhere"
+    content: "Author the fenced AAW routing block carrying SP-1, SP-2 (Architectural path only), the SP-4a companion pointer and SP-3, gated on the manifest predicate. Two variants: CLAUDE.md and AGENTS.md."
     repository: "Advanced-AI-Workflows"
-    base_sha: "loop-002-1; depends on phase-4 loop-003 manifest"
-    allowed_paths: [".claude/skills/", ".agents/skills/", "references/"]
+    base_sha: "loop-002-1; manifest merged 2026-08-26"
+    allowed_paths: [".claude/skills/setup-with-claude/references/", "docs/"]
     forbidden_paths: ["<standard programme forbidden set>"]
     provider: "claude"
     worktree_owner: "herdr"
     checks:
-      - "grep for .claude/ in the ported routing logic -> expect zero host-specific probes"
-      - "the routing reads the installation manifest, not a directory existence test"
-    evidence: "The routing source and the grep output"
+      - "the block reads .aaw/installed.json .components[advanced-planning].installed — no directory existence test anywhere in it"
+      - "grep the block for .claude/ and .cursor/ and .opencode/ -> zero hits"
+      - "SP-2 names the Architectural path explicitly and says Spike and Bounded are untouched"
+      - "grep the block for plannotator -> zero hits"
+      - "the AGENTS.md and CLAUDE.md variants say the same thing about SP-1, SP-2 and SP-3; only host mechanics differ"
+    evidence: "Both block texts and every grep output"
     gate: "none"
-    outcome: "The integration behaviour lives in AAW and works on any host, rather than in a Claude-only fork patch"
+    outcome: "All four intents are expressed in a file AAW owns, so the fork needs no patch at all"
     status: pending
     complexity: high
     priority: high
   - id: "loop-002-3"
-    content: "Port the Advanced Planning half of SP-4 (companion-tools recommendation) and confirm the Plannotator half is absent"
+    content: "Make the installer merge the block idempotently into an existing instruction file without replacing user-authored content"
     repository: "Advanced-AI-Workflows"
     base_sha: "loop-002-2"
-    allowed_paths: [".claude/skills/", ".agents/skills/", "references/"]
+    allowed_paths: [".claude/skills/setup-with-claude/", "tests/packaging/"]
     forbidden_paths: ["<standard programme forbidden set>"]
     provider: "claude"
     worktree_owner: "herdr"
     checks:
-      - "the companion recommendation names Advanced Planning"
-      - "grep for plannotator in the ported routing -> zero hits"
-    evidence: "The recommendation text and both grep results"
+      - "install twice into a fixture -> the instruction file is byte-identical after the second run"
+      - "install into a fixture whose instruction file already has user content -> that content survives verbatim"
+      - "the block is delimited so uninstall can remove exactly it and nothing else"
+      - "tests/packaging/run-all.sh still passes"
+    evidence: "The fixture diffs, the byte-identical proof, and the suite output"
     gate: "none"
-    outcome: "The useful half of SP-4 survives the deprecation and the deprecated half does not come back"
+    outcome: "Design section 7.2 idempotency holds in practice, not just on paper"
     status: pending
-    complexity: low
-    priority: medium
+    complexity: high
+    priority: high
   - id: "loop-002-4"
-    content: "Prove the behaviour with Advanced Planning present: an approved design lands in .advanced-plans/specs/ and the terminal state routes to phase planning"
+    content: "Prove the behaviour with Advanced Planning present: an approved design lands in .advanced-plans/specs/ and the Architectural terminal state routes to phase planning"
     repository: "a temporary fixture project"
     base_sha: "loop-002-3"
     allowed_paths: ["the fixture project"]
@@ -192,10 +198,11 @@ todos:
     worktree_owner: "herdr"
     checks:
       - "run the flow end to end; assert the output landed in .advanced-plans/specs/ — ACC-04"
-      - "assert the terminal state invoked phase planning"
-    evidence: "The fixture transcript and the resulting file paths"
+      - "assert the Architectural terminal state invoked phase planning"
+      - "run a Spike-classified and a Bounded-classified request; assert NEITHER produced a spec file or invoked phase planning"
+    evidence: "The fixture transcript and the resulting file paths, for all three router paths"
     gate: "none"
-    outcome: "SP-1 and SP-2 are proven by behaviour rather than by file inspection"
+    outcome: "SP-1 and SP-2 are proven by behaviour, and the router is proven not to have been over-hooked"
     status: pending
     complexity: high
     priority: high
@@ -210,23 +217,25 @@ todos:
     checks:
       - "run the same flow; assert the output landed in the upstream default location — ACC-05"
       - "grep the whole output for .advanced-plans -> zero hits"
-    evidence: "The fixture transcript, the resulting paths, and the grep output"
+      - "assert the manifest predicate read false rather than the file being missing entirely — absence must be recorded, not inferred"
+    evidence: "The fixture transcript, the resulting paths, the manifest contents, and the grep output"
     gate: "none"
     outcome: "ACC-05 passes — the failure mode where AAW invents a path that does not exist is excluded"
     status: pending
     complexity: high
     priority: high
   - id: "loop-002-6"
-    content: "Prove the current upstream Three Paths router is intact on the port branch by diffing the section, not by asserting it"
-    repository: "superpowers (port worktree)"
+    content: "Prove the fork is a mirror by diffing the whole tree against upstream, not by asserting it"
+    repository: "superpowers (mirror branch)"
     base_sha: "loop-002-5"
     allowed_paths: ["read-only"]
     forbidden_paths: ["<standard programme forbidden set>"]
     provider: "controller"
     worktree_owner: "herdr"
     checks:
-      - "git diff upstream/main..port/aaw-routing-<date> -- skills/brainstorming/SKILL.md -> the router section is unchanged, or every change to it is justified in writing"
-    evidence: "The diff, with the router section shown"
+      - "git diff upstream/main..<mirror branch> -> empty. Any non-empty result is a failed port, not a partial success"
+      - "git show upstream/main:skills/brainstorming/SKILL.md contains the Three Paths router verbatim as quoted in the drift evidence"
+    evidence: "Both outputs in full"
     gate: "none"
     outcome: "The exact regression this phase exists to prevent is checked for, not hoped against"
     status: pending
@@ -242,7 +251,8 @@ todos:
     worktree_owner: "herdr"
     checks:
       - "the reviewing and implementing providers are named and differ — ACC-18"
-      - "if a fork patch remains, it is host-neutral, minimal, and against current upstream"
+      - "the reviewer is asked specifically whether the fenced block over-reaches into user instructions"
+      - "if a fork patch remains, it is host-neutral, minimal, against current upstream, and justified in writing"
     evidence: "Verdict, findings, reviewer model, the human resolution or waiver of each finding, and the mirror-or-patch outcome"
     gate: "human"
     outcome: "The higher-risk lane carries an independent verdict and an explicit statement of what the fork now is"
@@ -253,26 +263,50 @@ todos:
 prompt: |
   ## Context from prior loop
   Done: [inject prior.handoff_summary.done]
+
   The behaviour matrix is the specification for this loop. Follow it; do not re-derive intent
-  from the diff.
+  from the diff. Read all three evidence documents before starting:
+  - evidence/2026-08-26-superpowers-behaviour-matrix.md    (the spec)
+  - evidence/2026-08-26-upstream-superpowers-drift.md      (what upstream now does)
+  - evidence/2026-08-26-superpowers-matrix-gate-review.md  (what the gate changed and why)
 
   ## Objective
-  Move SP-1, SP-2, and the AP half of SP-4 into AAW-owned routing so the Superpowers fork can
-  become a mirror. A minimal host-neutral patch against current upstream is an acceptable
-  fallback if it is justified in writing.
+  Deliver SP-1, SP-2, SP-3 and the SP-4a companion pointer through the fenced AAW routing
+  block in AGENTS.md / CLAUDE.md, so the Superpowers fork needs no patch and can become a
+  mirror. The fork patch target is ZERO. A remaining patch is a failure to be justified, not
+  a planned outcome.
+
+  ## What changed from the first draft of this loop
+  This loop was written before the matrix existed and contradicted it in two places. Both are
+  now corrected above. Do not resurrect either:
+  - SP-4a is NOT ported into Superpowers. The fenced block is read earlier and AAW owns it.
+  - SP-3 is NOT left in the fork "pending upstream". It goes in the fenced block too.
+
+  ## Entry criteria — settled, do not re-litigate
+  1. Manifest predicate: Advanced Planning is present iff
+     .aaw/installed.json .components["advanced-planning"].installed is true. A .advanced-plans/
+     directory is data and does not count. Merged into this branch 2026-08-26.
+  2. Precedence: the block is additive and idempotent. It must never assert authority over
+     user-authored instructions, and re-running the installer must leave the file
+     byte-identical.
+  3. Acceptance: loop-002-4 and loop-002-5 are the with-AP and without-AP tests. File
+     inspection is not proof.
 
   ## Hard rules
-  - Branch from current upstream/main. Never copy the stale fork files forward.
-  - No .claude/ path probes in ported logic. Read the installation manifest.
-  - Prove behaviour with AND without Advanced Planning. File inspection is not proof.
-  - Do not port SP-3. Do not port the Plannotator half of SP-4.
+  - Never copy the stale fork files forward. Nothing is written into Superpowers at all.
+  - No .claude/, .cursor/ or .opencode/ probe in the routing. Read the manifest.
+  - SP-2 attaches to the Architectural path ONLY. Spike and Bounded must behave exactly as
+    upstream has them, and loop-002-4 tests that.
+  - Do not port the Plannotator half of SP-4. It is dropped.
+  - No remote write in this loop. Publishing the mirror is a separate authorisation.
 
   ## Success criteria
-  - [ ] port branch provably starts at current upstream/main, with a backup tag on the old head
-  - [ ] SP-1, SP-2, SP-4-AP reimplemented with host-neutral detection
-  - [ ] ACC-04 proven in a fixture with Advanced Planning
-  - [ ] ACC-05 proven in a fixture without it, with zero .advanced-plans references in the output
-  - [ ] the upstream Three Paths router is diffed and shown intact
+  - [ ] backup tag and mirror branch exist locally, with the publish command written down
+  - [ ] the fenced block carries SP-1, SP-2, SP-3 and SP-4a with host-neutral detection
+  - [ ] the installer merges it idempotently without touching user content
+  - [ ] ACC-04 proven with Advanced Planning, including that Spike and Bounded are untouched
+  - [ ] ACC-05 proven without it, with zero .advanced-plans references in the output
+  - [ ] git diff upstream/main..<mirror branch> is empty
   - [ ] a different provider reviewed it; mirror-or-patch outcome recorded
 ---
 ```

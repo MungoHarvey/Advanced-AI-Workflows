@@ -6,11 +6,15 @@ superpowers/
 # Scratch test projects (intentionally isolated fresh repos)
 scratch/
 
-# Claude Code working state (ignore everything, then whitelist the public skill)
+# Claude Code working state. Ignore everything, then re-admit the published skills one
+# directory at a time. Never relax `.claude/skills/*` wholesale: this machine's local skill
+# collection lives in the same tree and must not leak into the repository. Adding a skill to
+# the product means adding one line here, deliberately.
 .claude/*
 !.claude/skills/
 .claude/skills/*
 !.claude/skills/setup-with-claude/
+!.claude/skills/gstack-to-plans/
 
 # Local agent briefing (not public)
 CLAUDE.md

@@ -4,7 +4,7 @@
 **Branch:** `feat/aaw-packaging-repair`, head `3b0c6214ba7025e91c5cd4834c3770e9022b8713`
 **Base:** `e5082037e4d5a007c1a8ccd0a3753ab5239ae667` on `docs/herdr-v0.2-import`
 **Worktree:** `C:\Users\mharvey2\Coding\aaw worktrees\aaw-packaging-repair`, workspace `wA`, owner `herdr`
-**Pushed:** no. This branch is local only and has never been sent to a remote.
+**Pushed:** yes, on 2026-08-26, under the loop-003-5 human gate — `origin/feat/aaw-packaging-repair` at `360ab3c`. No pull request has been opened and nothing has been merged; both remain separate decisions.
 
 **Result: the documented install set is now complete in a fresh clone, and a test now fails if it
 stops being complete.** The `.gitignore` change admits exactly one directory and nothing else.

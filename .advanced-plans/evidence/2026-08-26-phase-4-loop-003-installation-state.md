@@ -4,7 +4,7 @@
 **Branch:** `feat/aaw-packaging-repair`, head `360ab3c`
 **Base:** `3b0c621` (end of loop 002), on top of `e508203` on `docs/herdr-v0.2-import`
 **Worktree:** `C:\Users\mharvey2\Coding\aaw worktrees\aaw-packaging-repair`, workspace `wA`, owner `herdr`
-**Pushed:** no. This branch is local only and has never been sent to a remote.
+**Pushed:** yes, on 2026-08-26, under the loop-003-5 human gate — `origin/feat/aaw-packaging-repair` at `360ab3c`. No pull request has been opened and nothing has been merged; both remain separate decisions.
 
 **Result: installation state is now a thing a machine can read, disagree with, and fail on.**
 A manifest records what is installed and where; detection no longer treats a data directory as
@@ -210,7 +210,7 @@ should stop a pull request:
 |---|---|
 | Branch | `feat/aaw-packaging-repair` at `360ab3c`, clean |
 | Commits since base | 11 (`0e145c7` … `360ab3c`) |
-| Pushed | **no** — local only, and no push has been authorised for it |
+| Pushed | **yes**, 2026-08-26, authorised at the loop-003-5 gate — `origin/feat/aaw-packaging-repair` at `360ab3c`. No PR, no merge. |
 | Suite | `packaging: PASS - 4/4 checks` (13/13, 24/24, 21/21, 43/43) |
 | Reviewer | codex `pkgreview`, `gpt-5.6-terra`, workspace `wA`, pane `wA:p1` |
 | Verdict | **PASS** on pass 4, with the two caveats in §4 recorded |

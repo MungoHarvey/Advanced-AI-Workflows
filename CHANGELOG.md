@@ -17,7 +17,9 @@ Design: [`.advanced-plans/specs/2026-08-26-herdr-multi-runtime-orchestration-des
 ### Added
 
 > The packaging entries below live on `feat/aaw-packaging-repair`. That branch is complete and has
-> passed its cross-model review; it has not been merged, and it has never been pushed.
+> passed its cross-model review and was pushed on 2026-08-26 under the loop-003-5 gate
+> (`origin/feat/aaw-packaging-repair` at `360ab3c`). It has not been merged, and no pull request
+> has been opened.
 
 - **`.aaw/installed.json` and its schema** — a manifest recording which components are installed,
   at which version, and to which absolute native path, so a later reader can check the same paths
@@ -166,8 +168,9 @@ Two assumptions were disproved by test rather than carried: a CR guard in the ma
 added, tested, found redundant, and removed; and the comment justifying the LF pin was corrected to
 its true reason.
 
-Record: `.advanced-plans/evidence/2026-08-26-phase-4-loop-002-packaging-repair.md`. The branch
-`feat/aaw-packaging-repair` is local only at `3b0c621` and has never been pushed.
+Record: `.advanced-plans/evidence/2026-08-26-phase-4-loop-002-packaging-repair.md`. That loop
+left `feat/aaw-packaging-repair` local at `3b0c621`; it was pushed on 2026-08-26, at `360ab3c`,
+after loop 003 and its review.
 
 
 ### Known issues

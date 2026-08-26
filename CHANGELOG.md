@@ -32,6 +32,12 @@ Design: [`.advanced-plans/specs/2026-08-26-herdr-multi-runtime-orchestration-des
 - `.advanced-plans/phases/phase-3` … `phase-9` — the v0.2 implementation plan. Phases 3 to 5 are
   decomposed into ralph loops; 6 to 9 are planned at phase level only.
 - `.advanced-plans/evidence/2026-08-26-phase-3-loop-001-environment-pin.md` — loop 001 evidence.
+- `.advanced-plans/evidence/2026-08-26-phase-3-loop-002-herdr-pilot.md` — the disposable Herdr
+  pilot report covering all ten kickoff Step 4 items. Verdict: Herdr is fit to be the execution
+  layer, with four qualifying findings.
+- `%USERPROFILE%\.local\bin\cursor-agent` (outside the repository) — an extensionless POSIX wrapper
+  beside the `.cmd` shim, because Git Bash does not consider `.cmd` when resolving a bare command
+  name and this project's agents shell out through Bash.
 
 ### Changed
 

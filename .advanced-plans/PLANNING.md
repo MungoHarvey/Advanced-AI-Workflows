@@ -4,12 +4,12 @@ current_phase: 3
 phase_name: "Safety Baseline and Herdr Pilot"
 plan_file: .advanced-plans/phases/phase-3/plan.md
 loops_file: .advanced-plans/phases/phase-3/loops.md
-status: in progress — loop 001 complete, loop 002 (Herdr pilot) next
-current_loop: 002 — herdr-pilot
+status: in progress — loops 001 and 002 complete, loop 003 (policy documents) next
+current_loop: 003 — policy-record
 loops_total: 3
 todos_total: 15
-todos_done: 4
-todos_pending: 11
+todos_done: 12
+todos_pending: 3
 last_updated: 2026-08-26
 
 programme: "AAW v0.2 — Herdr-managed multi-runtime orchestration"
@@ -32,7 +32,7 @@ blocking_decisions:
 |-------|------|--------|------|
 | 1 | Four-Tool Integration v0.1 | complete (smoke PASS 2026-06-05) | [phases/phase-1/plan.md](phases/phase-1/plan.md) |
 | 2 | v0.1 Smoke-Findings Fix-Pack | complete (2026-06-08) | [phases/phase-2/plan.md](phases/phase-2/plan.md) |
-| 3 | Safety Baseline and Herdr Pilot | in progress (loop 001 done) | [phases/phase-3/plan.md](phases/phase-3/plan.md) |
+| 3 | Safety Baseline and Herdr Pilot | in progress (loops 001-002 done) | [phases/phase-3/plan.md](phases/phase-3/plan.md) |
 | 4 | gstack Sync and AAW Packaging Repair | planned (3 loops decomposed) | [phases/phase-4/plan.md](phases/phase-4/plan.md) |
 | 5 | Superpowers Behavioural Port | planned (2 loops decomposed) | [phases/phase-5/plan.md](phases/phase-5/plan.md) |
 | 6 | Advanced Planning Multi-Runtime Adapters | planned (loops deferred) | [phases/phase-6/plan.md](phases/phase-6/plan.md) |

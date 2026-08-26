@@ -38,6 +38,14 @@ Design: [`.advanced-plans/specs/2026-08-26-herdr-multi-runtime-orchestration-des
 - `%USERPROFILE%\.local\bin\cursor-agent` (outside the repository) — an extensionless POSIX wrapper
   beside the `.cmd` shim, because Git Bash does not consider `.cmd` when resolving a bare command
   name and this project's agents shell out through Bash.
+- `docs/programme-git-policy.md` — branch and tag naming for every repository in the programme, the
+  per-repository check command, commit authorship for agent-written work, and the three human gates
+  (push, pull request, tag push).
+- `docs/worktree-ownership.md` — one owner per checkout, the controller-sole-writer rule with the
+  forbidden-path list, safe removal without `--force`, and the pilot finding that a Herdr worktree
+  bounds the working directory and nothing else.
+- `.gitattributes` — `*.sh` pinned to LF, `*.ps1` / `*.cmd` / `*.bat` to CRLF. Without it
+  `core.autocrlf=true` checks shell scripts out with CRLF and Git Bash fails on them.
 
 ### Changed
 
@@ -55,6 +63,21 @@ Design: [`.advanced-plans/specs/2026-08-26-herdr-multi-runtime-orchestration-des
   the launcher as the supported way to invoke Herdr.
 - `docs/upstream-sync-playbook.md` and `docs/herdr-windows-operations.md` now carry resolved
   checkout paths instead of `C:\src\...` placeholders.
+
+### Phase 3 — Safety Baseline and Herdr Pilot: complete
+
+All three loops complete; evidence in
+[`loop 001 — environment pin`](.advanced-plans/evidence/2026-08-26-phase-3-loop-001-environment-pin.md)
+and
+[`loop 002 — Herdr pilot`](.advanced-plans/evidence/2026-08-26-phase-3-loop-002-herdr-pilot.md).
+
+**Exit gate: PASS with one open item.** Herdr reliably creates worktrees, including on paths
+containing a space; detects the chosen agents; and reports `working` / `idle` / `done` / `blocked`
+accurately. Cross-model review is demonstrated end to end — codex `gpt-5.6-terra` implemented,
+opencode `Qwen3.5-397B` reviewed. A clean worktree was removed without `--force`. The open item is
+ACC-10: Herdr 0.8.2 exposes no CLI detach, so detach-and-reattach could not be exercised without
+killing or seizing the controller's own session. It is recorded as a testability gap and closes
+with one manual `Ctrl+B`, `Q` and reattach by the operator.
 
 ### Known issues
 

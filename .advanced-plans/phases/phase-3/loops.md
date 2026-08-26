@@ -296,9 +296,9 @@ max_iterations: 2
 on_max_iterations: escalate
 
 handoff_summary:
-  done: ""
+  done: "docs/programme-git-policy.md and docs/worktree-ownership.md written and linked from README and ROADMAP. Every branch and tag phases 4-7 will use is named in the policy document; the forbidden-path list is byte-identical across all three loops.md headers and the ownership document, verified programmatically. CHANGELOG Unreleased records phase 3 and its exit gate; phases/phase-3/complete.md written."
   failed: ""
-  needed: ""
+  needed: "Phase 4 starts at the gstack fork audit. Use the merge-base net-patch test, never git diff upstream/main origin/main. The phase-4 boundary is the first place /run-gate runs a cross-model reviewer for real - phase 3 has no gate verdict."
 
 todos:
   - id: "loop-003-1"
@@ -314,7 +314,7 @@ todos:
     evidence: "The document, linked from the ROADMAP operating guides list"
     gate: "none"
     outcome: "Branch and tag names are decided once, in writing, rather than improvised per worktree"
-    status: pending
+    status: completed
     complexity: medium
     priority: high
   - id: "loop-003-2"
@@ -330,7 +330,7 @@ todos:
     evidence: "The document"
     gate: "none"
     outcome: "ACC-07 and ACC-08 have a written contract to be tested against in Phase 8"
-    status: pending
+    status: completed
     complexity: low
     priority: high
   - id: "loop-003-3"
@@ -346,7 +346,7 @@ todos:
     evidence: "Changelog diff"
     gate: "none"
     outcome: "The release record stays current as the programme runs rather than being reconstructed at the end"
-    status: pending
+    status: completed
     complexity: low
     priority: medium
 

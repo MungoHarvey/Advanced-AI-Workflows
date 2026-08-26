@@ -5,9 +5,11 @@ Design spec: §14 Workstreams 1A (gstack) and 1B
 Procedure: `docs/upstream-sync-playbook.md`
 Baseline: `.advanced-plans/evidence/2026-08-26-baseline-audit.md` §2.3, §3
 
-**Standard programme forbidden set.** `.advanced-plans/state/`, `.advanced-plans/PLANNING.md`,
+**Standard programme forbidden set.** Forbidden for every worker todo in this programme, without
+exception: `.advanced-plans/state/`, `.advanced-plans/PLANNING.md`,
 `.advanced-plans/PLANS-INDEX.md`, `.advanced-plans/phases/*/complete.md`,
-`.advanced-plans/gate-verdicts/`, `.advanced-plans/evidence/`. Only the controller writes those.
+`.advanced-plans/gate-verdicts/`, `.advanced-plans/evidence/`. Only the controller checkout
+writes those.
 
 Loops 001 and 002/003 touch different repositories and may run concurrently in separate Herdr
 worktrees with separate owners.

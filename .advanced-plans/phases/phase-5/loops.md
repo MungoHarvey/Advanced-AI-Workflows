@@ -4,9 +4,11 @@ Source phase plan: `.advanced-plans/phases/phase-5/plan.md`
 Design spec: §14 Workstream 1A (Superpowers), §13.3
 Baseline: `.advanced-plans/evidence/2026-08-26-baseline-audit.md` §2.4, §2.4.1
 
-**Standard programme forbidden set.** `.advanced-plans/state/`, `.advanced-plans/PLANNING.md`,
+**Standard programme forbidden set.** Forbidden for every worker todo in this programme, without
+exception: `.advanced-plans/state/`, `.advanced-plans/PLANNING.md`,
 `.advanced-plans/PLANS-INDEX.md`, `.advanced-plans/phases/*/complete.md`,
-`.advanced-plans/gate-verdicts/`, `.advanced-plans/evidence/`. Only the controller writes those.
+`.advanced-plans/gate-verdicts/`, `.advanced-plans/evidence/`. Only the controller checkout
+writes those.
 
 ---
 

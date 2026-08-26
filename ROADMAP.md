@@ -112,6 +112,9 @@ registry and CLI are explicitly not to be implemented yet.
 - [Baseline audit](.advanced-plans/evidence/2026-08-26-baseline-audit.md) — verified environment and repository heads at full SHAs.
 - [Plannotator deprecation](docs/plannotator-deprecation.md) — rationale, replacement review gate, and migration.
 - [Releasing](docs/releasing.md) — versioning scheme and the push/tag human gate.
+- [Programme Git policy](docs/programme-git-policy.md) — branch and tag names, the per-repository check command, and the three human gates.
+- [Worktree ownership](docs/worktree-ownership.md) — one owner per checkout, the controller-sole-writer rule, and why a worktree is not a sandbox.
+- [Herdr pilot report](.advanced-plans/evidence/2026-08-26-phase-3-loop-002-herdr-pilot.md) — the ten-item Step 4 pilot and its four findings.
 
 ---
 

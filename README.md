@@ -135,6 +135,9 @@ Claude will walk you through detecting and installing each sub-package, wiring t
 | [Baseline audit](.advanced-plans/evidence/2026-08-26-baseline-audit.md) | Verified environment and five-repository audit at full SHAs, with deltas from the design snapshot |
 | [Plannotator deprecation](docs/plannotator-deprecation.md) | Why plannotator was removed from the stack, what replaces the review gate, and the migration path |
 | [Releasing](docs/releasing.md) | Versioning scheme, release procedure, and the push/tag human gate |
+| [Programme Git policy](docs/programme-git-policy.md) | Branch and tag naming, the per-repository check command, commit authorship, and the three human gates |
+| [Worktree ownership](docs/worktree-ownership.md) | One owner per checkout, the controller-sole-writer rule, safe removal, and why a worktree is not a sandbox |
+| [Herdr pilot report](.advanced-plans/evidence/2026-08-26-phase-3-loop-002-herdr-pilot.md) | The ten-item disposable pilot: what Herdr agent states actually mean on this machine, and four qualifying findings |
 | [v0.2 orchestration design](.advanced-plans/specs/2026-08-26-herdr-multi-runtime-orchestration-design.md) | Implementation-ready architecture, contracts, workstreams, and acceptance criteria |
 | [Herdr kickoff prompt](docs/herdr-kickoff-prompt.md) | Prompt to start the programme in a Herdr controller session |
 

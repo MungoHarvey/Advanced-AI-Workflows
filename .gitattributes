@@ -10,3 +10,8 @@
 *.ps1 text eol=crlf
 *.cmd text eol=crlf
 *.bat text eol=crlf
+
+# Data files that shell scripts parse line-by-line must check out with LF too. A CRLF
+# manifest leaves a trailing carriage return on every path the script reads, which could
+# turn a passing packaging test into a stream of MISSING for files that are present.
+tests/packaging/*.txt text eol=lf

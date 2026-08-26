@@ -73,7 +73,9 @@ checked=0
 failed=0
 
 while IFS= read -r line; do
-  # strip comments and surrounding whitespace
+  # strip comments and surrounding whitespace. The trailing-whitespace sed also removes a
+  # trailing CR, so a CRLF checkout of the manifest is handled; .gitattributes pins it to LF
+  # anyway so the test does not depend on that side effect.
   path="${line%%#*}"
   path="$(printf '%s' "$path" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')"
   [ -n "$path" ] || continue

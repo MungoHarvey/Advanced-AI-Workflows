@@ -292,11 +292,14 @@ handoff_summary:
     documented-destinations.txt is an exception list whose required reason is a
     convention the parser does not enforce.
   needed: >
-    A human gate on loop-003-5. Also on the table: loop-003-4 specifies provider "codex
-    or opencode" and Claude implemented it - the cross-model property is preserved
-    because the reviewer is codex, but authorship independence is not. The branch
-    feat/aaw-packaging-repair sits at 360ab3c and has never been pushed; a push is a
-    separate authorisation.
+    Nothing to close this loop. The human gate on loop-003-5 was taken and closed on
+    2026-08-26: the PASS was accepted, both recorded caveats were accepted as stated,
+    and the loop-003-4 provider deviation - the todo specifies "codex or opencode" and
+    Claude implemented it - was accepted on the grounds that the cross-model review
+    property survives because the reviewer is codex. The same gate authorised pushing
+    feat/aaw-packaging-repair and docs/herdr-v0.2-import. A pull request and a merge
+    were not authorised and remain separate decisions. Next is the phase-4 boundary
+    gate, which is the first place /run-gate runs a cross-model reviewer for real.
 
 todos:
   - id: "loop-003-1"

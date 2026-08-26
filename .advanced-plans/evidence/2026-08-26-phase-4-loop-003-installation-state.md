@@ -66,6 +66,9 @@ the idempotency scaffolding, a Claude reviewer would have been reading unfamilia
 its own.
 
 This is offered as a fact for the human gate to accept or reject, not as a conclusion.
+**The gate accepted it on 2026-08-26**, on the reasoning above: the review property the plan
+was buying is intact, and re-implementing working, four-times-reviewed code to recover
+authorship independence was judged not worth a full loop.
 
 ---
 
@@ -211,6 +214,7 @@ should stop a pull request:
 | Suite | `packaging: PASS - 4/4 checks` (13/13, 24/24, 21/21, 43/43) |
 | Reviewer | codex `pkgreview`, `gpt-5.6-terra`, workspace `wA`, pane `wA:p1` |
 | Verdict | **PASS** on pass 4, with the two caveats in §4 recorded |
+| Human gate | **closed 2026-08-26.** PASS accepted; both caveats accepted as stated; the provider deviation in §2 accepted. Push of this branch authorised, PR and merge not. |
 
 **Still open, and outside this loop:** `jq` is not installed and Windows Developer Mode is off, so
 the gstack suite cannot be run to completion here; both need the user. Nothing in this loop depends

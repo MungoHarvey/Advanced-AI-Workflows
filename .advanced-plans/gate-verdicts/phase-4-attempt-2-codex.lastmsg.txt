@@ -1,0 +1,86 @@
+```json
+{
+  "phase": "phase-4",
+  "attempt": 2,
+  "timestamp": "2026-08-26T10:05:10Z",
+  "agent": "codex",
+  "backend": "codex",
+  "verdict": "pass",
+  "confidence": 93,
+  "findings": [
+    {
+      "severity": "warning",
+      "location": ".advanced-plans/evidence/2026-08-26-phase-4-loop-001-gstack-sync.md",
+      "description": "The recorded upstream Windows suite does not pass: bun run test:windows exited 1 with seven failing tests. This is the explicitly waived criterion and therefore does not alone drive the overall verdict.",
+      "evidence": "lines 117-138: \"$ bun run test:windows\", \"exit=1\", and \"This is a failure and is recorded as a failure\"."
+    }
+  ],
+  "loops_to_revert": [],
+  "failure_notes": [
+    "The waived upstream-suite criterion is failed; all execution-dependent packaging and smoke-test criteria are deferred because this reviewer is confined to a read-only sandbox."
+  ],
+  "phase_title": "Phase 4: gstack Sync and AAW Packaging Repair",
+  "criteria_outcomes": [
+    {
+      "criterion": "V `sync/upstream-<date>` is created from a freshly fetched `upstream/main`, not from the fork tree.",
+      "status": "met",
+      "evidence": "Directly confirmed in C:\\Users\\mharvey2\\Coding\\gstack-fork: `sync/upstream-2026-08-26` and `upstream/main` both resolve to ad8400543cd9ce8d07641362db48d44a95417e33 and their diff is empty; narrative record agrees at .advanced-plans/evidence/2026-08-26-phase-4-loop-001-gstack-sync.md:17-29."
+    },
+    {
+      "criterion": "V The empty-net-patch claim is re-verified at execution time with `git diff <merge-base> origin/main`, not with `git diff upstream/main origin/main` - the latter measures how far behind the fork is and will look alarming while proving nothing.",
+      "status": "met",
+      "evidence": "Directly confirmed in C:\\Users\\mharvey2\\Coding\\gstack-fork: merge-base is 029356e1f0693f22cb1fa4524c9b0f28ceab5a1b and `git diff --stat <merge-base> origin/main` produced no output; narrative record states the same result at .advanced-plans/evidence/2026-08-26-phase-4-loop-001-gstack-sync.md:40-45."
+    },
+    {
+      "criterion": "V The upstream suite passes, with the exact command and exit code recorded.",
+      "status": "failed",
+      "evidence": "Narrative record only (not independently executable in this sandbox): .advanced-plans/evidence/2026-08-26-phase-4-loop-001-gstack-sync.md:117-138 records `bun run test:windows`, `exit=1`, and seven failures; the criterion's required passing result is absent."
+    },
+    {
+      "criterion": "V A Windows install smoke test passes from the synced tree.",
+      "status": "deferred",
+      "evidence": "Executable verification is blocked by the read-only sandbox. Narrative record only: .advanced-plans/evidence/2026-08-26-phase-4-loop-001-gstack-sync.md:189-228 records the isolated smoke command and `exit=0`."
+    },
+    {
+      "criterion": "V The branch contains zero AAW-specific changes.",
+      "status": "met",
+      "evidence": "Directly confirmed in C:\\Users\\mharvey2\\Coding\\gstack-fork: `sync/upstream-2026-08-26` is byte-for-byte tree-identical to `upstream/main`; narrative record matches at .advanced-plans/evidence/2026-08-26-phase-4-loop-001-gstack-sync.md:22-31."
+    },
+    {
+      "criterion": "V `git ls-files .claude/skills/gstack-to-plans/SKILL.md` returns the path - the file is tracked, not merely present.",
+      "status": "met",
+      "evidence": "Directly confirmed in C:\\Users\\mharvey2\\Coding\\aaw worktrees\\aaw-packaging-repair at HEAD 3b19a49: `git ls-files` returned `.claude/skills/gstack-to-plans/SKILL.md`; narrative record agrees at .advanced-plans/evidence/2026-08-26-phase-4-loop-002-packaging-repair.md:65-75."
+    },
+    {
+      "criterion": "V A fresh `git clone` of the branch into a temporary directory contains every install source named in README, SETUP, and the setup skill.",
+      "status": "deferred",
+      "evidence": "Executable clone verification is blocked by the read-only sandbox. Direct source inspection confirms the test assets exist at C:\\Users\\mharvey2\\Coding\\aaw worktrees\\aaw-packaging-repair\\tests\\packaging\\required-sources.txt:17-45; passing-clone evidence rests only on .advanced-plans/evidence/2026-08-26-phase-4-loop-003-installation-state.md:162-166."
+    },
+    {
+      "criterion": "V The packaging test fails when any one of those sources is deleted, and passes when restored.",
+      "status": "deferred",
+      "evidence": "Executable mutation verification is blocked by the read-only sandbox. Directly inspected test implementation is C:\\Users\\mharvey2\\Coding\\aaw worktrees\\aaw-packaging-repair\\tests\\packaging\\test-fresh-clone.sh; claimed mutation results rest only on .advanced-plans/evidence/2026-08-26-phase-4-loop-002-packaging-repair.md:114-140."
+    },
+    {
+      "criterion": "V A directory containing only a stale `.advanced-plans/` is reported as *data present, Advanced Planning absent* - ACC-02.",
+      "status": "deferred",
+      "evidence": "Executable audit verification is blocked by the read-only sandbox. Directly inspected test assertions are at C:\\Users\\mharvey2\\Coding\\aaw worktrees\\aaw-packaging-repair\\tests\\packaging\\test-audit.sh:55-56 and 122-145; passing result rests only on .advanced-plans/evidence/2026-08-26-phase-4-loop-003-installation-state.md:39-41."
+    },
+    {
+      "criterion": "V Running refresh twice produces no change on the second run - ACC-16.",
+      "status": "deferred",
+      "evidence": "Executable idempotency verification is blocked by the read-only sandbox. Directly inspected test scaffold is C:\\Users\\mharvey2\\Coding\\aaw worktrees\\aaw-packaging-repair\\tests\\packaging\\test-idempotency.sh:2-12; claimed 43-check pass rests only on .advanced-plans/evidence/2026-08-26-phase-4-loop-003-installation-state.md:48-51 and 162-166."
+    },
+    {
+      "criterion": "V Uninstall removes only AAW-owned fenced blocks and files, and preserves user content.",
+      "status": "deferred",
+      "evidence": "Executable uninstall verification is blocked by the read-only sandbox. Directly inspected assertions are at C:\\Users\\mharvey2\\Coding\\aaw worktrees\\aaw-packaging-repair\\tests\\packaging\\test-idempotency.sh:217-271; claimed result rests only on .advanced-plans/evidence/2026-08-26-phase-4-loop-003-installation-state.md:48-51 and 162-166."
+    },
+    {
+      "criterion": "V No global path in the installer resolves through `~` or `HOME`.",
+      "status": "met",
+      "evidence": "Directly confirmed at C:\\Users\\mharvey2\\Coding\\aaw worktrees\\aaw-packaging-repair\\.claude\\skills\\setup-with-claude\\SKILL.md:269-270 and 532-541: Steps 6 and U7 resolve global paths through `<profile>`. The remaining `~` is confined to Step R2 fenced commands explicitly handed to the user's shell at lines 617-620 and 622-633; the carve-out is sound for this criterion because the skill does not resolve that path. The declared boundary is explicit at lines 720-729."
+    }
+  ]
+}
+```

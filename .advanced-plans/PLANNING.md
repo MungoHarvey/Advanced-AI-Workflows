@@ -4,7 +4,7 @@ current_phase: 5
 phase_name: "Superpowers Behavioural Port"
 plan_file: .advanced-plans/phases/phase-5/plan.md
 loops_file: .advanced-plans/phases/phase-5/loops.md
-status: in progress — ralph-loop-001 COMPLETE 2026-08-26 (behaviour matrix written, cross-model design gate PASSED after a BLOCKED verdict was resolved). feat/aaw-packaging-repair merged into this branch (5524580), so the installation manifest is available; ralph-loop-002 realigned against the matrix and ready to execute.
+status: in progress — ralph-loop-001 COMPLETE 2026-08-26 (behaviour matrix written, cross-model design gate PASSED after a BLOCKED verdict was resolved). feat/aaw-packaging-repair merged into this branch (5524580), so the installation manifest is available; ralph-loop-002 todos 1-6 COMPLETE 2026-08-26. The ACC-04/ACC-05 behaviour proofs passed on the sixth round after catching two real defects in the routing block (rule 5 contradicted Brainstorming addition 3; the block never claimed precedence over a skill's own defaults). Both fixed and re-proven. The fork patch against upstream measures ZERO - mirror/upstream-2026-08-26 and upstream/main are the same commit. Only loop-002-7, the cross-model human gate, remains.
 current_loop: ralph-loop-002
 gate_status: loop-001 design gate PASSED 2026-08-26 (reviewer codex/GPT-5.6 Sol, author claude/Opus 5 — ACC-18 satisfied)
 loops_total: 2
@@ -31,6 +31,18 @@ blocking_decisions:
   - "none open"
 
 open_items:
+  - "An instruction file is advisory: verified 2026-08-26 that opencode DOES auto-load a
+    project AGENTS.md before the first user message (a context probe quoted the routing
+    block back verbatim having run no tool at all), and that a worker with the block in
+    context still ignored it in one round out of five. The block now states that its
+    additions outrank a skill's built-in defaults, which is a mitigation and not a cure.
+    Worth re-measuring on claude and codex before the fenced block is described anywhere
+    as a reliable mechanism rather than a well-delivered one."
+  - "The ACC fixtures live in the session scratchpad, not in the repository, so the
+    ACC-04/ACC-05 proofs are not reproducible by anyone else and will not survive this
+    machine. Decide whether they become a tracked fixture under tests/, alongside the
+    packaging suite, or whether the evidence file is the only durable record. Not decided
+    unilaterally because it means committing a second copy of two upstream skill files."
   - "ACC-10: detach/reattach unproven — Herdr 0.8.2 has no CLI detach. One manual Ctrl+B, Q by the operator closes it."
   - "Machine-wide HOME override unverified until next logon; the launcher makes it moot either way."
   - "Phase 3 has no gate verdict — the phase-4 boundary was the first real /run-gate run (attempt 1: FAIL, unanimous across codex, code-review-agent and phase-goals-agent)."

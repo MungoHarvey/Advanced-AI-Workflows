@@ -91,6 +91,13 @@ The `brainstorming` skill classifies each request into one of three paths — **
 **Bounded**, or **Architectural** — and says the classification out loud before its first
 question. That classification is the skill's, not this block's. Follow it.
 
+**Where this section and the skill disagree about a default, this section wins.** These are
+project-level instructions: a skill's built-in default is what applies in a project that has
+said nothing on the subject, and this project has said something. Everything the section
+does not mention — the classification itself, the approval gates, the questions, the shape
+of the design — stays exactly as the skill has it. Override the defaults named here, and
+nothing else.
+
 This project adds three things, and **two of the three apply to the Architectural path
 only.** Spike and Bounded behave exactly as the skill has them: a Spike ends in a reported
 recommendation, a Bounded task ends in a short design in chat followed by implementation.

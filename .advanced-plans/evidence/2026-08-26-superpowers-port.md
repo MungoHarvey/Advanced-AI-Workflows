@@ -330,3 +330,202 @@ rather than left behind:
 `loop-002-3` satisfied. Idempotency and content preservation hold on both instruction
 files, the delimitation is proven by an uninstall that restores starting bytes, and the
 skill and its executable form agree.
+
+---
+
+## loop-002-4 and loop-002-5 — the behaviour proofs (ACC-04, ACC-05)
+
+**Provider**: `opencode` (Qwen3.5 397B via the ELM proxy), six rounds, each in its own
+fresh pane and process. **Controller**: `claude`/Opus 5. **Date**: 2026-08-26.
+**Verification**: filesystem only — every claim below is a hash-diff of the fixture
+against a baseline taken immediately before the run. A worker's own account of what it did
+is corroboration, never evidence.
+
+### The two fixtures
+
+Two throwaway projects, identical in every respect except the one thing under test.
+
+|  | `with-ap` | `without-ap` |
+|---|---|---|
+| `.aaw/installed.json` → `advanced-planning.installed` | `true` | **`false`**, with `scope: none` |
+| The framework itself | `.claude/skills/phase-plan-creator/SKILL.md` present | absent |
+| `.advanced-plans/` on disk | none | **`specs/borrowed.md`** — plans copied in from elsewhere |
+| `AGENTS.md` | the routing block, byte-identical between the two | same |
+| `skills/brainstorming`, `skills/writing-plans` | copied from `mirror/upstream-2026-08-26` | same |
+| `src/cli.py`, `README.md` | a small real CLI with a flag-parsing flow | same |
+
+The `.advanced-plans/specs/borrowed.md` in `without-ap` is the whole point of the
+discriminator: a project can hold plans without holding the framework. A rule that tests
+for the directory passes there and is wrong. A rule that reads the manifest predicate
+fails there and is right. `without-ap` also records the component as `installed: false`
+rather than omitting it, so the check is "absence was recorded", not "absence was
+inferred".
+
+`src/cli.py` exists because the Bounded path *requires* it: the skill says "bounded means
+the flow you are changing is already here to read. If there is no existing flow to change,
+the task is not bounded." Without real code, a Bounded classification could not be earned
+and the negative check would have proved nothing.
+
+### The envelope
+
+One envelope, byte-identical in both projects (`cmp` checked before every round), naming
+three requests to be handled one at a time and independently:
+
+1. a plugin system for the formatters, with a discovery mechanism, a registration
+   interface the existing formatters must move onto, and interface versioning — stated as
+   not existing in the codebase today (**Architectural** by the skill's own definition);
+2. add a `--quiet` flag suppressing the per-row progress lines (**Bounded** — the flow is
+   in `src/cli.py`);
+3. can Parquet be read with the standard library alone, quick and dirty, no dependency
+   (**Spike**).
+
+The envelope never names the expected classifications, never names `.advanced-plans`,
+`docs/superpowers`, phase planning or `writing-plans`, and never says which file carries
+the project's instructions — only "read the project's instruction file or files". It ends
+by asking for `ACC-RESULT.md`: classification, spec path written, other files, terminal
+step, and one line of why, per request.
+
+Four envelope revisions were made across the six rounds. Every one of them was about
+unblocking an approval or question gate so an unattended run could reach a terminal state;
+none touched routing, paths, or tools. They are listed in the round table so the reader can
+see which text each round ran under.
+
+### The six rounds
+
+Each row is a hash-diff against a baseline taken immediately before that round, in a fresh
+pane and a fresh process. "blocked" means the worker put a clarifying question to a human
+through the harness's interactive question tool and waited; no controller answered it.
+
+| # | envelope | block | fixture | spec written to | terminal step | verdict |
+|---|---|---|---|---|---|---|
+| 1 | v1 | as authored | with-ap | `.advanced-plans/specs/` OK | `writing-plans` WRONG | **FAIL** — found F1 |
+| 1 | v1 | as authored | without-ap | `docs/superpowers/specs/` OK | `writing-plans` OK | PASS |
+| 2 | v2 | + F1 fix | with-ap | named, not written | `/new-phase` OK | partial |
+| 2 | v2 | + F1 fix | without-ap | `docs/superpowers/specs/` OK | `writing-plans` OK | PASS |
+| 3 | v3 | + F1 fix | with-ap | — | — | blocked |
+| 3 | v3 | + F1 fix | without-ap | `docs/superpowers/specs/` OK | `writing-plans` OK | PASS |
+| 4 | v3 | + F1 fix | with-ap | `.advanced-plans/specs/` OK | `/new-phase` OK | **PASS** |
+| 4 | v3 | + F1 fix | without-ap | — | — | blocked |
+| 5 | v4 | + F1 fix | with-ap | `docs/superpowers/specs/` WRONG | `writing-plans` WRONG | **FAIL** — found F2 |
+| 5 | v4 | + F1 fix | without-ap | `docs/superpowers/specs/` OK | `writing-plans` OK | PASS |
+| 6 | v4 | + F1 + F2 fix | with-ap | `.advanced-plans/specs/` OK | `/new-phase` OK | **PASS** |
+| 6 | v4 | + F1 + F2 fix | without-ap | `docs/superpowers/specs/` OK | `writing-plans` OK | PASS |
+
+Envelope revisions, all of them about letting an unattended run reach a terminal state and
+none about routing: **v2** — approval is granted *at the moment the design is presented*,
+so a write is not deferred to a future approval that never comes; **v3** — ask clarifying
+questions, then answer them yourself with the option you would have recommended; **v4** —
+ask them *in the transcript*, because a question put through the harness's interactive tool
+waits forever when nobody is at the keyboard.
+
+`without-ap` returned the same answer in every round that produced one — five for five,
+under three different envelopes and two versions of the block.
+
+### Finding F1 — the block told two different stories, and the worker believed the wrong one
+
+Round 1 wrote the spec to the right place and then handed over to the wrong skill. The
+worker's stated reason named the culprit: front-door **rule 5**, which read
+
+> Need a structured implementation plan from a spec -> Use the `writing-plans` skill
+
+with no condition on it at all, while addition 3 under *Brainstorming* said that with
+Advanced Planning installed the step after an approved architectural spec is phase
+planning. *Where Plans and Specs Are Written* made it worse by discussing where
+`writing-plans` output goes, which reads as a third endorsement of running it.
+
+Rule 5 is now gated on the same manifest predicate as addition 3, and the plans section
+says outright that it governs where `writing-plans` writes *if it runs* and is not an
+instruction to run it. Fixed in `12af179`; rounds 2, 4 and 6 all took `/new-phase`
+afterwards and cited rule 5 by name for it.
+
+This is the finding the proof existed to catch. The contradiction was invisible on
+inspection — I wrote both halves — and only a run that had to *act* on the block exposed
+which half won.
+
+### Finding F2 — the block was in context and was ignored anyway
+
+Round 5's `with-ap` worker wrote the spec to the upstream default and handed to
+`writing-plans`, citing only the brainstorming skill and never mentioning the project's
+instructions at all.
+
+The obvious explanation — that `AGENTS.md` was never delivered — is wrong, and a direct
+probe settles it. A fresh `opencode` agent in the same fixture, told to answer from context
+and to run no tool of any kind, replied:
+
+> Yes — two files were supplied automatically as context: `~/.claude/CLAUDE.md`
+> (machine-level instructions), `AGENTS.md` (project-level instructions in the current
+> working directory)
+
+and then quoted addition 2 back verbatim, matching the file character for character. **The
+fenced block reaches a non-Claude harness automatically, before the first user message,
+with no tool call and no host-specific path.** That is the premise the whole zero-patch
+design rests on, and it is now demonstrated rather than assumed.
+
+So round 5 was the model declining to apply an instruction it had been given. The block
+had no sentence anywhere asserting that its additions outrank a skill's built-in defaults —
+it disclaimed precedence over the *file* it sits in, which is right, but said nothing about
+the *skills*, which is what it exists to steer. That sentence now exists, at the top of the
+*Brainstorming* section, along with an explicit statement that everything the section does
+not mention stays exactly as the skill has it. Round 6 then passed on both fixtures.
+
+Two rounds are not a measurement, and this is recorded as a mitigation, not a cure: on this
+runtime the block was applied in four of the five `with-ap` rounds that produced a result.
+An instruction file is advisory by construction — no wording makes a model read it — which
+is a fact about instruction files and not a defect in this one, and it is why the phase
+gate wants a second model's eyes on this in `loop-002-7`.
+
+### The checks
+
+**loop-002-4 — ACC-04, Advanced Planning present** (round 6, `with-ap`):
+
+| check | result |
+|---|---|
+| the output landed in `.advanced-plans/specs/` — **ACC-04** | PASS — `2026-08-26-formatter-plugin-system-design.md`, by hash-diff |
+| the Architectural terminal state invoked phase planning | PASS — `/new-phase`, and `/plan-and-phase` correctly *not* chosen: the parenthetical in addition 3 says `/new-phase` for a codebase already explored, and the worker gave that as its reason |
+| `writing-plans` did not run | PASS — no plan document exists anywhere in the fixture; the only new files are the spec and the report |
+| a Spike-classified request produced no spec file and no phase planning | PASS — request 3, classified Spike, `spec_file: NONE`, `terminal_step: NONE` |
+| a Bounded-classified request produced no spec file and no phase planning | PASS — request 2, classified Bounded, `spec_file: NONE`, ends at implementation |
+| no fixture input was modified | PASS — all ten baseline files unchanged, `skills/brainstorming/SKILL.md` included |
+
+**loop-002-5 — ACC-05, Advanced Planning absent** (round 6, `without-ap`):
+
+| check | result |
+|---|---|
+| the output landed in the upstream default location — **ACC-05** | PASS — `docs/superpowers/specs/2026-08-26-plugin-system-design.md`, the path at `skills/brainstorming/SKILL.md:100` and `:206` |
+| every file the worker produced, grepped for `.advanced-plans` | PASS — **0 hits** in both files |
+| the manifest predicate read `false` rather than the file being missing | PASS — the transcript reads `installed.json`, then reasons "Since Advanced Planning is NOT installed, the spec goes to `docs/superpowers/specs/`". Absence recorded, not inferred |
+| the `.advanced-plans/specs/borrowed.md` decoy did not read as an installation | PASS — untouched, never cited, and the routing went the other way |
+| Spike and Bounded produced no spec file and no phase planning | PASS — both `NONE` |
+| no fixture input was modified | PASS — all ten baseline files unchanged |
+
+One thing the round-6 `without-ap` report got wrong is worth keeping: it recorded
+`spec_file: docs/superpowers/specs/plugin-system-design.md` while the file on disk is
+`2026-08-26-plugin-system-design.md`. Nothing turns on it — but it is a clean small example
+of why the hash-diff is the evidence and the worker's report is not.
+
+### loop-002-6 — the fork patch, measured
+
+```
+$ git rev-parse mirror/upstream-2026-08-26              b36e0829c6d0...
+$ git rev-parse upstream/main                           b36e0829c6d0...
+$ git diff --quiet upstream/main..mirror/upstream-...   -> exit 0
+$ git rev-list --count mirror..upstream/main            0
+$ git rev-list --count upstream/main..mirror            0
+```
+
+Same commit, both directions, empty tree diff. **The patch against upstream is zero**, and
+it stayed zero through all six rounds — `skills/brainstorming/SKILL.md` and
+`skills/writing-plans/SKILL.md` are byte-identical in both fixtures to the copies taken
+from the mirror, before and after every run. Everything ACC-04 and ACC-05 demonstrate was
+carried by the instruction file, not by an edit to a skill.
+
+`loop-002-6` is satisfied locally. Publishing the mirror still requires
+`git push origin mirror/upstream-2026-08-26:main --force-with-lease`, which the kickoff
+prompt places outside this session's authority — it stops at the `loop-002-7` human gate.
+
+### Verdict
+
+`loop-002-4` and `loop-002-5` satisfied, on the sixth round, after the proof caught two
+real defects in the deliverable — one a contradiction between two halves of the block, the
+other a missing precedence claim over the skills the block steers. Both are fixed and both
+fixes are re-proven, not asserted.

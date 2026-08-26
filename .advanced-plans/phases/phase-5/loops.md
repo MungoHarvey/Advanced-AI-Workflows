@@ -200,10 +200,13 @@ todos:
       - "run the flow end to end; assert the output landed in .advanced-plans/specs/ — ACC-04"
       - "assert the Architectural terminal state invoked phase planning"
       - "run a Spike-classified and a Bounded-classified request; assert NEITHER produced a spec file or invoked phase planning"
+      - "AMENDED 2026-08-26, after the run. 'Invoked phase planning' cannot mean a slash command actually executing - a fixture project has no live /new-phase to run, and a worker that ran one would be implementing, not routing. Read operationally as: the worker named phase planning as the handover, gave the manifest as its reason, and produced NO writing-plans plan document anywhere in the fixture. All three are checked separately."
+      - "ADDED 2026-08-26. Assert every fixture input is byte-identical after the run - skills/brainstorming/SKILL.md above all. The zero-patch claim is worthless if the run mutated the skill it was testing."
     evidence: "The fixture transcript and the resulting file paths, for all three router paths"
     gate: "none"
     outcome: "SP-1 and SP-2 are proven by behaviour, and the router is proven not to have been over-hooked"
-    status: pending
+    status: completed
+    result: "PASSED on round 6 of 6. The proof caught two real defects first. F1: front-door rule 5 told the worker to use writing-plans after an approved spec, unconditionally, contradicting Brainstorming addition 3 - round 1 followed rule 5 and routed wrongly, naming it as the reason. Rule 5 is now gated on the manifest predicate (commit 12af179). F2: round 5 ignored the block entirely; a context probe proved AGENTS.md IS auto-loaded by opencode before the first message, so this was inattention, not delivery - the block now states that its additions outrank a skill's built-in defaults. Round 6: spec in .advanced-plans/specs/, terminal /new-phase with rule 5 cited, /plan-and-phase correctly not chosen, Spike and Bounded produced nothing, all ten inputs unchanged. Evidence: .advanced-plans/evidence/2026-08-26-superpowers-port.md"
     complexity: high
     priority: high
   - id: "loop-002-5"
@@ -218,10 +221,13 @@ todos:
       - "run the same flow; assert the output landed in the upstream default location — ACC-05"
       - "grep the whole output for .advanced-plans -> zero hits"
       - "assert the manifest predicate read false rather than the file being missing entirely — absence must be recorded, not inferred"
+      - "AMENDED 2026-08-26, after the run. 'The whole output' is every file the worker produced, not the transcript. The transcript necessarily quotes .advanced-plans while reasoning about the block that mentions it, so a transcript-wide zero-hit count would fail on correct behaviour. The claim being tested is that no AAW path was fabricated in the work product, and that is what the grep now measures."
+      - "ADDED 2026-08-26. Assert the .advanced-plans/specs/borrowed.md decoy is untouched and was not read as an installation. It is the whole point of this fixture: a directory is data, a manifest is an installation."
     evidence: "The fixture transcript, the resulting paths, the manifest contents, and the grep output"
     gate: "none"
     outcome: "ACC-05 passes — the failure mode where AAW invents a path that does not exist is excluded"
-    status: pending
+    status: completed
+    result: "PASSED, five times out of five rounds that produced a result, under three envelope revisions and two versions of the block. Spec landed at docs/superpowers/specs/ - the upstream default at skills/brainstorming/SKILL.md:100 and :206. Zero .advanced-plans hits in either produced file. The transcript reads installed.json and reasons 'Since Advanced Planning is NOT installed' - absence recorded, not inferred. The borrowed.md decoy was untouched and never cited."
     complexity: high
     priority: high
   - id: "loop-002-6"
@@ -235,10 +241,12 @@ todos:
     checks:
       - "git diff upstream/main..<mirror branch> -> empty. Any non-empty result is a failed port, not a partial success"
       - "git show upstream/main:skills/brainstorming/SKILL.md contains the Three Paths router verbatim as quoted in the drift evidence"
+      - "ADDED 2026-08-26. Assert the skill copies the ACC fixtures actually ran are byte-identical to upstream/main. Diffing the mirror proves the branch is clean; this proves the behaviour proofs were run against unmodified upstream and not against a local edit."
     evidence: "Both outputs in full"
     gate: "none"
     outcome: "The exact regression this phase exists to prevent is checked for, not hoped against"
-    status: pending
+    status: completed
+    result: "PASSED. mirror/upstream-2026-08-26 and upstream/main are the SAME COMMIT (b36e0829c6d0): git diff --quiet exits 0, and rev-list --count is 0 in both directions. The patch against upstream is zero. The Three Paths router is present verbatim at upstream/main:22-52, and both skills/brainstorming/SKILL.md and skills/writing-plans/SKILL.md in both ACC fixtures are byte-identical to it. Publishing the mirror needs git push origin mirror/upstream-2026-08-26:main --force-with-lease, which is outside this session's authority - it stops at the loop-002-7 gate."
     complexity: medium
     priority: high
   - id: "loop-002-7"

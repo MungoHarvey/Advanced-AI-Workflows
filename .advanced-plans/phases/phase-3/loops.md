@@ -25,9 +25,9 @@ max_iterations: 3
 on_max_iterations: escalate
 
 handoff_summary:
-  done: ""
+  done: "HOME fix decided (both machine-wide + scoped launcher); tools/herdr-env.sh and .ps1 written with a target-scoped doctor assertion, proven passing and proven failing on drift; five orphan items copied from M: byte-identical with sources intact; cursor-agent found already bundled by the Cursor IDE and shimmed onto PATH (no remote installer run). All four runtimes now report current."
   failed: ""
-  needed: ""
+  needed: "The machine-wide HOME override is unverified until the next logon - it competes with the AD home-folder attribute. Re-run tools/herdr-env.sh --assert after signing back in."
 
 todos:
   - id: "loop-001-1"
@@ -42,7 +42,7 @@ todos:
     evidence: "Decision recorded with the option chosen and the reason; baseline audit section 7.5 cited"
     gate: "human"
     outcome: "The HOME fix approach is chosen in writing before any implementation"
-    status: pending
+    status: completed
     complexity: low
     priority: high
   - id: "loop-001-2"
@@ -59,7 +59,7 @@ todos:
     evidence: "Both check outputs pasted verbatim into the pilot report"
     gate: "none"
     outcome: "herdr integration status reports current for every target runtime even when the ambient HOME is M:\\"
-    status: pending
+    status: completed
     complexity: medium
     priority: high
   - id: "loop-001-3"
@@ -75,7 +75,7 @@ todos:
     evidence: "Per-item before/after listing with sizes"
     gate: "none"
     outcome: "Nothing on M:\\ is lost when HOME stops pointing there, and M:\\ itself is unmodified"
-    status: pending
+    status: completed
     complexity: low
     priority: medium
   - id: "loop-001-4"
@@ -92,7 +92,7 @@ todos:
     evidence: "Either a version string, or a diff showing the runtime count changed consistently everywhere"
     gate: "human"
     outcome: "The v0.2 target runtime set is a fact rather than an assumption, and the documents agree with it"
-    status: pending
+    status: completed
     complexity: medium
     priority: high
 

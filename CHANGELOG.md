@@ -23,6 +23,15 @@ Design: [`.advanced-plans/specs/2026-08-26-herdr-multi-runtime-orchestration-des
   recording the environment, all five repository heads at full SHA, and the deltas
   from the design snapshot.
 - Versioning: this changelog, a `VERSION` file, and `docs/releasing.md`.
+- `tools/herdr-env.sh` and `tools/herdr-env.ps1` — launchers that pin `HOME`, `HOMEDRIVE` and
+  `HOMEPATH` from `USERPROFILE` for the child process, plus an `--assert` doctor check scoped to
+  the four target runtimes. Proven in both directions, including a deliberate-drift negative test.
+- `%USERPROFILE%\.local\bin\cursor-agent.cmd` (outside the repository) — a shim onto the
+  `cursor-agent` CLI the Cursor IDE already bundles but does not expose on `PATH`. It resolves the
+  newest version directory at run time, so a Cursor upgrade cannot leave it stale.
+- `.advanced-plans/phases/phase-3` … `phase-9` — the v0.2 implementation plan. Phases 3 to 5 are
+  decomposed into ralph loops; 6 to 9 are planned at phase level only.
+- `.advanced-plans/evidence/2026-08-26-phase-3-loop-001-environment-pin.md` — loop 001 evidence.
 
 ### Changed
 
@@ -34,6 +43,12 @@ Design: [`.advanced-plans/specs/2026-08-26-herdr-multi-runtime-orchestration-des
   superpowers.
 - ROADMAP restated for the Herdr execution runtime and the four target agent
   runtimes (Claude Code, Codex, OpenCode, Cursor). Gemini CLI is no longer a target.
+- Corrected the baseline audit's HOME diagnosis. Herdr does not ignore `USERPROFILE`; it prefers
+  `HOME` when set and falls back to `USERPROFILE` otherwise, which makes the `M:\` failure
+  shell-specific rather than machine-wide. `docs/herdr-windows-operations.md` §1.1 now documents
+  the launcher as the supported way to invoke Herdr.
+- `docs/upstream-sync-playbook.md` and `docs/herdr-windows-operations.md` now carry resolved
+  checkout paths instead of `C:\src\...` placeholders.
 
 ### Known issues
 

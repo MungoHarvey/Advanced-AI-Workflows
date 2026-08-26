@@ -61,7 +61,7 @@ Workstream 1A's Plannotator fast-forward is **withdrawn** — deprecated 2026-08
 
 | Loop | Name | Status |
 |------|------|--------|
-| 001 | environment-pin (HOME fix, orphan copy, Cursor decision) | pending |
+| 001 | environment-pin (HOME fix, orphan copy, Cursor decision) | completed |
 | 002 | herdr-pilot (ten-step disposable pilot) | pending |
 | 003 | policy-record (Git policy, worktree ownership) | pending |
 

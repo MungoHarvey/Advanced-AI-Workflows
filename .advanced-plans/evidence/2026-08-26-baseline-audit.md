@@ -10,6 +10,15 @@
 Supersedes the assumptions in `references/upstream-baseline-2026-08-26.json` where noted.
 Written per Step 2 of `docs/herdr-kickoff-prompt.md`. No repository was modified to produce it.
 
+> **Correction, 2026-08-26 (later the same day).** Sections 1.1 and 7 below state that Herdr
+> reports every integration as `not installed` because `HOME`/`HOMEDRIVE` resolve to `M:\`. That is
+> true but imprecise. Herdr honours `HOME` when it is set and falls back to `USERPROFILE` when it is
+> not, so the failure is **shell-specific**: Windows PowerShell (`HOME` unset) was never affected;
+> Git Bash (`HOME=/m/`) always was. The readings recorded below came from Git Bash. The findings
+> and the fix still stand — see
+> [`2026-08-26-phase-3-loop-001-environment-pin.md`](2026-08-26-phase-3-loop-001-environment-pin.md)
+> §2. The text below is left as collected; evidence records are not rewritten after the fact.
+
 ---
 
 ## 1. Environment

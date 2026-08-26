@@ -48,6 +48,44 @@ $GlobalRoot = (Resolve-Path $env:USERPROFILE).Path
 
 Do not use Git Bash `~` for global install or cleanup targets. The v0.1 smoke exercise demonstrated that its home can differ from `%USERPROFILE%`.
 
+### 1.1 Always invoke Herdr through the launcher
+
+On a managed Windows profile the logon process injects `HOMEDRIVE`/`HOMEPATH` from the Active
+Directory home-folder attribute, and Git Bash derives `HOME` from those. Herdr honours `HOME` when
+it is set and falls back to `USERPROFILE` when it is not, so the failure is **shell-specific**:
+PowerShell (where `HOME` is normally unset) resolves correctly, while Git Bash probes
+`M:\.claude\`, `M:\.codex\`, and so on, and reports every integration as `not installed`.
+
+Two launchers pin `HOME`, `HOMEDRIVE` and `HOMEPATH` from `USERPROFILE` for the child process only,
+then hand off to `herdr` with your arguments:
+
+```bash
+tools/herdr-env.sh integration status     # Git Bash - the one that matters here
+tools/herdr-env.sh --assert               # doctor check; exit 1 if any target runtime is wrong
+```
+
+```powershell
+tools\herdr-env.ps1 integration status
+tools\herdr-env.ps1 -Assert
+```
+
+`--assert` / `-Assert` checks only the four target runtimes — `claude`, `codex`, `opencode`,
+`cursor`. Herdr 0.8.2 ships integrations for seventeen runtimes and `not installed` is the correct
+answer for the thirteen this project does not use, so a check that fails on any occurrence of that
+string would fail permanently. The assertion exits non-zero if a target reports `not installed` or
+resolves to a path outside the real profile.
+
+Run `tools/herdr-env.sh --assert` after any Windows profile change, any Herdr update, and any
+sign-out and sign-in. See
+[`.advanced-plans/evidence/2026-08-26-phase-3-loop-001-environment-pin.md`](../.advanced-plans/evidence/2026-08-26-phase-3-loop-001-environment-pin.md)
+for the verification, including the negative test.
+
+**`cursor-agent`.** The Cursor IDE bundles a complete CLI inside its extension storage and does not
+put it on `PATH`. If `Get-Command cursor-agent` finds nothing, look under
+`%USERPROFILE%\AppData\Roaming\Cursor\User\globalStorage\anysphere.cursor-agent-worker\agent-cli\.local\share\cursor-agent\versions\`
+before installing anything. A shim at `%USERPROFILE%\.local\bin\cursor-agent.cmd` that resolves the
+newest version directory at run time survives Cursor upgrades.
+
 ## 2. Install Herdr stable
 
 Use Herdr's official native Windows installer:

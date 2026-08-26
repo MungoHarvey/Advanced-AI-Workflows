@@ -1,0 +1,12 @@
+# Normalise line endings in the repository to LF.
+* text=auto
+
+# Shell scripts MUST check out with LF even on Windows. core.autocrlf=true would otherwise
+# give tools/herdr-env.sh CRLF endings, and Git Bash fails on those with:
+#     $'\r': command not found
+*.sh text eol=lf
+
+# Windows-native scripts keep CRLF.
+*.ps1 text eol=crlf
+*.cmd text eol=crlf
+*.bat text eol=crlf

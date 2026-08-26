@@ -457,7 +457,11 @@ Check whether the directory still exists before concluding the removal failed. P
 
 ### Budget for auto-created parent workspaces
 
-`herdr worktree create --cwd <repo>` creates a workspace for the new worktree **and** one for the parent repository if it is not already open. Cleanup debt is therefore roughly double the number of worktrees created. The parent workspace is a worktree-group root, so closing its pane returns `confirmation_required: "closing this pane would close a worktree group"` and needs an explicit confirmation — plan for an operator step, or leave the group root open.
+`herdr worktree create --cwd <repo>` creates a workspace for the new worktree **and** one for the parent repository if it is not already open. Cleanup debt is therefore roughly double the number of worktrees created.
+
+The parent workspace is a worktree-group root *only while children exist*. Closing its pane returns `confirmation_required: "closing this pane would close a worktree group"` while linked worktrees are still attached, and succeeds silently once the last one is removed — verified 2026-08-26, when `wB` (xrepo) and `w8` (smoke-repo) both refused, then both returned `{"type":"ok"}` after their child worktrees were gone. **Treat the confirmation as a *children still exist* signal**, not as an operator step to plan around: clean the children in order and the parent closes on its own terms. Reaching for `workspace close` to get past it is what orphans registrations.
+
+Two related behaviours: `herdr worktree remove` closes the removed worktree's own workspace as part of the operation, so no follow-up close is needed; and `~/.herdr/worktrees/<repo>/` is left behind as an empty directory once its last child goes, which is harmless but accumulates.
 
 ## 13. First pilot checklist
 

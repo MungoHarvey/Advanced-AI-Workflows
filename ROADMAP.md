@@ -85,6 +85,24 @@ Full table: §15 of the design document.
 
 v0.2 is complete only when the three forks are current through reviewed branches; AAW contains every source artifact it tells users to install; Advanced Planning has tested adapters for all four runtimes; Herdr is the documented and tested execution backend on native Windows; worktree ownership and sole-planning-state-writer rules are enforced; task and result contracts are versioned and validated; the registry survives interruption and never equates terminal idle with success; install, refresh, sync, run, review, resume, and safe cleanup all have acceptance evidence; every user-facing claim matches observed behaviour; and release tags plus the compatibility manifest point at the exact tested commits.
 
+### Implementation plan
+
+The design is decomposed into Advanced Planning phases 3-9 in
+[`.advanced-plans/PLANS-INDEX.md`](.advanced-plans/PLANS-INDEX.md):
+
+| Workstream | Phase | Loops |
+|---|---|---|
+| 0 — Safety baseline and Herdr pilot | [3](.advanced-plans/phases/phase-3/plan.md) | decomposed |
+| 1A gstack + 1B packaging repair | [4](.advanced-plans/phases/phase-4/plan.md) | decomposed |
+| 1A Superpowers behavioural port | [5](.advanced-plans/phases/phase-5/plan.md) | decomposed |
+| 2 — Advanced Planning adapters | [6](.advanced-plans/phases/phase-6/plan.md) | deferred |
+| 3 — AAW multi-host routing | [7](.advanced-plans/phases/phase-7/plan.md) | deferred |
+| 4 — AAW registry and dispatcher | [8](.advanced-plans/phases/phase-8/plan.md) | deferred |
+| 5 — Cross-host E2E and release | [9](.advanced-plans/phases/phase-9/plan.md) | deferred |
+
+Phases 3-5 are the authorised execution scope. Phases 6-9 are planned at phase level only; the
+registry and CLI are explicitly not to be implemented yet.
+
 ### Operating guides
 
 - [Herdr Windows operations](docs/herdr-windows-operations.md) — native-Windows pilot, worktrees, provider sessions, evidence, safe cleanup.

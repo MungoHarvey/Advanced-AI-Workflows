@@ -141,15 +141,32 @@ def _strip_annotations(value):
     return value
 
 
+def _ours(hooks):
+    return [h for h in hooks if OURS in (h.get("command") or "")]
+
+
 def _survivors(post, matcher):
-    """The PostToolUse entries that would remain after our hook is removed."""
+    """The PostToolUse entries that would remain after our hook is removed.
+
+    An entry carrying our matcher but none of our hooks belongs to somebody else -
+    an empty `Write` matcher another tool left behind is the case that found this -
+    so it survives untouched. Dropping it was two defects at once: a silent deletion
+    of a stranger's entry, and, through the Step U6 guard above, a refusal to
+    uninstall at all when there was nothing of ours in the file to remove.
+
+    Returns new dicts rather than editing in place, so the guard can ask what would
+    happen without it having happened. Both the guard and the removal call this, so
+    the question and the answer cannot drift apart.
+    """
     kept = []
     for item in post:
-        if item.get("matcher") != matcher["matcher"]:
+        hooks = item.get("hooks", [])
+        if item.get("matcher") != matcher["matcher"] or not _ours(hooks):
             kept.append(item)
             continue
-        if [h for h in item.get("hooks", []) if OURS not in (h.get("command") or "")]:
-            kept.append(item)
+        others = [h for h in hooks if OURS not in (h.get("command") or "")]
+        if others:
+            kept.append(dict(item, hooks=others))
     return kept
 
 
@@ -205,6 +222,7 @@ def uninstall_settings(project):
         return "absent"
     original = read(path)
     doc = json.loads(original)
+    before = json.loads(original)      # a separate copy, to compare against at the end
     perms, matcher = snippet()
 
     would_empty = []
@@ -227,29 +245,19 @@ def uninstall_settings(project):
 
     post = doc.get("hooks", {}).get("PostToolUse")
     if isinstance(post, list):
-        kept = []
-        for item in post:
-            if item.get("matcher") != matcher["matcher"]:
-                kept.append(item)
-                continue
-            # Step U6 identifies our hook by the `aaw-hook` marker in the command,
-            # not by an exact string match, so a reformatted command is still
-            # recognised. Another tool's hook on the same matcher is not ours to
-            # delete, and taking it would be the worst kind of uninstall.
-            others = [h for h in item.get("hooks", [])
-                      if OURS not in (h.get("command") or "")]
-            if others:
-                item["hooks"] = others
-                kept.append(item)
-        doc["hooks"]["PostToolUse"] = kept
+        # Step U6 identifies our hook by the `aaw-hook` marker in the command, not by
+        # an exact string match, so a reformatted command is still recognised. Another
+        # tool's hook on the same matcher is not ours to delete, and taking it would
+        # be the worst kind of uninstall. _survivors() is the single answer to that.
+        doc["hooks"]["PostToolUse"] = _survivors(post, matcher)
 
-    result = json.dumps(doc, indent=2) + "\n"
-    if result == original:
-        # Nothing of ours was in there. Writing an identical file is harmless
-        # until the day it is not identical - a reformat, a changed newline -
-        # so do not write at all.
+    if doc == before:
+        # Nothing of ours was in there to remove. The comparison is on the parsed
+        # document, not on the bytes: comparing serialised output would call a
+        # four-space-indented file "changed" and rewrite it in our own formatting,
+        # which is a change the user did not ask for and did not make.
         return "unchanged"
-    write(path, result)
+    write(path, json.dumps(doc, indent=2) + "\n")
     return "removed"
 
 
@@ -330,10 +338,15 @@ def main(argv=None):
         install_settings(project)
         install_glue(project, args.source)
     elif args.action == "uninstall":
-        # Step U1 is unambiguous: if either marker is absent, STOP, and do not
-        # proceed to the remaining uninstall steps until the user has said to. An
-        # earlier version of this file carried on and a comment claiming the skill
-        # said so. It does not. The comment was wrong and the behaviour with it.
+        # Step U1, "exactly one marker": STOP, and do not proceed to the remaining
+        # uninstall steps until the user has said to. An earlier version of this file
+        # carried on, under a comment claiming the skill said so. It did not. The
+        # comment was wrong and the behaviour with it.
+        #
+        # Neither marker, or no CLAUDE.md at all, is a different case and not an
+        # error: the routing block is not installed, so there is nothing to remove
+        # and the rest of the uninstall proceeds. uninstall_routing() returns
+        # "kept"/"absent" there rather than "refused".
         if uninstall_routing(project) == "refused":
             return EXIT_NEEDS_HUMAN
         if uninstall_settings(project) == "refused":

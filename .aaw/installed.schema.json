@@ -20,7 +20,7 @@
       "const": 1
     },
     "generated_at": {
-      "description": "UTC ISO 8601 instant, seconds precision, trailing Z. Local times are not accepted: two manifests written on either side of a DST boundary must remain comparable.",
+      "description": "UTC ISO 8601 instant, seconds precision, trailing Z. Local times are not accepted: two manifests written on either side of a DST boundary must remain comparable. The pattern below fixes the shape only - 2026-99-99T99:99:99Z matches it and is not a date. JSON Schema cannot express the calendar check here (format is an annotation a validator need not enforce), so readers do it: tools/aaw-audit.py before writing, tests/packaging/validate-manifest.py when validating.",
       "type": "string",
       "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$"
     },

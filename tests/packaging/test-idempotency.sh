@@ -423,6 +423,61 @@ grep -q 'permissions.allow and hooks.PostToolUse' "$TMP/empty.err" \
   || bad "and stopped before removing the glue skill"
 echo ""
 
+# --------------------------------------------------------------------------
+# 9. nothing of ours to remove - do not refuse, and do not reformat
+# --------------------------------------------------------------------------
+# Two findings from the second review pass, in one fixture, because they meet here:
+# a settings.json that has never had AAW in it, formatted the way its owner formats
+# it, carrying somebody else's PostToolUse entry on the same "Write" matcher we use.
+# The Step U6 guard used to refuse this - it asked "would the array be empty after
+# removal" and got yes, because the survivors calculation dropped a matcher that held
+# none of our hooks. And the no-rewrite check compared serialised bytes, so a
+# four-space file was "changed" and came back two-space.
+echo "--- stage 9: nothing of ours to remove ---------------------------"
+N="$TMP/not-ours"
+mkdir -p "$N/.claude"
+cat > "$N/.claude/settings.json" <<'JSON'
+{
+    "permissions": {
+        "allow": [
+            "Bash(git status)"
+        ]
+    },
+    "hooks": {
+        "PostToolUse": [
+            {
+                "matcher": "Write",
+                "hooks": []
+            }
+        ]
+    }
+}
+JSON
+cp "$N/.claude/settings.json" "$TMP/not-ours-before.json"
+
+"$PY" "$OPS" uninstall --project "$N" >/dev/null 2>"$TMP/notours.err"
+code=$?
+[ "$code" -eq 0 ] && ok "an uninstall with nothing of ours to remove does not refuse" \
+  || { bad "an uninstall with nothing of ours to remove does not refuse, got $code"
+       sed 's/^/        /' "$TMP/notours.err" | head -3; }
+
+cmp -s "$TMP/not-ours-before.json" "$N/.claude/settings.json" \
+  && ok "and leaves a four-space-indented settings.json byte-identical" \
+  || { bad "and leaves a four-space-indented settings.json byte-identical"
+       diff -u "$TMP/not-ours-before.json" "$N/.claude/settings.json" | head -14; }
+
+grep -q '"matcher"' "$N/.claude/settings.json" \
+  && ok "and does not delete somebody else's empty Write matcher" \
+  || bad "and does not delete somebody else's empty Write matcher"
+
+# Step U1, "neither marker": there is no CLAUDE.md here at all, and that is not an
+# error - it is a project the routing block was never installed into. The uninstall
+# must carry on rather than stop, or the other artefacts become unremovable.
+[ ! -f "$N/CLAUDE.md" ] \
+  && ok "and a project with no CLAUDE.md is not treated as a hand-edited one" \
+  || bad "and a project with no CLAUDE.md is not treated as a hand-edited one"
+echo ""
+
 echo "--- after install ------------------------------------------------"
 sed 's/^/  /' "$TMP/fp-install-1.txt"
 echo ""

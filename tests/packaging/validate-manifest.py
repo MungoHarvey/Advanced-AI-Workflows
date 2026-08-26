@@ -24,6 +24,16 @@ not know and passes a document it should reject. That is closed here: the built-
 validator walks the schema first and **exits 2** if it meets any keyword outside
 its supported set. It refuses rather than under-checks.
 
+One check that is not a schema check.
+
+`generated_at` has a `pattern`, and a pattern fixes the shape of a string and nothing
+more: `2026-99-99T99:99:99Z` matches it and is not a date. JSON Schema's `format:
+"date-time"` is an annotation that a Draft 2020-12 validator is not obliged to enforce,
+and the built-in validator here does not implement formats at all, so putting it in the
+schema would look like a check without being one. `semantic_errors()` does it instead,
+outside both validators, and the audit that writes manifests does the same check before
+writing (`tools/aaw-audit.py`).
+
 `--self-check` runs both validators over the fixture corpus and fails if they
 disagree on any fixture, so the fallback is measured against the reference on
 every run of the packaging tests rather than trusted.
@@ -35,6 +45,7 @@ import json
 import os
 import re
 import sys
+from datetime import datetime
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(os.path.dirname(HERE))
@@ -53,6 +64,28 @@ TYPES = {
     "object": dict, "array": list, "string": str,
     "integer": int, "number": (int, float), "boolean": bool, "null": type(None),
 }
+
+
+def semantic_errors(doc):
+    """Checks the schema cannot express, applied on top of it. See the note above.
+
+    Deliberately kept out of validate_builtin(): --self-check measures the built-in
+    validator against jsonschema, and that comparison only means anything while both
+    are answering the same question - does this document satisfy the schema.
+    """
+    if not isinstance(doc, dict):
+        return []
+    value = doc.get("generated_at")
+    if not isinstance(value, str):
+        return []                  # a non-string is the schema's finding, not this one
+    if not re.match(r"^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$", value):
+        return []                  # so is the wrong shape; do not report it twice
+    try:
+        datetime.strptime(value, "%Y-%m-%dT%H:%M:%SZ")
+    except ValueError as exc:
+        return ["/generated_at: %r has the right shape but is not a real UTC instant "
+                "- %s" % (value, exc)]
+    return []
 
 
 class Unsupported(Exception):
@@ -211,7 +244,7 @@ def validate_file(schema, path):
         doc = load_json(path)
     except (OSError, ValueError) as exc:
         return ["%s: could not be read as JSON - %s" % (path, exc)]
-    return validate_builtin(schema, doc)
+    return validate_builtin(schema, doc) + semantic_errors(doc)
 
 
 def self_check(schema):
@@ -235,7 +268,8 @@ def self_check(schema):
             continue
 
         doc = load_json(path)
-        mine = validate_builtin(schema, doc)
+        mine_schema = validate_builtin(schema, doc)
+        mine = mine_schema + semantic_errors(doc)
         got_valid = not mine
 
         if got_valid != expect_valid:
@@ -249,10 +283,14 @@ def self_check(schema):
 
         if reference_available:
             theirs = validate_reference(schema, doc)
-            if bool(theirs) != bool(mine):
+            # Schema findings against schema findings. semantic_errors() has no
+            # counterpart in jsonschema, so including it here would report a
+            # disagreement that is really the two validators being asked different
+            # questions.
+            if bool(theirs) != bool(mine_schema):
                 print("  FAIL  %s - validators disagree: built-in says %s, "
                       "jsonschema says %s"
-                      % (name, "valid" if not mine else "invalid",
+                      % (name, "valid" if not mine_schema else "invalid",
                          "valid" if not theirs else "invalid"))
                 failures += 1
                 continue

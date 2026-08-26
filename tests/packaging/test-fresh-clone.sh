@@ -136,6 +136,20 @@ done < "$MANIFEST"
 # The pattern is deliberately narrow - repo-relative paths under .claude/skills/ that
 # the docs mention - because that is the shape of the defect this file exists to catch.
 # It is not a proof of completeness. It is one class of omission, closed.
+#
+# Two failure modes, both named rather than hidden:
+#   MISSING     the docs name a path in this repository that the clone does not have.
+#               This used to be skipped with a comment calling it a docs bug rather
+#               than a packaging one. That was wrong: a user following the docs from a
+#               fresh clone reaches for a file that is not there, which is exactly the
+#               broken install source this scan exists to catch. It now fails.
+#   UNDECLARED  the path is there but required-sources.txt does not list it.
+#
+# A path named only to illustrate something, rather than as a source to install from,
+# will be flagged. That is a real false positive and there is no way to tell the two
+# apart from the text. The remedy is the same either way and is cheap: declare it, or
+# stop naming it as a path. Paths under ~/ are the user's profile, not this repo, and
+# are skipped.
 EXCLUDED_RE='^\.claude/skills/(gstack|brainstorming|phase-plan-creator|superpowers)/'
 DOCS=""
 for doc in SETUP.md README.md .claude/skills/setup-with-claude/SKILL.md; do
@@ -146,16 +160,24 @@ MENTIONED="$TMP/mentioned.txt"
 : > "$MENTIONED"
 if [ -n "$DOCS" ]; then
   # shellcheck disable=SC2086
-  grep -ohE '\.claude/skills/[A-Za-z0-9._-]+/[A-Za-z0-9._/-]+\.(md|json|py)' $DOCS \
+  grep -ohE '(~/)?\.claude/skills/[A-Za-z0-9._-]+/[A-Za-z0-9._/-]+\.(md|json|py|sh|txt|ya?ml)' $DOCS \
     | sed 's/[.,;:)]*$//' | sort -u > "$MENTIONED"
 fi
 
 undeclared=0
 while IFS= read -r cand; do
   [ -n "$cand" ] || continue
+  case "$cand" in
+    "~/"*) continue ;;                       # the user's profile, not this repository
+  esac
   echo "$cand" | grep -qE "$EXCLUDED_RE" && continue
-  [ -e "$CLONE/$cand" ] || continue          # a path the docs name that does not exist
-                                             # here is a docs bug, not a packaging one
+  if [ ! -e "$CLONE/$cand" ]; then
+    echo "  MISSING    $cand"
+    echo "             the docs name it as a path in this repository and a fresh"
+    echo "             clone does not have it"
+    undeclared=$((undeclared + 1))
+    continue
+  fi
   if ! grep -qxF "$cand" "$TMP/declared.txt" 2>/dev/null; then
     echo "  UNDECLARED $cand"
     echo "             the docs name it and required-sources.txt does not list it"

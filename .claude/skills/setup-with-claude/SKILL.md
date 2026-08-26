@@ -403,13 +403,35 @@ never touches a pre-existing plannotator install, which is deprecated but left a
 
 Read `CLAUDE.md`. Search for both `<!-- aaw-routing:begin -->` and `<!-- aaw-routing:end -->`.
 
-If EITHER marker is absent, STOP. Do not modify `CLAUDE.md`. Print:
+Three cases, and they are not the same case.
+
+**Both markers present.** The block has both ends, so it is safe to remove. Continue to
+Step U2.
+
+**Neither marker present, or there is no `CLAUDE.md` at all.** The routing block is not
+installed. There is nothing to remove and nothing ambiguous about it: note it for the
+Step U8 report and continue to Step U2. The glue skill, the manifest and the
+settings.json entries may still be there, and refusing to remove them because of a file
+that was never written would leave them uninstallable.
+
+> An earlier version of this step said only "if EITHER marker is absent, STOP". Read
+> literally that made an uninstall impossible to complete on a project with no
+> `CLAUDE.md`: the recovery text below tells the user to remove the block by hand and
+> re-run, and there is no block to remove, so the second run stops in the same place as
+> the first. A reviewer found the deadlock. This is the fix, and the fix is to this
+> step rather than to the code that already behaved this way.
+
+**Exactly one marker present.** STOP. Do not modify `CLAUDE.md`, and do not proceed to
+Steps U3–U8 until the user has said to — the other artefacts stay where they are. One
+marker without the other means the file has been edited by hand since setup and there is
+no longer a reliable end to the block, so anything removed on a guess might be the user's
+own writing. Print:
 
 ```
-ERROR: aaw-routing markers not found in CLAUDE.md.
+ERROR: aaw-routing markers are incomplete in CLAUDE.md.
 
-Cannot safely remove the routing block — the fenced markers that delimit it are
-missing or incomplete. This usually means CLAUDE.md was edited manually after setup.
+Cannot safely remove the routing block — one of the two fenced markers that delimit
+it is missing. This usually means CLAUDE.md was edited manually after setup.
 
 Manual recovery instructions:
 1. Open CLAUDE.md in a text editor.

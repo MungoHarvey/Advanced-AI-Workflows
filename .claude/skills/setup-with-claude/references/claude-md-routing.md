@@ -33,51 +33,75 @@ Three things follow from that, and they matter:
   NOT installed** and follow the plain upstream behaviour of whatever skill you are in. Do
   not guess, and do not write to a path that this project has given you no evidence exists.
 
-Below, "**when Advanced Planning is installed**" always means exactly that predicate.
+Below, "**when Advanced Planning is installed**" always means exactly that predicate, and
+so does the same phrasing for `gstack` and `superpowers`.
+
+**Every route below that names a command or a skill belonging to a companion tool is
+gated on that tool.** If you ever find one that is not — because this block was edited,
+truncated, or is an older version — treat it as gated anyway and fall back to plain
+behaviour. Recommending a command that this project has given you no evidence exists is
+the failure this section exists to prevent, and a rule that forgot to say "when installed"
+is not permission to guess.
 
 ### Front-Door Rules
 
 When a user presents a new request, route to the right tool using these rules — in order:
 
 1. **Ambiguous scope, unclear problem, or need for strategic review**
-   → Invoke `/office-hours` (gstack)
+   → **When gstack is installed:** invoke `/office-hours`.
+   → **When it is not:** there is no command to run. Work the ambiguity out in
+   conversation — name the options, say which you would pick and why — and do not invent
+   a substitute command.
    Use when: the user is not sure where to start, the problem spans multiple subsystems,
    or a second opinion on strategy is wanted before committing to a plan.
 
 2. **Clear scope, unfamiliar codebase or new project**
-   → Invoke `/plan-and-phase` (advanced-planning)
-   Use when: the user knows what to build but this codebase or project is new. The command
-   runs an exploration step before phase planning. Supply the gstack design doc content as
-   the description argument if one has been archived.
+   → **When Advanced Planning is installed:** invoke `/plan-and-phase`. The command runs
+   an exploration step before phase planning.
+   → **When it is not:** explore the codebase first, then plan — with the `writing-plans`
+   skill if superpowers is installed, and in conversation if it is not.
+   Use when: the user knows what to build but this codebase or project is new. Supply the
+   gstack design doc content as the description argument if one has been archived.
 
 3. **Clear scope, familiar codebase (continuing work)**
-   → Invoke `/new-phase` (advanced-planning)
+   → **When Advanced Planning is installed:** invoke `/new-phase`. It skips the
+   exploration step.
+   → **When it is not:** plan directly — with the `writing-plans` skill if superpowers is
+   installed, and in conversation if it is not.
    Use when: the user knows what to build and the codebase is already understood from prior
-   work. Skips the exploration step. Supply the gstack design doc content as the description
-   argument if one has been archived.
+   work. Supply the gstack design doc content as the description argument if one has been
+   archived.
 
 4. **Need ideation mid-execution, stuck on options, or exploring trade-offs**
-   → Use the `brainstorming` skill (superpowers)
-   Use when: a todo or task requires exploring approaches before implementing. Load the
-   skill from wherever this harness keeps its skills and follow it. See *Brainstorming*
-   below for the three additions this project makes to it.
+   → **When superpowers is installed:** use the `brainstorming` skill. Load it from
+   wherever this harness keeps its skills and follow it. See *Brainstorming* below for the
+   three additions this project makes to it.
+   → **When it is not:** explore the approaches in conversation. The *Brainstorming*
+   section below still describes what this project wants from that conversation, but there
+   is no skill to load and no three-path classification to announce.
+   Use when: a todo or task requires exploring approaches before implementing.
 
 5. **Need a structured implementation plan from a spec**
    → **When Advanced Planning is installed:** invoke `/new-phase` (or `/plan-and-phase`
    for a codebase not yet explored), passing the spec as the description. Phase planning
    is this project's route from an approved spec to executable work, and for that job it
    **supersedes** `writing-plans` — see *Brainstorming*, addition 3.
-   → **When it is not installed:** use the `writing-plans` skill (superpowers).
+   → **When it is not installed:** use the `writing-plans` skill if superpowers is
+   installed, and write the plan in conversation if neither tool is.
    Use when: a spec or design doc is approved and a detailed task-by-task plan is needed.
 
 6. **Need a second opinion on a plan, design, or completed work**
-   → Invoke `/plan-ceo-review`, `/plan-eng-review`, `/plan-design-review`, or `/codex`
-   (gstack)
+   → **When gstack is installed:** invoke `/plan-ceo-review`, `/plan-eng-review`,
+   `/plan-design-review`, or `/codex`.
+   → **When it is not:** review the work directly, and say which lens you are applying —
+   the value is the second perspective, not the command that summons it.
    Use when: a phase plan or design is ready for structured review before execution begins,
    or after execution for a retrospective quality check.
 
 7. **Review at a phase boundary**
-   → Invoke `/run-gate` (advanced-planning)
+   → **When Advanced Planning is installed:** invoke `/run-gate`.
+   → **When it is not:** this project has no phases, so there is no boundary to gate.
+   Review the completed work directly and do not manufacture a phase to hold the review.
    Use when: a phase's work is complete and it must be reviewed before advancing.
    The gate reviewer runs on a different model from the implementer, reads the diff,
    check output, and phase success criteria, and writes a verdict to
@@ -91,12 +115,17 @@ The `brainstorming` skill classifies each request into one of three paths — **
 **Bounded**, or **Architectural** — and says the classification out loud before its first
 question. That classification is the skill's, not this block's. Follow it.
 
-**Where this section and the skill disagree about a default, this section wins.** These are
-project-level instructions: a skill's built-in default is what applies in a project that has
-said nothing on the subject, and this project has said something. Everything the section
-does not mention — the classification itself, the approval gates, the questions, the shape
-of the design — stays exactly as the skill has it. Override the defaults named here, and
-nothing else.
+**Where this section names a spec location, a terminal state, or a question format that
+differs from the skill's built-in default, this section wins — for those three things
+only.** They are project-level instructions, and a skill's built-in default is what applies
+in a project that has said nothing on the subject. This project has said something about
+exactly three things.
+
+Two limits on that, and both are absolute. It is a claim over the **skill's** defaults and
+never over the user's own writing: instructions outside this block's markers still win, as
+the top of the block says. And everything the three additions do not mention — the
+classification itself, the approval gates, the questions asked, the shape of the design —
+stays exactly as the skill has it. Override those three defaults, and nothing else.
 
 This project adds three things, and **two of the three apply to the Architectural path
 only.** Spike and Bounded behave exactly as the skill has them: a Spike ends in a reported
@@ -149,6 +178,11 @@ change to superpowers is required for any of it.
 
 ### Companion Tools
 
+**Read `.aaw/installed.json` to decide what is installed here.** This section reasons about
+one tool being present and another absent, and that judgement is the manifest's to make.
+Do not infer that Advanced Planning is installed from a `.advanced-plans/` directory, or
+that superpowers is installed from a skills directory — a project can hold either as data.
+
 When a user is planning work in a project where Advanced Planning is installed and
 `superpowers` is not, say so once and offer it: the methodology skills (`brainstorming`,
 `writing-plans`, TDD, systematic debugging) are what the loops inject per todo. The reverse
@@ -163,8 +197,9 @@ route to it, and treat any companion list that still names it as out of date.
 
 ### Closing Instruction — /gstack-to-plans Fallback
 
-AFTER any gstack planning skill writes a design doc, invoke `/gstack-to-plans` if it
-has not already fired.
+**When gstack is installed:** after any gstack planning skill writes a design doc,
+invoke `/gstack-to-plans` if it has not already fired. **When it is not**, no gstack skill
+can have written a design doc, so this rule never applies — do not go looking for one.
 
 This applies to: `/office-hours`, `/plan-ceo-review`, `/plan-eng-review`,
 `/plan-design-review`, `/codex` — any gstack skill that produces a design doc under

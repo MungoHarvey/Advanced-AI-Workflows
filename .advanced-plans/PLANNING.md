@@ -4,13 +4,13 @@ current_phase: 5
 phase_name: "Superpowers Behavioural Port"
 plan_file: .advanced-plans/phases/phase-5/plan.md
 loops_file: .advanced-plans/phases/phase-5/loops.md
-status: in progress — ralph-loop-001 COMPLETE 2026-08-26 (behaviour matrix written, cross-model design gate PASSED after a BLOCKED verdict was resolved). feat/aaw-packaging-repair merged into this branch (5524580), so the installation manifest is available; ralph-loop-002 todos 1-6 COMPLETE 2026-08-26. The ACC-04/ACC-05 behaviour proofs passed on the sixth round after catching two real defects in the routing block (rule 5 contradicted Brainstorming addition 3; the block never claimed precedence over a skill's own defaults). Both fixed and re-proven. The fork patch against upstream measures ZERO - mirror/upstream-2026-08-26 and upstream/main are the same commit. loop-002-7 REVIEWED 2026-08-26 and its human gate is now OPEN - two providers different from the implementer (codex on gpt-5.6-terra/medium, opencode on Qwen3.5-397B) both returned PASS WITH FINDINGS, and both answered the two questions the todo names the same way - the block does not over-reach into user instructions, and the fork should be published as a pure mirror retaining no patch. They contradicted each other on manifest gating and the controller adjudicated by reading the lines. The consolidated major finding is that F1 was fixed as an instance when it was a class - EIGHT routes name a companion command with no manifest gate. Nothing is closed until the user resolves or waives R1-R4.
+status: in progress — ralph-loop-001 COMPLETE 2026-08-26 (behaviour matrix written, cross-model design gate PASSED after a BLOCKED verdict was resolved). feat/aaw-packaging-repair merged into this branch (5524580), so the installation manifest is available; ralph-loop-002 todos 1-6 COMPLETE 2026-08-26. The ACC-04/ACC-05 behaviour proofs passed on the sixth round after catching two real defects in the routing block (rule 5 contradicted Brainstorming addition 3; the block never claimed precedence over a skill's own defaults). Both fixed and re-proven. The fork patch against upstream measures ZERO - mirror/upstream-2026-08-26 and upstream/main are the same commit. loop-002-7 CLOSED 2026-08-26 and with it ralph-loop-002 - all 7 todos completed. The cross-model gate ran two providers different from the implementer (codex on gpt-5.6-terra/medium, opencode on Qwen3.5-397B); both returned PASS WITH FINDINGS and both agreed the block does not over-reach into user instructions and that the fork should be published as a pure mirror retaining no patch, with the measured patch at zero. They contradicted each other on manifest gating and the controller adjudicated by reading the lines - codex was right. The human gate then resolved R1 as a CLASS rather than an instance - eleven sites in claude-md-routing.md now gate every companion-tool route on the manifest predicate with a named fallback, plus a default-deny catch-all; R2 narrowed to three named defaults; R3 declined with reason; R4 folded into the re-prove. Re-proven by three installer-built fixtures on one byte-identical envelope, including a broken-manifest fixture with every sentinel on disk that correctly reported everything as not installed. Phase 5 remains open on the unmeasured-harness item below.
 current_loop: ralph-loop-002
 gate_status: loop-001 design gate PASSED 2026-08-26 (reviewer codex/GPT-5.6 Sol, author claude/Opus 5 — ACC-18 satisfied)
 loops_total: 2
 todos_total: 11
-todos_done: 4
-todos_pending: 7
+todos_done: 11
+todos_pending: 0
 previous_phase: 4 — gate PASSED attempt 2, closed and compacted 2026-08-26
 last_updated: 2026-08-26
 
@@ -25,19 +25,19 @@ resolved_decisions:
   - "Cursor runtime: install cursor-agent — already bundled by the Cursor IDE, shimmed onto PATH (2026-08-26)"
   - "External-write gate: approved — docs/herdr-v0.2-import and v0.1.0 pushed (2026-08-26)"
   - "Phase-4 gate, attempt 1: the gstack upstream-suite criterion is WAIVED (2026-08-26). All 7 failures were re-run in isolation and attributed - 3 to a missing jq, 2 to Windows Developer Mode being off, 1 to a Git Bash fork() flake, 1 to an upstream gstack defect predating the sync. None is attributable to the sync, so no retry can close it. Recorded inline in phases/phase-4/plan.md."
+  - "loop-002-7 findings, resolved 2026-08-26: R1 fixed as a class (every companion-tool
+    route in the fenced block is now gated on the manifest predicate, with a default-deny
+    catch-all above them), R2 narrowed to a spec location, a terminal state and a question
+    format, R3 DECLINED because the line already leads with the generic harness wording and
+    carries a prose fallback, R4 discharged by building all three re-prove fixtures with
+    project_ops.py install rather than by hand. Evidence and the fixture table are in
+    evidence/2026-08-26-superpowers-port.md."
   - "Phase-4 gate, attempt 1: the second failing criterion - no global installer path resolves through ~ or HOME - was fixed rather than waived, in 3b19a49 on feat/aaw-packaging-repair (2026-08-26)."
 
 blocking_decisions:
   - "none open"
 
 open_items:
-  - "R1, the loop-002-7 major finding, is UNRESOLVED and blocks nothing else: eight routes in
-    the fenced block name a companion tool's command without gating on the manifest
-    predicate - front-door rules 1, 2, 3, 4, 6 and 7, the Companion Tools section, and the
-    Closing Instruction. The block's own lines 32-34 say a missing or malformed manifest
-    means treat every component as not installed, and then these eight never consult it. The
-    six ACC rounds could not have caught it: every fixture had a well-formed manifest, so
-    the missing and malformed cases the block legislates for were never exercised."
   - "Neither gemini nor cursor can be started unattended on this machine - gemini has no
     stored API key at all, and cursor raises its workspace-trust modal even in an ordinary
     long-used checkout, not just in a fresh worktree. Both report idle/interactive_ready

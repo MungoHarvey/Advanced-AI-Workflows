@@ -674,3 +674,152 @@ What remains is the part the loop assigns to the human: the resolution or waiver
 finding, and the authorisation to publish the mirror — which needs
 `git push origin mirror/upstream-2026-08-26:main --force-with-lease` in the superpowers
 repository, outside this session's authorised set.
+
+
+---
+
+## loop-002-7 — the human resolution, and the re-prove that backs it
+
+The gate review above ended undecided, with four findings and a note that the todo was not
+closed. The user resolved it on 2026-08-26 with three decisions, and this section is what
+those decisions produced. The short version: **R1 was accepted and fixed as a class, R2 was
+accepted and narrowed, R3 was declined with a reason, R4 was folded into the re-prove
+rather than deferred, and all three of the fixtures that back it were built by the
+installer rather than by hand.**
+
+### What the human decided
+
+| Finding | Resolution | What it produced |
+|---|---|---|
+| **R1** (major, codex, confirmed by the controller against Qwen's denial) — eight routes name a companion command with no manifest gate | **Fix all eight and re-prove.** Not the instance; the class. | Eleven sites patched in `claude-md-routing.md`, plus a default-deny catch-all, plus a third fixture that would have caught it |
+| **R2** (major/minor, both reviewers) — the precedence claim is broader than the three additions it protects | **Accept and narrow.** | The claim is now scoped to *a spec location, a terminal state, or a question format*, with two stated absolutes |
+| **R3** (minor, Qwen) — name the harness-neutral equivalent of `AskUserQuestion` | **Declined, with reason.** | No change. The line already reads *"ask them with the harness's structured question tool (`AskUserQuestion` in Claude Code)"* and already carries the fallback *"Where the harness has no such tool, ask in prose as usual"*. The reviewer's own note called it cosmetic and judged the shape correct; the suggested rewrite restates what is there |
+| **R4** (both reviewers, independently) — the proofs cover one harness, and Qwen sharpened it: the fixtures' `AGENTS.md` was placed by hand, not by the installer | **Folded into the R1 re-prove**, not deferred. | Every fixture below starts as a project with its own house rules and is passed to `project_ops.py install`; the block in it is the installer's output, byte for byte |
+
+R3's decline is recorded rather than silently dropped because a gate that quietly ignores
+a finding is not a gate either. The reviewer was right that a non-Claude reader needs the
+generic form; the file simply already leads with the generic form and names the Claude tool
+as the example, which is the order the finding asked for.
+
+### The fix
+
+`claude-md-routing.md` went from 178 to 213 lines, still pure LF. Eleven sites:
+
+- **Front-door rules 1, 2, 3, 4, 6 and 7** each gained an explicit *when installed* /
+  *when it is not* pair. The fallback branch is not a shrug — it says what to do instead,
+  and in two cases says explicitly that the thing being asked for does not exist here
+  (rule 7: *"this project has no phases, so there is no boundary to gate … do not
+  manufacture a phase to hold the review"*).
+- **Rule 5**, gated for gstack by the earlier F1 fix, had an ungated superpowers half. It
+  now degrades twice: Advanced Planning → `writing-plans` → conversation.
+- **Companion Tools** now opens by naming the manifest as the authority and by naming the
+  two wrong inferences by name: a `.advanced-plans/` directory, and a skills directory.
+- **The Closing Instruction** is gated on gstack, with the reason stated — if gstack is not
+  installed no gstack skill can have written a design doc, so there is nothing to look for.
+- **A default-deny catch-all** sits above all of them: every route naming a companion
+  command is gated whether or not it says so, and a rule that forgot to say *when
+  installed* is explicitly *"not permission to guess"*.
+
+Mechanical check: `grep '→ Invoke\|→ Use the'` returns nothing. Gate phrasing appears three
+times for gstack, six for Advanced Planning, once for superpowers. Host-specific paths in
+the block: still zero. Suites re-run clean — packaging 4/4, idempotency 56/56.
+
+The design choice worth recording is *where* the gates went. They are stated at the point
+of use with a named fallback, not once in a general statement further up. That is the F1
+lesson literally applied: in ACC round 1 a worker followed an unconditional rule 5 straight
+past a general instruction that should have stopped it. A general rule loses to a specific
+one at the moment of reading, so the specific one has to carry the gate.
+
+### The re-prove
+
+Three fixtures, one envelope, three workers, no controller intervention between the prompt
+and the answer.
+
+Each fixture starts as an ordinary project — `src/cli.py`, `README.md`, and an `AGENTS.md`
+containing only its own house rules — with sentinels on disk for whatever it is supposed to
+have installed, and a manifest generated by the project's own `.aaw/detect.py` run against
+a **fake HOME**, so global tooling on this machine cannot leak in and decide the answer.
+Then `tests/packaging/project_ops.py install` merges the routing block in. All three
+reported `install_exit: 0`, `block_in_agents: true`, `house_rules_kept: true`, and no stray
+`CLAUDE.md` in an AGENTS.md-only project. That is R4 discharged: the artefact under test is
+the installer's, not the controller's.
+
+The envelope (`TASK.md`, byte-identical in all three, `cmp`-verified) carries three requests
+that hit rule 1 (ambiguous scope, wants a strategic second opinion), rules 4/5 (an
+architectural design taken to its approved artefact, then name the terminal step) and rule 6
+(review the finished work). It never mentions `AGENTS.md`, routing, or any tool by name —
+which is what makes delivery testable rather than assumed. It also states that nobody is at
+the keyboard, forbids interactive question tools, grants approval at presentation time, and
+adds the line the whole exercise turns on:
+
+> `routed_to` must name a real command or skill you actually believe is available in THIS
+> project, or `NONE`. Do not name one to be helpful.
+
+| Fixture | Manifest | On disk | Expected | Observed |
+|---|---|---|---|---|
+| `all-installed-2` | valid, all three true | all three sentinels | routes fire; specs to `.advanced-plans/specs/`; terminal step is phase planning | `/office-hours` · `brainstorming` · `/plan-eng-review`; all three specs in `.advanced-plans/specs/`; terminal step *"invoke phase-plan-creator with the spec file path"* |
+| `only-superpowers` | valid; gstack and AP false | superpowers sentinel **plus a `.advanced-plans/specs/borrowed.md` decoy** | rules 1 and 6 → `NONE`; spec to `docs/superpowers/specs/`; decoy ignored | `NONE` · `brainstorming → writing-plans` · `NONE`; spec at `docs/superpowers/specs/2026-08-26-plugin-system-design.md`; environment block states *"advanced-planning: NOT installed"* |
+| `broken-manifest` | **truncated, unparseable** | **every sentinel present**, and global gstack visible in the fake HOME | everything treated as not installed; all three `NONE` | `NONE` · `NONE` · `NONE`; `components_installed: NONE` |
+
+`broken-manifest` is the discriminator the six earlier ACC rounds could not build, because
+every earlier fixture had a well-formed manifest. Here the sentinels are all genuinely on
+disk, so a reader that probes the filesystem instead of the manifest gets a different — and
+wrong — answer for every one of the three requests. It got all three right, and its
+reasoning names the rule rather than the conclusion:
+
+> Global gstack skills exist at `~/.claude/skills/gstack/` but the project manifest does not
+> confirm installation, so per the routing rules I cannot treat them as installed for this
+> project.
+
+That is the sentence R1 existed to make possible. Before the fix, front-door rule 1 read
+*"→ Invoke `/office-hours` (gstack)"* with no condition attached, and a reader following it
+literally would have recommended a command this project has no evidence exists.
+
+`only-superpowers` is the decoy test and passes it: a `.advanced-plans/` directory full of
+plausible spec content, and the worker still reports Advanced Planning as not installed and
+routes the design to the superpowers location. That is exactly the inference the new
+Companion Tools opening names and forbids.
+
+The positive control matters as much as the two negatives. `all-installed-2` shows the gates
+did not simply suppress everything: with a good manifest the routes fire, SP-1 puts the spec
+in `.advanced-plans/specs/` rather than the upstream default, and SP-2 makes the terminal
+step phase planning rather than *"implementation complete"*. A fix that made every answer
+`NONE` would have passed both negative fixtures and been worthless.
+
+Inputs were hashed before and after. In all three, `.aaw/installed.json`, `AGENTS.md` and
+`TASK.md` came back **byte-identical**; `broken-manifest` modified nothing at all, and
+`only-superpowers` modified only `README.md` and `src/cli.py`, which the envelope asked for.
+
+### Two things this round got wrong, recorded because they cost a run
+
+The first attempt at `all-installed` **blocked on an opencode external-directory permission
+dialog**, and it was my fixture that caused it: the brainstorming sentinel read *"See the
+real copy; this is a sentinel only"*, which is an invitation to go looking outside the
+project. The dialog was left unanswered — a blocked agent sitting on a permission prompt is
+the user's to clear, not the controller's — and the fixture was rebuilt with a
+self-contained skill body that tells the reader everything it needs and says explicitly not
+to look for another copy. That is a general lesson about fixtures, not about opencode: a
+stub that references an authority outside the fixture is not a stub, it is a pointer, and
+the worker will follow it.
+
+The rebuild had to go to a new directory (`all-installed-2`) because the blocked worker
+still held its cwd open, and Windows will not remove a directory a live process is sitting
+in. Worth knowing before designing a re-run around reusing a path.
+
+### What this closes and what it does not
+
+The todo's own gate — an independent verdict on the higher-risk lane, and an explicit
+statement of what the fork now is — is satisfied: two providers, both different from the
+implementer, both `pass_with_findings`, unanimous that the block does not over-reach into
+user instructions and that the fork should be published as a **pure mirror retaining no
+patch**, with the measured patch at zero. R1, R2 and R4 are resolved; R3 is declined with
+its reason on the record.
+
+Still open, and not closed by this section: **codex's third finding stands**. All of this
+behavioural evidence — seven ACC rounds now — comes from the opencode harness. The block is
+installed for Claude Code and for `AGENTS.md` readers alike, and only one of those has been
+measured. Re-measuring adherence on `claude` and on `codex` remains on the list.
+
+Also unchanged: publishing the mirror needs
+`git push origin mirror/upstream-2026-08-26:main --force-with-lease` in the superpowers
+repository, which is outside this session's authorised set and is the user's to run.

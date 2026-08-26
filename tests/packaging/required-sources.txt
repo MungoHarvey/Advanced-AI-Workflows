@@ -41,3 +41,6 @@ SETUP.md
 .aaw/detect.py
 # The detection rules, executable. Step 1 of the setup skill points at it as the tested
 # version of what it describes in prose; a clone without it leaves that claim dangling.
+tools/aaw-audit.py
+# The non-interactive audit. It is the CI-runnable half of the setup skill, so a clone
+# without it can be set up by conversation but cannot be checked by a machine.

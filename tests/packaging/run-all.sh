@@ -15,6 +15,7 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CHECKS=(
   "test-fresh-clone.sh"
   "test-manifest-schema.sh"
+  "test-audit.sh"
 )
 
 failed=()

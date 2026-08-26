@@ -4,12 +4,12 @@ current_phase: 4
 phase_name: "gstack Sync and AAW Packaging Repair"
 plan_file: .advanced-plans/phases/phase-4/plan.md
 loops_file: .advanced-plans/phases/phase-4/loops.md
-status: in progress — loops 001 and 002 COMPLETE (10/15 todos, both cross-model reviews PASS); next is loop 003, packaging determinism
-current_loop: 002 — packaging-restore (complete); 003 next
+status: in progress — all 3 loops COMPLETE (15/15 todos); gate attempt 1 FAILED 2026-08-26 on two criteria, one fixed and one waived; attempt 2 pending
+current_loop: 003 — packaging-determinism (complete); all loops closed
 loops_total: 3
 todos_total: 15
-todos_done: 10
-todos_pending: 5
+todos_done: 15
+todos_pending: 0
 last_updated: 2026-08-26
 
 programme: "AAW v0.2 — Herdr-managed multi-runtime orchestration"
@@ -22,6 +22,8 @@ resolved_decisions:
   - "HOME split fix: BOTH — machine-wide user override plus the scoped launcher and doctor assertion (2026-08-26)"
   - "Cursor runtime: install cursor-agent — already bundled by the Cursor IDE, shimmed onto PATH (2026-08-26)"
   - "External-write gate: approved — docs/herdr-v0.2-import and v0.1.0 pushed (2026-08-26)"
+  - "Phase-4 gate, attempt 1: the gstack upstream-suite criterion is WAIVED (2026-08-26). All 7 failures were re-run in isolation and attributed - 3 to a missing jq, 2 to Windows Developer Mode being off, 1 to a Git Bash fork() flake, 1 to an upstream gstack defect predating the sync. None is attributable to the sync, so no retry can close it. Recorded inline in phases/phase-4/plan.md."
+  - "Phase-4 gate, attempt 1: the second failing criterion - no global installer path resolves through ~ or HOME - was fixed rather than waived, in 3b19a49 on feat/aaw-packaging-repair (2026-08-26)."
 
 blocking_decisions:
   - "none open"
@@ -29,7 +31,8 @@ blocking_decisions:
 open_items:
   - "ACC-10: detach/reattach unproven — Herdr 0.8.2 has no CLI detach. One manual Ctrl+B, Q by the operator closes it."
   - "Machine-wide HOME override unverified until next logon; the launcher makes it moot either way."
-  - "Phase 3 has no gate verdict — the phase-4 boundary is the first real /run-gate run."
+  - "Phase 3 has no gate verdict — the phase-4 boundary was the first real /run-gate run (attempt 1: FAIL, unanimous across codex, code-review-agent and phase-goals-agent)."
+  - "The Advanced Planning source at ~/Coding/planning/advanced-planning does not contain the helper modules /run-gate calls: platforms.python.codex_gate, platforms.python.install_audit, platforms/python/handoff_digest.py. Verdict aggregation, the drift preflight and the handoff digest all degrade to manual until that source is updated."
   - "gstack test:windows does not pass on this machine: exit 1, 7 failing tests. 5 are environmental (jq missing, Windows Developer Mode off), 1 a Git Bash fork flake, 1 a genuine upstream bug. None attributable to the sync. Fix the environment before any PR so real failures stop being masked."
   - "browse/test/build.test.ts:16 interpolates an unquoted path into execSync and breaks on any checkout path containing a space. Upstream bug, worth reporting to garrytan/gstack."
   - "sync/upstream-2026-08-26 and pre-upstream-sync-2026-08-26 are local only and need a push gate."

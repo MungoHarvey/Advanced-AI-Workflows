@@ -57,6 +57,25 @@ contains every source artefact the documentation tells a user to install.
   `git diff <merge-base> origin/main`, not with `git diff upstream/main origin/main` — the latter
   measures how far behind the fork is and will look alarming while proving nothing.
 - ✓ The upstream suite passes, with the exact command and exit code recorded.
+
+  > **WAIVED at the phase-4 gate on 2026-08-26, by human decision.** The suite does not pass on
+  > this machine: `bun run test:windows` -> `exit=1`, 7 failing tests, recorded in full at
+  > `.advanced-plans/evidence/2026-08-26-phase-4-loop-001-gstack-sync.md:117-186`. Every one of
+  > the seven was re-run in isolation and attributed: 3 need `jq` on PATH, 2 need Windows
+  > Developer Mode (symlink privilege), 1 is a Git Bash `fork()` flake, and 1 is a genuine
+  > upstream defect at `browse/test/build.test.ts:16` that pre-dates the sync. None is
+  > attributable to the sync - the branch carries no net patch - so re-running loop 001 in this
+  > environment reproduces the same result, which is why `loops_to_revert` was left empty by
+  > every reviewer who looked at it.
+  >
+  > The waiver covers the *passing* half of this criterion only. The recording half was met, and
+  > the Risk Assessment below anticipated exactly this case and required an honest record rather
+  > than a claimed pass. Closing the criterion properly needs environment remediation (`jq`,
+  > Developer Mode) and an upstream fix; both are tracked as open items in `PLANNING.md`.
+  >
+  > This note is a record of a decision already taken, not an instruction to a reviewer. A
+  > reviewer should still evaluate the criterion and report what it finds; the waiver governs
+  > what the controller does with that finding, not what the finding is.
 - ✓ A Windows install smoke test passes from the synced tree.
 - ✓ The branch contains zero AAW-specific changes.
 

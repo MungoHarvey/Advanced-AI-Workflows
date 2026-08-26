@@ -4,6 +4,12 @@ This is the practical operating guide for running Advanced AI Workflows (AAW) wi
 
 Herdr is the session, pane, and worktree manager. Advanced Planning remains the planner. AAW remains the workflow policy and evidence layer.
 
+> **Machine-level herdr knowledge lives in `~/Coding/herdr-ops`** — the runtime
+> capability matrix, the numbered blockers B1–B7, and the distilled operating
+> rules. This document covers what is specific to *this programme*: worktree
+> ownership, envelopes, gates, and the run audit trail. Where the two overlap,
+> `herdr-ops` is authoritative on herdr behaviour and this document on AAW policy.
+
 ## Recommended setup
 
 - Windows Terminal
@@ -230,6 +236,10 @@ When Herdr owns the worktree:
 - do not run Superpowers' worktree creation step again; and
 - tell the agent that isolation is already prepared.
 
+### Expect a first-run trust dialog
+
+A newly created worktree is a directory the provider has never seen, so `claude` and `cursor` both present a workspace-trust prompt on start; `opencode` does not. Because AAW creates a worktree per loop, this fires on **every** claude/cursor worker start, not once per machine. Clearing it requires `herdr agent send-keys`, which means an operator. Plan for it in any fan-out that starts those two runtimes.
+
 ## 7. Operate a running agent
 
 ### Inspect state
@@ -293,6 +303,10 @@ herdr agent focus superpowers-sync
 herdr session attach aaw
 ```
 
+**Cursor's blocked state is not trustworthy.** Verified 2026-08-26: cursor-agent sat at a full-screen "Workspace Trust Required" modal while Herdr reported `idle` with `interactive_ready: true`, and `state_change_seq` did not move across the entire modal-to-cleared transition. It *does* report `blocked` for mid-turn shell-approval dialogs, but then lags — still `blocked` after the dialog was answered and the pane showed "Running". Read the pane before dispatching to a cursor agent; do not act on its state alone. Claude reports the same conditions correctly on two channels (`agent_not_ready` at start, `agent_blocked` at prompt).
+
+Cursor also requires approval for **every** non-allowlisted shell command — one trivial commit task produced two separate approval stops. Unattended cursor work needs its allowlist pre-configured or it will stall repeatedly mid-task.
+
 The controller records the question and the user's response in the run audit trail.
 
 ### Follow up after collection
@@ -344,6 +358,19 @@ Do not rotate providers merely for variety. Assign a provider based on role and 
 | quick read-only investigation | native subagent or lightweight Herdr pane | no worktree or durable run overhead unless resumability is needed |
 
 The provider list is policy, not a queue. A runtime that is unauthenticated, unavailable, or poor at a task is skipped explicitly.
+
+### Verified runtime capability constraints (2026-08-26)
+
+| Runtime | Loads an injected skill | Commits from a linked worktree | Startable unattended in a fresh worktree |
+|---|---|---|---|
+| opencode | yes | yes | **yes — the only one** |
+| claude | yes | yes | no — trust dialog on every new worktree |
+| cursor | yes | yes | no — trust modal, then approval per shell command |
+| codex | not retested | **no** | no |
+
+**Codex cannot `git commit` inside a Herdr worktree.** A linked worktree's Git metadata lives in the parent repository's `.git/worktrees/`, outside codex's sandbox (pilot F1). Any envelope whose evidence requirement is `git_commit` must therefore go to opencode or claude, or the controller must perform the commit itself after collection. This is a per-runtime sandbox property, not a limitation of the worktree mechanism.
+
+Commit attribution differs by runtime: cursor adds a `Co-authored-by: Cursor` trailer; codex inherits the operator's Git identity unmarked. See `programme-git-policy.md`.
 
 ## 10. Native provider features versus Herdr
 
@@ -404,6 +431,34 @@ Herdr removes the checkout through Git and leaves the branch. If it refuses, ins
 
 Closing a Herdr workspace is not the same as removing its Git worktree. Use `workspace close` only when you intentionally want to preserve the checkout outside the Herdr UI.
 
+### Ordering: remove the worktree before closing anything
+
+The order is not cosmetic. **`herdr worktree remove` first, pane/workspace close only after.** Removal is Git-aware: it deregisters the worktree from the parent repository's `.git/worktrees/` and leaves the branch. Closing the pane first destroys the only thing holding that path open, and the worktree registration is then orphaned — Herdr can no longer remove it properly and you are left tidying directories by hand.
+
+Two ordering traps observed on 2026-08-26:
+
+- **Deleting the parent repository first orphans every worktree under it.** `rm -rf` on the parent checkout removes `.git/worktrees/`, after which `herdr worktree remove` cannot do a clean job on any child worktree. Remove the worktrees, then the parent.
+- **Closing the worker pane before removing the worktree** has the same effect for that one worktree.
+
+### `Permission denied` on removal is a lock, not a policy refusal
+
+```
+{"error":{"code":"worktree_remove_failed",
+ "message":"error: failed to delete '<path>': Permission denied"}}
+```
+
+On Windows this means a live process still has that directory as its working directory — usually the worker pane's shell, which persists after the agent itself has exited. **`--force` does not help**, because the obstacle is a filesystem lock rather than a Git safety check; passing it only risks forcing a removal that may already be partly done (pilot F2). The working sequence is:
+
+1. `herdr worktree remove --workspace <ws>` — attempt it first, without `--force`;
+2. if it fails on a lock, `herdr pane close <ws>:<pane>` to release the working directory;
+3. retry the removal.
+
+Check whether the directory still exists before concluding the removal failed. Pilot F2 recorded `worktree_remove_failed` being reported *after* the destructive part had already completed, so the error alone does not tell you what state you are in.
+
+### Budget for auto-created parent workspaces
+
+`herdr worktree create --cwd <repo>` creates a workspace for the new worktree **and** one for the parent repository if it is not already open. Cleanup debt is therefore roughly double the number of worktrees created. The parent workspace is a worktree-group root, so closing its pane returns `confirmation_required: "closing this pane would close a worktree group"` and needs an explicit confirmation — plan for an operator step, or leave the group root open.
+
 ## 13. First pilot checklist
 
 Run this before dispatching the real package updates:
@@ -445,6 +500,17 @@ Herdr's native Windows path uses ConPTY. The default drawn cursor favours stabil
 ### Direct terminal attach fails on Windows
 
 Herdr documents `herdr terminal attach` as unsupported on native Windows. Reattach to the Herdr session UI and focus the agent instead. Do not redesign AAW around the unsupported command.
+
+### `agent_prompt_stalled` immediately after starting an agent
+
+`herdr agent start` can return `agent_started` with `agent_status: "idle"` and `interactive_ready: true` while the provider's TUI is still painting its splash screen. A prompt sent at that moment is rejected:
+
+```
+{"error":{"code":"agent_prompt_stalled",
+ "message":"agent prompt produced no observed state change within 5000 ms; status is idle and state_change_seq remained 87"}}
+```
+
+The reported ready state is not a guarantee the composer will accept input. **Retry the prompt** — one retry was sufficient in testing. This is not a multi-line or bracketed-paste problem: multi-line prompts submit correctly once the agent is warm.
 
 ### Agent is done but output is incomplete
 

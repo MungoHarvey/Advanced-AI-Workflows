@@ -145,12 +145,27 @@ done < "$MANIFEST"
 #               broken install source this scan exists to catch. It now fails.
 #   UNDECLARED  the path is there but required-sources.txt does not list it.
 #
-# A path named only to illustrate something, rather than as a source to install from,
-# will be flagged. That is a real false positive and there is no way to tell the two
-# apart from the text. The remedy is the same either way and is cheap: declare it, or
-# stop naming it as a path. Paths under ~/ are the user's profile, not this repo, and
-# are skipped.
+# Two kinds of path are named in the docs and are not sources this repository ships: one
+# only illustrating something, and one naming where an installer PUTS a file in the
+# user's own project. Nothing in the text tells them apart from a source - a reviewer
+# made that point about the second kind - so they are declared instead, one per line with
+# a reason, in documented-destinations.txt. Declaring is the remedy for both, and the
+# alternative remedy, not writing the path, is always available.
+#
+# Paths under ~/ are the user's profile rather than this repository, and are skipped.
+#
+# The pattern takes any extension now. A documented source with no extension at all is
+# still not matched; that is the remaining hole and it is a small one.
 EXCLUDED_RE='^\.claude/skills/(gstack|brainstorming|phase-plan-creator|superpowers)/'
+
+# Paths the docs name that this repository is not expected to ship. Comment lines and
+# blank lines are ignored; everything else is one repo-relative path.
+DESTINATIONS="$TMP/destinations.txt"
+: > "$DESTINATIONS"
+if [ -f "$CLONE/tests/packaging/documented-destinations.txt" ]; then
+  sed 's/#.*//' "$CLONE/tests/packaging/documented-destinations.txt" \
+    | sed 's/[[:space:]]*$//' | grep -v '^$' > "$DESTINATIONS" || true
+fi
 DOCS=""
 for doc in SETUP.md README.md .claude/skills/setup-with-claude/SKILL.md; do
   [ -f "$CLONE/$doc" ] && DOCS="$DOCS $CLONE/$doc"
@@ -160,7 +175,7 @@ MENTIONED="$TMP/mentioned.txt"
 : > "$MENTIONED"
 if [ -n "$DOCS" ]; then
   # shellcheck disable=SC2086
-  grep -ohE '(~/)?\.claude/skills/[A-Za-z0-9._-]+/[A-Za-z0-9._/-]+\.(md|json|py|sh|txt|ya?ml)' $DOCS \
+  grep -ohE '(~/)?\.claude/skills/[A-Za-z0-9._-]+/[A-Za-z0-9._/-]+\.[A-Za-z0-9]+' $DOCS \
     | sed 's/[.,;:)]*$//' | sort -u > "$MENTIONED"
 fi
 
@@ -171,10 +186,13 @@ while IFS= read -r cand; do
     "~/"*) continue ;;                       # the user's profile, not this repository
   esac
   echo "$cand" | grep -qE "$EXCLUDED_RE" && continue
+  grep -qxF "$cand" "$DESTINATIONS" && continue
   if [ ! -e "$CLONE/$cand" ]; then
     echo "  MISSING    $cand"
     echo "             the docs name it as a path in this repository and a fresh"
-    echo "             clone does not have it"
+    echo "             clone does not have it. If the docs mean somewhere an installer"
+    echo "             writes in the user's project, say so in"
+    echo "             tests/packaging/documented-destinations.txt"
     undeclared=$((undeclared + 1))
     continue
   fi

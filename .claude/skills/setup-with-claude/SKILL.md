@@ -303,7 +303,16 @@ Verify what you wrote before reporting success:
 python tests/packaging/validate-manifest.py .aaw/installed.json
 ```
 
-If this repository is not available to the user, any JSON Schema validator will do.
+If this repository is not available to the user, a generic JSON Schema validator checks
+the shape and not the calendar: `generated_at` carries a `pattern`, and
+`2026-99-99T99:99:99Z` matches it. That is a limit of the schema rather than of the
+validator — JSON Schema cannot express the check here, and the field's own description in
+`.aaw/installed.schema.json` says so. Anyone validating that way must also read
+`generated_at` and confirm it is an instant that could have happened.
+`tests/packaging/validate-manifest.py` and `tools/aaw-audit.py` both do that check for
+you. This paragraph used to say "any JSON Schema validator will do", which was true of
+every field except this one.
+
 Report the manifest as written only after it validates.
 
 #### On `.claude/integrations.json`

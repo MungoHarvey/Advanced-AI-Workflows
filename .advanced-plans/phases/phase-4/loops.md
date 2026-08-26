@@ -152,9 +152,9 @@ max_iterations: 3
 on_max_iterations: escalate
 
 handoff_summary:
-  done: ""
-  failed: ""
-  needed: ""
+  done: "All 5 todos. .gitignore widened by one named directory (not by relaxing the exclusion); the gstack-to-plans glue skill tracked byte-identically from its deployed copy; tests/packaging/ added and proven in four directions including against the real pre-fix commit; tests/packaging/*.txt pinned to LF; README:7 and SETUP.md:9 updated to say the blocker is fixed here and stands on main. Cross-model review FAIL then PASS, one finding accepted and fixed. Four commits 0e145c7, 692b7be, 67ae688, 3b0c621 on feat/aaw-packaging-repair, head 3b0c621, local only."
+  failed: "Nothing failed. Two assumptions were made and then disproved by test rather than carried: a CR guard in the manifest reader (the reader's existing sed already strips CR, and the guard wrote a raw CR into a file pinned to LF), and the .gitattributes comment justifying the LF pin, which the reviewer caught still asserting the disproved failure mode."
+  needed: "The branch is unpushed and unmerged, so main still ships an incomplete install set; a push gate is required and none has been given. README:7 and SETUP.md:9 need one more edit when it lands. The AskUserQuestion contract gap in the glue skill is open. The test checks presence, not correctness — it cannot see that gap. .aaw/installed.json does not exist, so ACC-02 stale-data-directory detection is still wrong; that is loop 003."
 
 todos:
   - id: "loop-002-1"
@@ -184,10 +184,10 @@ todos:
     checks:
       - "git status --porcelain -> only the intended skill becomes visible, nothing else"
       - "git check-ignore -v on the other local skills -> still ignored"
-    evidence: "The gitignore diff and the git status before and after"
+    evidence: "The gitignore diff and the git status before and after. Result: one line added, `!.claude/skills/gstack-to-plans/`; the `.claude/skills/*` exclusion kept. After the edit `git status --porcelain` showed only `.gitignore` modified — nothing else became visible. Probes at head 3b0c621: gstack-to-plans/SKILL.md not ignored (exit 1); some-local-skill/SKILL.md still ignored by .gitignore:15; .claude/settings.json still ignored by .gitignore:13. Tracked set under .claude/ is seven files. Reviewer verdict OVER-WIDENS: no."
     gate: "none"
     outcome: "One skill becomes trackable; the machine local skill collection does not leak into the repository"
-    status: pending
+    status: completed
     complexity: medium
     priority: high
   - id: "loop-002-3"
@@ -202,10 +202,10 @@ todos:
       - "git ls-files .claude/skills/gstack-to-plans/SKILL.md -> returns the path"
       - "the frontmatter name and description match what the setup skill installs"
       - "every behaviour the docs promise is present in the file, or the gap is written down"
-    evidence: "The restored file, its provenance (the deployed copy path and mtime), and a contract-conformance note"
+    evidence: "Restored byte-identically from the deployed copy C:\Users\mharvey2\.claude\skills\gstack-to-plans\SKILL.md, 3912 bytes, mtime 2026-06-16 23:28:28, md5 3fc4d9cca4f5d93296fde2febe914292, cmp IDENTICAL. Frontmatter name: gstack-to-plans. CONTRACT GAP RECORDED, NOT REPAIRED: phase 1 accepted this skill on explicit AskUserQuestion callouts at all three ambiguous branches; the file contains zero occurrences of AskUserQuestion, two branches are prose only and the third is absent. Committed verbatim to preserve provenance; the gap is separate work. Reviewer independently confirmed the gap statement is accurate."
     gate: "none"
     outcome: "The documented install source exists in the repository and matches what the documentation claims it does"
-    status: pending
+    status: completed
     complexity: medium
     priority: high
   - id: "loop-002-4"
@@ -220,10 +220,10 @@ todos:
       - "the test passes on the current tree"
       - "the test FAILS when the glue skill is temporarily removed — prove this, do not assume it"
       - "the test runs against a fresh clone in a temporary directory, not against the working tree"
-    evidence: "Both runs, passing and deliberately failing, with exit codes"
+    evidence: "Both runs, passing and deliberately failing, with exit codes. tests/packaging/test-fresh-clone.sh + required-sources.txt, 9 required paths, clones into mktemp -d with --no-hardlinks --no-local. PASS on HEAD exit 0, 9/9. FAIL with --ref e508203 (the real commit before the fix) exit 1, MISSING the glue skill. FAIL on a scratch clone with the skill git rm-ed. FAIL on a scratch clone with SETUP.md truncated to zero bytes, EMPTY. Both scratch clones were in temp dirs and deleted; no broken commit was made on a real branch. Reviewer re-ran it independently: HEAD_EXIT=0, PREFIX_EXIT=1."
     gate: "none"
     outcome: "This class of defect cannot recur silently"
-    status: pending
+    status: completed
     complexity: high
     priority: high
   - id: "loop-002-5"
@@ -236,10 +236,10 @@ todos:
     worktree_owner: "herdr"
     checks:
       - "the reviewing and implementing providers are named and differ — ACC-18"
-    evidence: "Verdict, findings, reviewer model"
+    evidence: "Verdict, findings, reviewer model. Implementer Claude Opus 5 (claude-opus-5[1m], the controller); reviewer codex agent pkgreview, pane footer gpt-5.6-terra medium — they differ, ACC-18 holds. Pass 1 FAIL with OVER-WIDENS: no, 2m 11s, one finding: the .gitattributes comment still claimed a CRLF manifest could fail the test, which 67ae688 had itself disproved. Re-derived by the controller and accepted; fixed in 3b0c621. Pass 2 PASS, no findings. The reviewer self-reported MODEL: gpt-5.6-sol in pass 1 and retracted it in pass 2 as unknown — an agent self-reported model id is not evidence; the started --kind and the pane footer are. Full record: .advanced-plans/evidence/2026-08-26-phase-4-loop-002-packaging-repair.md"
     gate: "none"
     outcome: "An independent reader has checked the change that decides what enters the repository"
-    status: pending
+    status: completed
     complexity: medium
     priority: high
 

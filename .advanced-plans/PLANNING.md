@@ -4,12 +4,12 @@ current_phase: 4
 phase_name: "gstack Sync and AAW Packaging Repair"
 plan_file: .advanced-plans/phases/phase-4/plan.md
 loops_file: .advanced-plans/phases/phase-4/loops.md
-status: in progress — loop 001 COMPLETE (5/5 todos, cross-model review PASS); next is loop 002, AAW packaging repair
-current_loop: 001 — gstack-sync
+status: in progress — loops 001 and 002 COMPLETE (10/15 todos, both cross-model reviews PASS); next is loop 003, packaging determinism
+current_loop: 002 — packaging-restore (complete); 003 next
 loops_total: 3
 todos_total: 15
-todos_done: 5
-todos_pending: 10
+todos_done: 10
+todos_pending: 5
 last_updated: 2026-08-26
 
 programme: "AAW v0.2 — Herdr-managed multi-runtime orchestration"
@@ -33,6 +33,9 @@ open_items:
   - "gstack test:windows does not pass on this machine: exit 1, 7 failing tests. 5 are environmental (jq missing, Windows Developer Mode off), 1 a Git Bash fork flake, 1 a genuine upstream bug. None attributable to the sync. Fix the environment before any PR so real failures stop being masked."
   - "browse/test/build.test.ts:16 interpolates an unquoted path into execSync and breaks on any checkout path containing a space. Upstream bug, worth reporting to garrytan/gstack."
   - "sync/upstream-2026-08-26 and pre-upstream-sync-2026-08-26 are local only and need a push gate."
+  - "feat/aaw-packaging-repair is local only and needs a push gate. Until it lands, main still ships an incomplete install set, and README:7 and SETUP.md:9 need one further edit when it does."
+  - "The gstack-to-plans glue skill has zero AskUserQuestion callouts although phase 1 accepted it on having them at three ambiguous branches. Committed verbatim to preserve provenance; the packaging test checks presence, not correctness, so it cannot catch this."
+  - "An agent self-reported model id is not evidence — a codex reviewer named a model that contradicted its own pane footer, then retracted it. ACC-18 checks must use the started --kind and the observable pane, not the agent word."
 
 ## Phases
 

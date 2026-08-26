@@ -137,6 +137,7 @@ Record the exact command and its exit code either way.
 | `C:\Users\mharvey2\Coding\Advanced-AI-Workflows` | `aaw` | `docs/herdr-v0.2-import` | controller; sole writer of programme state |
 | `C:\Users\mharvey2\Coding\gstack-fork` | `none` | `main` | untouched; `origin/main` still at `a5dc03bd` |
 | `C:\Users\mharvey2\Coding\aaw worktrees\gstack-sync-2026-08-26` | `herdr` | `sync/upstream-2026-08-26` | phase 4 loop 001, workspace `w5`. Local only, never pushed |
+| `C:\Users\mharvey2\Coding\aaw worktrees\aaw-packaging-repair` | `herdr` | `feat/aaw-packaging-repair` | phase 4 loops 002-003, workspace `wA`. Local only, never pushed |
 | `C:\Users\mharvey2\Coding\superpowers` | `none` | `main` | phase 5 loop 002 will create a `herdr`-owned port worktree beside it |
 | `C:\Users\mharvey2\Coding\advanced-planning` | `none` | `main` | read-only until phase 6 |
 | `C:\Users\mharvey2\Coding\gstack` | `none` | — | pre-existing dirty checkout, deliberately untouched |

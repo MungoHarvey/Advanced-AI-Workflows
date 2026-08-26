@@ -15,6 +15,10 @@ Work towards v0.2.0 — Herdr-managed multi-runtime orchestration.
 Design: [`.advanced-plans/specs/2026-08-26-herdr-multi-runtime-orchestration-design.md`](.advanced-plans/specs/2026-08-26-herdr-multi-runtime-orchestration-design.md).
 
 ### Added
+- **`tests/packaging/`** — a fresh-clone packaging test and the manifest of documented install
+  sources it enforces. Clones into a temporary directory, never inspects the working tree, and
+  reports every missing, empty, or untracked source rather than stopping at the first.
+- **Loop 002 evidence record** — `.advanced-plans/evidence/2026-08-26-phase-4-loop-002-packaging-repair.md`.
 
 - `docs/herdr-windows-operations.md`, `docs/upstream-sync-playbook.md`,
   `docs/herdr-kickoff-prompt.md` and `references/upstream-baseline-2026-08-26.json` —
@@ -114,12 +118,43 @@ Independent cross-model review (ACC-18): implementer Claude Opus 5, reviewer
 re-derived by the controller before being accepted.
 
 
+### Phase 4 loop 002 — AAW packaging repair: complete
+
+The glue skill `.claude/skills/gstack-to-plans/SKILL.md` is now tracked. It had never been tracked:
+absent from the whole history on every ref, so the only source was the deployed copy, imported
+byte-identically (3912 bytes, md5 `3fc4d9cca4f5d93296fde2febe914292`, `cmp` IDENTICAL).
+
+The `.gitignore` fix names one directory and keeps the `.claude/skills/*` exclusion, because this
+machine's local skill collection lives in the same tree. Verified not to over-widen: an arbitrary
+sibling skill and `.claude/settings.json` are both still ignored, `git status` showed no other file
+becoming visible, and the tracked set under `.claude/` is seven files.
+
+`tests/packaging/` fails the build when a documented install source goes missing from a fresh clone.
+It was proven in four directions, the strongest being a run against `e508203` — the repository's own
+commit immediately before the fix — which fails for the real reason with nothing fabricated.
+
+Independent cross-model review (ACC-18): implementer Claude Opus 5, reviewer codex
+(`gpt-5.6-terra medium`). Pass 1 **FAIL** with one finding — the `.gitattributes` comment still
+asserted a CRLF failure mode that the same commit had itself disproved by test. The finding was
+re-derived by the controller, accepted, and fixed. Pass 2 **PASS**, no findings.
+
+Two assumptions were disproved by test rather than carried: a CR guard in the manifest reader was
+added, tested, found redundant, and removed; and the comment justifying the LF pin was corrected to
+its true reason.
+
+Record: `.advanced-plans/evidence/2026-08-26-phase-4-loop-002-packaging-repair.md`. The branch
+`feat/aaw-packaging-repair` is local only at `3b0c621` and has never been pushed.
+
+
 ### Known issues
 
-- `.claude/skills/gstack-to-plans/SKILL.md` is documented and installed but not tracked
-  in this repository — `.gitignore` whitelists only `setup-with-claude/`. The Quick Start
-  is therefore not a verified fresh-install route at this head. Repaired in v0.2
-  Workstream 1B.
+- `.claude/skills/gstack-to-plans/SKILL.md` is tracked on `feat/aaw-packaging-repair` and still
+  missing on `main`, which has not been merged and needs a push gate. Until it lands, the Quick
+  Start is not a verified fresh-install route at the default head, and `README.md:7` / `SETUP.md:9`
+  carry a notice that will need one further edit when it does.
+- The glue skill contains zero `AskUserQuestion` callouts, although phase 1 accepted it on having
+  them at three ambiguous branches. It was committed verbatim to preserve provenance. The packaging
+  test checks presence, not correctness, so it cannot catch this.
 - Global path resolution must use `USERPROFILE`, never `HOME` / `HOMEDRIVE` / `~`.
   On this machine those disagree (`M:\` vs `C:\Users\mharvey2`), which silently hides
   installed tooling. See §1.2 and §7 of the baseline audit.

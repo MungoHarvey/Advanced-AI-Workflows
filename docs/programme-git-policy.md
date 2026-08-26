@@ -97,8 +97,15 @@ git worktree list                     # expect exactly the checkouts you intend
 tools/herdr-env.sh --assert           # exit 0; every target runtime under the real profile
 ```
 
-There is no build. The packaging tests arrive in phase 4 loop 003 at `tests/packaging/`; once they
-exist, they join this list.
+There is no build. The packaging tests arrived in phase 4 loop **002**, not 003 as this document
+first said, and they are now part of the list:
+
+```bash
+bash tests/packaging/test-fresh-clone.sh    # exit 0; every documented install source in a fresh clone
+```
+
+It clones into a temporary directory. Running it never touches the working tree, so it is safe to
+run at any point, including immediately before a push gate.
 
 ### gstack-fork
 

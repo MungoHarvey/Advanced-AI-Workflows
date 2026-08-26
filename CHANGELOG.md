@@ -46,6 +46,11 @@ Design: [`.advanced-plans/specs/2026-08-26-herdr-multi-runtime-orchestration-des
   bounds the working directory and nothing else.
 - `.gitattributes` — `*.sh` pinned to LF, `*.ps1` / `*.cmd` / `*.bat` to CRLF. Without it
   `core.autocrlf=true` checks shell scripts out with CRLF and Git Bash fails on them.
+- `.advanced-plans/evidence/2026-08-26-fork-divergence-reaudit.md` — fresh gstack and Superpowers
+  fork audits; both reproduce the baseline exactly.
+- `.advanced-plans/evidence/2026-08-26-phase-4-loop-001-gstack-sync.md` — the gstack sync record:
+  refs, backup tag, build, suite, per-failure attribution, Windows install smoke, the control run,
+  the cross-model review, and the worktree teardown.
 
 ### Changed
 
@@ -63,6 +68,11 @@ Design: [`.advanced-plans/specs/2026-08-26-herdr-multi-runtime-orchestration-des
   the launcher as the supported way to invoke Herdr.
 - `docs/upstream-sync-playbook.md` and `docs/herdr-windows-operations.md` now carry resolved
   checkout paths instead of `C:\src\...` placeholders.
+- `docs/worktree-ownership.md` section 4 gains two rules from phase 4 loop 001: attempt
+  `herdr worktree remove` *before* closing panes (closing the last pane of a workspace destroys
+  the workspace and loses the Herdr-managed removal path entirely), and check the content diff
+  before treating a worktree as dirty, since `core.autocrlf=true` can leave a file stat-dirty
+  with identical content.
 
 ### Phase 3 — Safety Baseline and Herdr Pilot: complete
 
@@ -79,6 +89,31 @@ ACC-10: Herdr 0.8.2 exposes no CLI detach, so detach-and-reattach could not be e
 killing or seizing the controller's own session. It is recorded as a testability gap and closes
 with one manual `Ctrl+B`, `Q` and reattach by the operator.
 
+### Phase 4 loop 001 — gstack upstream sync: complete
+
+Evidence:
+[`loop 001 — gstack sync`](.advanced-plans/evidence/2026-08-26-phase-4-loop-001-gstack-sync.md).
+
+`sync/upstream-2026-08-26` created in a Herdr worktree from freshly fetched `upstream/main`
+(`ad840054`), identical to it. Annotated backup tag `pre-upstream-sync-2026-08-26` at the pre-sync
+fork head `a5dc03bd`. **Both are local only and neither has been pushed.**
+
+`bun install` and `bun run build` exit 0. The Windows install smoke exits 0 into an isolated
+`HOME`, leaving the live profile skills directory identical (245 entries, same hash, nothing
+touched).
+
+**`bun run test:windows` exits 1 with 7 failing tests, and that is recorded as a failure.** Each
+was re-run in isolation and attributed: 3 need `jq` (not installed), 2 need Windows symlink
+privilege (Developer Mode off), 1 is a Git Bash `fork()` flake, and 1 is a genuine upstream bug —
+`browse/test/build.test.ts:16` interpolates an unquoted path into `execSync`, so it breaks on any
+checkout path containing a space. **None is attributable to the sync**, which the empty net tree
+patch makes structural rather than a judgement call.
+
+Independent cross-model review (ACC-18): implementer Claude Opus 5, reviewer
+`Qwen/Qwen3.5-397B-A17B-FP8` via opencode. **Verdict PASS**, and every factual claim in it was
+re-derived by the controller before being accepted.
+
+
 ### Known issues
 
 - `.claude/skills/gstack-to-plans/SKILL.md` is documented and installed but not tracked
@@ -88,6 +123,9 @@ with one manual `Ctrl+B`, `Q` and reattach by the operator.
 - Global path resolution must use `USERPROFILE`, never `HOME` / `HOMEDRIVE` / `~`.
   On this machine those disagree (`M:\` vs `C:\Users\mharvey2`), which silently hides
   installed tooling. See §1.2 and §7 of the baseline audit.
+- The gstack suite has never been observed green on this machine. `jq` is not installed and
+  Windows Developer Mode is off, so five test failures are environmental and mask anything real.
+  Fix both before proposing a PR on the sync branch.
 
 ---
 

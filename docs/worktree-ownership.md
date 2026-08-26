@@ -112,6 +112,20 @@ The correct sequence when removal reports a permission failure:
 4. if only an empty directory remains, `rmdir` it after confirming it holds zero entries;
 5. delete the branch if it was a `pilot/` branch.
 
+**Attempt the removal first. Do not close panes as a precaution.** Phase 4 loop 001 applied step 2
+above pre-emptively, before trying to remove anything. The pane was the *only* pane in its
+workspace, so closing it destroyed the workspace, and Herdr then answered both `worktree list` and
+`worktree remove` with `workspace_not_found` — the directory and the Git registration were still
+there, but Herdr no longer had a handle on either. Recovery was `git worktree remove <path>`
+followed by `git branch -d`, both exit 0 and neither forced. The Herdr-managed path was simply
+lost. Order matters: remove, then close panes only if removal fails.
+
+**A worktree can be dirty on line endings alone.** The same loop found `M gstack/llms.txt` in a
+worktree nothing had edited. `git diff --numstat` was empty and `git ls-files --eol` showed an empty
+`attr/` column — no `.gitattributes` rule, so `core.autocrlf=true` leaves the file stat-dirty with
+identical content. Check the content diff before concluding a worktree holds work. Clear it with a
+targeted `git checkout -- <path>`, never `git reset --hard`.
+
 Record the exact command and its exit code either way.
 
 ---
@@ -121,7 +135,8 @@ Record the exact command and its exit code either way.
 | Checkout | Owner | Branch | Notes |
 |---|---|---|---|
 | `C:\Users\mharvey2\Coding\Advanced-AI-Workflows` | `aaw` | `docs/herdr-v0.2-import` | controller; sole writer of programme state |
-| `C:\Users\mharvey2\Coding\gstack-fork` | `none` | `main` | phase 4 loop 001 will create a `herdr`-owned sync worktree beside it |
+| `C:\Users\mharvey2\Coding\gstack-fork` | `none` | `main` | untouched; `origin/main` still at `a5dc03bd` |
+| `C:\Users\mharvey2\Coding\aaw worktrees\gstack-sync-2026-08-26` | `herdr` | `sync/upstream-2026-08-26` | phase 4 loop 001, workspace `w5`. Local only, never pushed |
 | `C:\Users\mharvey2\Coding\superpowers` | `none` | `main` | phase 5 loop 002 will create a `herdr`-owned port worktree beside it |
 | `C:\Users\mharvey2\Coding\advanced-planning` | `none` | `main` | read-only until phase 6 |
 | `C:\Users\mharvey2\Coding\gstack` | `none` | — | pre-existing dirty checkout, deliberately untouched |

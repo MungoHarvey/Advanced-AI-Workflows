@@ -4,12 +4,12 @@ current_phase: 4
 phase_name: "gstack Sync and AAW Packaging Repair"
 plan_file: .advanced-plans/phases/phase-4/plan.md
 loops_file: .advanced-plans/phases/phase-4/loops.md
-status: in progress — loop 001 read-only audit done (todos 1-2); next write is the sync branch and backup tag
+status: in progress — loop 001 COMPLETE (5/5 todos, cross-model review PASS); next is loop 002, AAW packaging repair
 current_loop: 001 — gstack-sync
 loops_total: 3
 todos_total: 15
-todos_done: 2
-todos_pending: 13
+todos_done: 5
+todos_pending: 10
 last_updated: 2026-08-26
 
 programme: "AAW v0.2 — Herdr-managed multi-runtime orchestration"
@@ -30,6 +30,9 @@ open_items:
   - "ACC-10: detach/reattach unproven — Herdr 0.8.2 has no CLI detach. One manual Ctrl+B, Q by the operator closes it."
   - "Machine-wide HOME override unverified until next logon; the launcher makes it moot either way."
   - "Phase 3 has no gate verdict — the phase-4 boundary is the first real /run-gate run."
+  - "gstack test:windows does not pass on this machine: exit 1, 7 failing tests. 5 are environmental (jq missing, Windows Developer Mode off), 1 a Git Bash fork flake, 1 a genuine upstream bug. None attributable to the sync. Fix the environment before any PR so real failures stop being masked."
+  - "browse/test/build.test.ts:16 interpolates an unquoted path into execSync and breaks on any checkout path containing a space. Upstream bug, worth reporting to garrytan/gstack."
+  - "sync/upstream-2026-08-26 and pre-upstream-sync-2026-08-26 are local only and need a push gate."
 
 ## Phases
 

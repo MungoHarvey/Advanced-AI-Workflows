@@ -24,9 +24,9 @@ max_iterations: 2
 on_max_iterations: escalate
 
 handoff_summary:
-  done: ""
-  failed: ""
-  needed: ""
+  done: "All 5 todos. Fork re-audited (89/3, empty net patch). Annotated tag pre-upstream-sync-2026-08-26 at a5dc03bd, local only. Branch sync/upstream-2026-08-26 created in Herdr worktree w5 at ad840054, identical to upstream/main. bun install exit 0, bun run build exit 0, bun run test:windows exit 1 with 7 failing tests, all 7 attributed (3 need jq, 2 need Windows symlink privilege, 1 Git Bash fork flake, 1 genuine upstream unquoted-path bug at browse/test/build.test.ts:16). Windows install smoke exit 0 into an isolated HOME; live profile verified byte-identical after. Cross-model review PASS from Qwen/Qwen3.5-397B-A17B-FP8 via opencode; all six of its claims re-derived by the controller. Control worktree removed and pilot branch deleted, no force."
+  failed: "The suite does not pass: exit 1, 7 failing tests, recorded as a failure. The first two runs were invalid because bun run build had not been run, and are recorded as invalid rather than discarded. The pre-sync control could not give a like-for-like comparison: its runner is fail-fast over 20 shards and 103 curated tests against 7 shards and 261, and 5 of the 6 failing files do not exist at the pre-sync head."
+  needed: "A push gate before sync/upstream-2026-08-26 or its tag leaves this machine. Before any PR: install jq and enable Windows Developer Mode so environmental failures stop masking real ones, and report browse/test/build.test.ts:16 upstream. Deviation to note: todo loop-001-4 names its provider as codex or opencode and the controller ran it instead; ACC-18 still holds because the reviewer is a different model."
 
 todos:
   - id: "loop-001-1"
@@ -78,7 +78,7 @@ todos:
     evidence: "Branch name, head SHA, backup tag name and target SHA, worktree absolute path"
     gate: "none"
     outcome: "A recoverable sync branch exists locally; the pre-sync state is tagged and cannot be lost"
-    status: pending
+    status: completed
     complexity: low
     priority: high
   - id: "loop-001-4"
@@ -95,7 +95,7 @@ todos:
     evidence: "Command, exit code, and the tail of output for each. A failure is recorded as a failure, never summarised as passing"
     gate: "none"
     outcome: "The sync branch is known-good or known-bad, on evidence the controller re-ran"
-    status: pending
+    status: completed
     complexity: medium
     priority: high
   - id: "loop-001-5"
@@ -111,7 +111,7 @@ todos:
     evidence: "Reviewer verdict, findings, and the model that produced it"
     gate: "none"
     outcome: "The sync branch carries an independent verdict before it is proposed for a PR"
-    status: pending
+    status: completed
     complexity: medium
     priority: high
 

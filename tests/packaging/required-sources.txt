@@ -38,3 +38,6 @@ SETUP.md
 # but nothing can check one, and the audit has no rule to audit against.
 .aaw/installed.example.json
 # The worked example. It is copied by people; a clone that lacks it invites invention.
+.aaw/detect.py
+# The detection rules, executable. Step 1 of the setup skill points at it as the tested
+# version of what it describes in prose; a clone without it leaves that claim dangling.

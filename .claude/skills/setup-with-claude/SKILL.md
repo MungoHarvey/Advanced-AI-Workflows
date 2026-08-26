@@ -20,6 +20,14 @@ Before starting, be aware of these files in `references/` (relative to this SKIL
 - `claude-md-routing.md` — the routing block to insert into CLAUDE.md
 - `settings-snippet.json` — the permissions and hook entry to merge into .claude/settings.json
 
+And these, in the repository root rather than in `references/`, because they are shipped
+product rather than prose for this skill to read out:
+
+- `.aaw/installed.schema.json` - the manifest contract. Read it before writing a manifest.
+- `.aaw/installed.example.json` - a worked example of a valid manifest.
+- `.aaw/detect.py` - the detection rules of Step 1, executable. It is what the
+  non-interactive audit runs, and it is the tested version of those rules.
+
 Read the relevant reference file whenever you need the exact command text. Do not invent
 flag names or paths — use what is in the reference files.
 
@@ -29,7 +37,7 @@ This skill supports three modes. Detect which one applies from the user's messag
 
 - **Default (no flag)**: Full install + wire flow. Follow all steps below.
 - **`--uninstall`**: Remove meta-project artifacts only. Jump to the [--uninstall](#uninstall) section.
-- **`--refresh`**: Re-detect installed tools and update `.claude/integrations.json`. Jump to the [--refresh](#refresh) section.
+- **`--refresh`**: Re-detect installed tools and update `.aaw/installed.json`. Jump to the [--refresh](#refresh) section.
 
 ---
 
@@ -37,31 +45,90 @@ This skill supports three modes. Detect which one applies from the user's messag
 
 ### Step 1: Detect current install state
 
-Check the project for each sub-package. Detection is path-based — look for the sentinel
-file or directory that each tool installs. Do not run shell commands for this; read the
-filesystem directly.
+**The rule: a component is installed if and only if its sentinel file exists.**
 
-| Sub-package | Installed if... |
-|---|---|
-| **gstack** | `~/.claude/skills/gstack/` exists (global install — gstack is always global) |
-| **advanced-planning** | `.claude/skills/phase-plan-creator/SKILL.md` exists in this project, OR `.advanced-plans/` exists at the project root |
-| **superpowers** | `.claude/skills/brainstorming/SKILL.md` exists in this project, OR `~/.claude/skills/brainstorming/SKILL.md` exists globally |
+A sentinel is a file the component's own installer writes. It is never a directory
+the component merely uses. That distinction is the whole of the detection logic, and
+it exists because the previous rule got it wrong in both directions.
 
-On Windows, `~` resolves to `%USERPROFILE%` (e.g. `C:\Users\<name>`). Use `os.homedir()` or
-the platform-appropriate equivalent when constructing paths. On macOS/Linux, `~` resolves
-normally.
+The previous rule reported `advanced-planning` installed when `.advanced-plans/`
+existed. `.advanced-plans/` is where Advanced Planning writes its **data**. It
+outlives an uninstall, it travels with a copied project template, and a person who
+has read the documentation can create it by hand. Reporting that as an installation
+tells the user something comfortable and false, and the next step then fails for a
+reason the status table said was fine.
 
-Report findings to the user in a table:
+#### 1a. Prefer the manifest
+
+If `<project>/.aaw/installed.json` exists, read it first.
+
+- Validate it against `.aaw/installed.schema.json`. If it does not validate, say so
+  and fall through to 1b: a manifest that fails its own contract is not evidence.
+- If `schema_version` is a number this skill does not recognise, do not guess at the
+  contents. Say which version was found and fall through to 1b.
+- If it validates, confirm each `sentinel` path still exists. The manifest records
+  what was true when it was written, and a component can be removed afterwards. A
+  sentinel that has disappeared makes that entry stale: report the component MISSING
+  and say that the manifest disagrees.
+
+The manifest is a recording, not an authority. It is preferred over probing because it
+names the exact absolute path that was checked, which is something a probe cannot tell
+you afterwards. It is still checked against the filesystem.
+
+#### 1b. Otherwise, detect by sentinel
+
+| Sub-package | Sentinel file | Scope |
+|---|---|---|
+| **gstack** | `<profile>\.claude\skills\gstack\SKILL.md` | global only |
+| **advanced-planning** | `<project>\.claude\skills\phase-plan-creator\SKILL.md`, else the same path under `<profile>` | project, else global |
+| **superpowers** | `<project>\.claude\skills\brainstorming\SKILL.md`, else the same path under `<profile>` | project, else global |
+| **gstack-to-plans** | `<project>\.claude\skills\gstack-to-plans\SKILL.md`, else the same path under `<profile>` | project, else global |
+
+Where a component can be either project-local or global, check the project first and
+record which one answered. "Installed globally" and "installed in this project" are
+different facts, and the user needs the right one.
+
+`<profile>` is `%USERPROFILE%` on Windows. **Not** `HOME`, and never `~`. On a domain
+machine `HOME` can point at a redirected network drive while the real profile stays on
+`C:`, so a component installed under the real profile reads as absent. Resolve the
+profile once and use the absolute result.
+
+#### 1c. Report data separately from installations
+
+Data directories are reported, never counted as installations:
+
+| Path | Belongs to | What its presence means |
+|---|---|---|
+| `<project>\.advanced-plans\` | advanced-planning | plan and state artefacts exist here |
+| `<project>\.claude\integrations.json` | setup-with-claude | the v0.1 bookkeeping file, superseded by `.aaw/installed.json` |
+
+When a data directory is present and the component that owns it is **not** installed,
+say both things plainly:
 
 ```
 | Tool               | Status     | Location |
 |--------------------|------------|----------|
-| gstack             | installed  | ~/.claude/skills/gstack/ |
-| advanced-planning  | MISSING    | — |
-| superpowers        | installed  | .claude/skills/brainstorming/ |
+| gstack             | installed  | C:\Users\me\.claude\skills\gstack |
+| advanced-planning  | MISSING    | -        |
+| superpowers        | MISSING    | -        |
+| gstack-to-plans    | MISSING    | -        |
+
+Data present without the tool that owns it:
+  .advanced-plans\ exists, but advanced-planning is not installed.
+  Its plans are intact. Installing advanced-planning will pick them up;
+  nothing here needs to be deleted first.
 ```
 
-If everything is installed, tell the user and ask if they want to skip to Step 5 (wire
+That last sentence matters. A user told "data present, tool absent" often reaches for
+the delete key. Tell them they do not have to.
+
+#### 1d. These rules are executable
+
+`.aaw/detect.py` implements exactly the rules above, and it is what the non-interactive
+audit runs. If this section and that file ever disagree, the file is the one that has
+been tested against temporary projects. Fix this section.
+
+If everything is installed, tell the user and ask whether to skip to Step 5 (wire
 routing) or Step 7 (verify only).
 
 ### Step 2: Install missing sub-packages
@@ -204,60 +271,50 @@ If skip: note it. The user can invoke `/gstack-to-plans` only if the skill is in
 
 **Case B — Already installed:** Note it and continue.
 
-### Step 7: Write .claude/integrations.json
+### Step 7: Write .aaw/installed.json
 
-Write (or overwrite) `.claude/integrations.json` recording the current detection state.
-This is a non-destructive write that the user does not need to gate — it is a bookkeeping
-file. However, if the file already exists with different content, show the diff and ask:
+Write `<project>/.aaw/installed.json` recording what Steps 1 and 3 actually found. This
+is a non-destructive bookkeeping write and does not need a gate. If the file already
+exists with different content, show the diff and ask:
 
-> "`.claude/integrations.json` already exists. Overwrite with current detection state?
+> "`.aaw/installed.json` already exists. Overwrite with the current detection state?
 > (yes / no)"
 
-Write this structure (fill in actual detected values):
+The file must satisfy `.aaw/installed.schema.json`. Read that schema rather than copying
+a shape from memory; `.aaw/installed.example.json` is a worked example.
 
-```json
-{
-  "_comment": "Advanced AI Workflows — integration state. Updated by /setup-with-claude.",
-  "generated_at": "<ISO timestamp>",
-  "platform": "claude-code",
-  "tools": {
-    "gstack": {
-      "installed": true,
-      "install_path": "~/.claude/skills/gstack/",
-      "notes": "Always global; gstack is not project-local"
-    },
-    "advanced-planning": {
-      "installed": true,
-      "install_path": ".claude/skills/phase-plan-creator/",
-      "version": "<version from advanced-planning/VERSION file if readable, else 'unknown'>"
-    },
-    "superpowers": {
-      "installed": true,
-      "install_path": ".claude/skills/brainstorming/",
-      "scope": "project-local"
-    },
-    "plannotator": {
-      "installed": false,
-      "deprecated": "2026-08-26",
-      "notes": "Deprecated. Not installed or detected by this stack. The review gate is the cross-model reviewer in /run-gate. A pre-existing install is left untouched."
-    }
-  },
-  "glue": {
-    "gstack-to-plans": {
-      "installed": true,
-      "install_path": ".claude/skills/gstack-to-plans/"
-    }
-  },
-  "routing": {
-    "claude_md_routing_block": true,
-    "settings_json_permissions": true,
-    "settings_json_hook": true
-  }
-}
+Four rules the schema enforces, restated because they are the ones easy to get wrong:
+
+- **Every path is absolute and native.** No `~`, no `$HOME`, no `%USERPROFILE%`. The
+  literal string must be resolvable by whatever reads the file later, on a machine where
+  `HOME` and `USERPROFILE` may disagree.
+- **An installed component records `install_path`, `sentinel`, and `version`.** The
+  sentinel is what makes the claim falsifiable: a later reader can check the same path
+  and disagree with you.
+- **A component that is not installed is written with `installed: false` and
+  `scope: "none"`, not omitted**, and carries no path. A missing key cannot distinguish
+  "absent" from "never looked".
+- **`version` is `"unknown"`** for a component that publishes no version. That is a real
+  answer. Do not invent a number, and do not drop the field.
+
+Verify what you wrote before reporting success:
+
+```bash
+python tests/packaging/validate-manifest.py .aaw/installed.json
 ```
 
-Adjust each `installed` value to match the actual detection results from Steps 1 and 3.
-Set `install_path` values to whichever path was actually found during detection.
+If this repository is not available to the user, any JSON Schema validator will do.
+Report the manifest as written only after it validates.
+
+#### On `.claude/integrations.json`
+
+Superseded. Do not create it. Its paths were written with `~`, which is exactly the
+ambiguity `.aaw/installed.json` exists to remove.
+
+**Leave an existing one alone.** It is not this skill's file to delete, another tool may
+read it, and removing it silently is the kind of tidying that costs someone an afternoon.
+Report it under Step 1c as data. If the user asks, tell them it can go once nothing they
+use reads it.
 
 ### Step 8: Verify and report
 
@@ -266,14 +323,14 @@ Present a final status table to the user:
 ```
 | Component                       | Status | Notes |
 |---------------------------------|--------|-------|
-| gstack                          | OK     | ~/.claude/skills/gstack/ |
-| advanced-planning               | OK     | .claude/skills/phase-plan-creator/ |
-| superpowers                     | OK     | .claude/skills/brainstorming/ |
+| gstack                          | OK     | C:\Users\me\.claude\skills\gstack |
+| advanced-planning               | OK     | <project>\.claude\skills\phase-plan-creator |
+| superpowers                     | OK     | <project>\.claude\skills\brainstorming |
 | CLAUDE.md routing block         | OK     | appended to CLAUDE.md |
 | .claude/settings.json perms     | OK     | 4 entries added |
 | .claude/settings.json hook      | OK     | PostToolUse/Write matcher added |
-| gstack-to-plans glue skill      | OK     | .claude/skills/gstack-to-plans/ |
-| .claude/integrations.json       | OK     | written |
+| gstack-to-plans glue skill      | OK     | <project>\.claude\skills\gstack-to-plans |
+| .aaw/installed.json             | OK     | written and schema-validated |
 ```
 
 For any MISSING or SKIP item, print the relevant install command from the reference file
@@ -328,7 +385,8 @@ never touches a pre-existing plannotator install, which is deprecated but left a
 **Artifacts removed by --uninstall:**
 1. The fenced routing block in `CLAUDE.md` (between `<!-- aaw-routing:begin -->` and `<!-- aaw-routing:end -->`)
 2. The `.claude/skills/gstack-to-plans/` directory (glue skill)
-3. `.claude/integrations.json`
+3. `.aaw/` - the installation manifest and nothing else in it
+3b. `.claude/integrations.json`, if the superseded v0.1 file is still present
 4. The four `.advanced-plans/**` permission entries added to `.claude/settings.json`
 5. The PostToolUse Write hook entry added to `.claude/settings.json`
 
@@ -354,7 +412,7 @@ Manual recovery instructions:
    and closing instruction).
 4. Save the file.
 
-The other meta-project artifacts (glue skill, integrations.json, settings.json
+The other meta-project artifacts (glue skill, .aaw/ manifest, settings.json
 additions) can still be removed by re-running /setup-with-claude --uninstall
 after you have completed the manual CLAUDE.md cleanup.
 ```
@@ -371,7 +429,8 @@ Ask:
 >
 > - CLAUDE.md routing block (between aaw-routing markers)
 > - .claude/skills/gstack-to-plans/ (glue skill)
-> - .claude/integrations.json
+> - .aaw/installed.json (and .aaw/ if it is then empty)
+> - .claude/integrations.json, if the superseded v0.1 file is present
 > - 4 .advanced-plans/** permission entries in .claude/settings.json
 > - PostToolUse Write hook (gstack trigger) in .claude/settings.json
 >
@@ -401,9 +460,17 @@ the user.
 
 Delete `.claude/skills/gstack-to-plans/` and all its contents.
 
-**Step U5: Remove integrations.json**
+**Step U5: Remove the installation manifest**
 
-Delete `.claude/integrations.json` if it exists.
+Delete `.aaw/installed.json`. Then remove `.aaw/` itself **only if it is now empty** -
+another tool may have put something there, and an uninstall that takes a directory it
+does not own with it is the kind of behaviour that stops people running uninstallers.
+
+Delete `.claude/integrations.json` too if the superseded v0.1 file is still present.
+
+Do not delete `.advanced-plans/`. It is the user's plan data, not a meta-project
+artefact, and this skill never installed it. Say explicitly that it was left in place,
+because a user who has just uninstalled will want to know where their plans went.
 
 **Step U6: Remove settings.json entries**
 
@@ -449,7 +516,8 @@ Uninstall complete.
 Removed (project-local):
   - CLAUDE.md routing block
   - .claude/skills/gstack-to-plans/
-  - .claude/integrations.json
+  - .aaw/installed.json
+  - .claude/integrations.json (if the superseded v0.1 file was present)
   - settings.json: 4 .advanced-plans/** permission entries
   - settings.json: PostToolUse gstack hook
 
@@ -472,7 +540,7 @@ To reinstall: run /setup-with-claude
 
 Re-detect installed tools, re-fetch the canonical `setup-with-claude` skill, re-run
 each detected sub-package's installer to pick up upstream changes, and update
-`.claude/integrations.json`. No changes to CLAUDE.md or settings.json.
+`.aaw/installed.json`. No changes to CLAUDE.md or settings.json.
 
 Use `--refresh` after: updating a sub-package to a new version, pulling new meta-project
 changes, or finding that a deployed copy has drifted from its source.
@@ -481,9 +549,14 @@ changes, or finding that a deployed copy has drifted from its source.
 
 **Step R1: Detect current state**
 
-Run the same detection checks as Step 1 of the default flow. Build the status table.
-Record which sub-packages are currently detected — only detected packages will be
-re-installed in Step R3.
+Run the same detection checks as Step 1 of the default flow: sentinel files, with the
+manifest preferred and then confirmed against the filesystem. Build the status table.
+Record which sub-packages are currently detected, because only those are re-installed
+in Step R3.
+
+A refresh must not turn a MISSING into an installed by wishful reading. If the previous
+manifest says a component was installed and its sentinel is gone, the component is gone.
+Say so and offer to install it, rather than carrying the old entry forward.
 
 **Step R2: Re-fetch the canonical setup-with-claude skill**
 
@@ -538,15 +611,22 @@ If yes: show the relevant install command from the table above (and cross-refere
 Tell the user to run it in a terminal, then confirm when done.
 If skip: note it — this sub-package will retain its current version.
 
-**Step R4: Update integrations.json**
+**Step R4: Update the installation manifest**
 
-If `.claude/integrations.json` exists, show the diff between current content and the
-new detection state. Ask:
+If `.aaw/installed.json` exists, show the diff between its current content and the new
+detection state. Ask:
 
-> "I will update .claude/integrations.json to reflect current detection results.
+> "I will update .aaw/installed.json to reflect current detection results.
 > Proceed? (yes / no)"
 
-If it does not exist, write it without asking (same structure as Step 7 above).
+If it does not exist, write it without asking, to the same rules as Step 7.
+
+Validate the result before reporting it, exactly as in Step 7. A refresh that writes an
+invalid manifest has replaced a known state with an unreadable one, which is worse than
+the stale file it overwrote.
+
+A pre-existing `.claude/integrations.json` is not updated and not deleted here. Refresh
+is not the place to remove a file; `--uninstall` is.
 
 **Step R5: Report what changed**
 
@@ -559,7 +639,7 @@ setup-with-claude skill:  [refreshed via Method A / refreshed via Method B / ski
 advanced-planning:        [re-installed / skipped / not detected]
 gstack:                   [re-installed / skipped / not detected]
 superpowers:              [re-installed / skipped / not detected]
-integrations.json:        [updated / written (new) / no change]
+.aaw/installed.json:      [updated / written (new) / no change] [validated]
 
 Not modified: CLAUDE.md, .claude/settings.json
 To re-run full setup: /setup-with-claude (no flags)
@@ -571,14 +651,32 @@ Fill in each line's status based on what actually happened in Steps R2–R4.
 
 ## Cross-platform notes
 
-- **Windows**: `~` resolves to `%USERPROFILE%`. When constructing home-directory paths
-  in detection or file writes, use `os.homedir()` or equivalent — do not assume `/home/`.
+- **Windows**: resolve the profile from `%USERPROFILE%` and record the absolute result.
+  Do not use `~`, and do not use `HOME`. On a domain machine `HOME` can be redirected to
+  a network drive by the AD home-folder attribute while the real profile stays on `C:`,
+  so a component installed under the real profile reads as absent. That has happened on
+  a machine this stack is developed on, and it is why the manifest forbids `~` outright.
 - **macOS / Linux**: `~` resolves normally. Paths use forward slashes.
 - **WSL**: Treat as Linux. Windows paths are accessible via `/mnt/c/...` but the Claude
   Code install paths follow Linux conventions.
 
 When reading detection paths, check both Windows and POSIX forms if the platform is
 ambiguous.
+
+### The tilde trap
+
+Detection and manifest writes resolve the profile from `%USERPROFILE%` and never use
+`~`. The commands this skill hands the **user** to run in their own terminal are a
+separate matter and still contain `~`, because that is what a user typing into their
+own shell expects to see.
+
+Be aware that this is not always safe. On a domain Windows machine, Git Bash expands
+`~` from `HOME`, which the AD home-folder attribute can point at a network drive, so a
+`cp ... ~/.claude/skills/...` runs against the wrong profile and appears to succeed.
+PowerShell on the same machine resolves it correctly. When a user reports that an
+install "worked" but the component is still not detected, this is the first thing to
+check: ask which shell they used, and have them run
+`echo $HOME` and `echo $USERPROFILE` and compare.
 
 ---
 
@@ -588,7 +686,7 @@ ambiguous.
   to run in their terminal.
 - It does not modify sub-package files (gstack, advanced-planning, superpowers). It only
   installs meta-project artifacts: the routing block, the glue skill,
-  the settings.json entries, and integrations.json.
+  the settings.json entries, and `.aaw/installed.json`.
 - It does not modify `~/.claude/` globally except when the user explicitly chooses global
   glue-skill install.
 - It does not silently overwrite anything. Every write that touches existing content is

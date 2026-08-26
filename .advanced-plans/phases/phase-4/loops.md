@@ -202,7 +202,7 @@ todos:
       - "git ls-files .claude/skills/gstack-to-plans/SKILL.md -> returns the path"
       - "the frontmatter name and description match what the setup skill installs"
       - "every behaviour the docs promise is present in the file, or the gap is written down"
-    evidence: "Restored byte-identically from the deployed copy C:\Users\mharvey2\.claude\skills\gstack-to-plans\SKILL.md, 3912 bytes, mtime 2026-06-16 23:28:28, md5 3fc4d9cca4f5d93296fde2febe914292, cmp IDENTICAL. Frontmatter name: gstack-to-plans. CONTRACT GAP RECORDED, NOT REPAIRED: phase 1 accepted this skill on explicit AskUserQuestion callouts at all three ambiguous branches; the file contains zero occurrences of AskUserQuestion, two branches are prose only and the third is absent. Committed verbatim to preserve provenance; the gap is separate work. Reviewer independently confirmed the gap statement is accurate."
+    evidence: "Restored byte-identically from the deployed copy C:\\Users\\mharvey2\\.claude\\skills\\gstack-to-plans\\SKILL.md, 3912 bytes, mtime 2026-06-16 23:28:28, md5 3fc4d9cca4f5d93296fde2febe914292, cmp IDENTICAL. Frontmatter name: gstack-to-plans. CONTRACT GAP RECORDED, NOT REPAIRED: phase 1 accepted this skill on explicit AskUserQuestion callouts at all three ambiguous branches; the file contains zero occurrences of AskUserQuestion, two branches are prose only and the third is absent. Committed verbatim to preserve provenance; the gap is separate work. Reviewer independently confirmed the gap statement is accurate."
     gate: "none"
     outcome: "The documented install source exists in the repository and matches what the documentation claims it does"
     status: completed
@@ -273,9 +273,30 @@ max_iterations: 3
 on_max_iterations: escalate
 
 handoff_summary:
-  done: ""
-  failed: ""
-  needed: ""
+  done: >
+    Installation state is now readable by a machine. .aaw/installed.schema.json plus a
+    24-fixture corpus and a two-validator test (11fb8a4); .aaw/detect.py, which stops a
+    stale .advanced-plans/ reading as an installed component - ACC-02 (6e94cf5);
+    tools/aaw-audit.py, a non-interactive audit with meaningful exit codes and both
+    environmental inputs passed as arguments (3ae6121); and a 43-check idempotency test
+    over install x3, uninstall, reinstall, a hand-edited CLAUDE.md, an existing glue
+    skill, a would-be-emptied array and a settings file holding nothing of ours
+    (8f7b008). Cross-model review by codex gpt-5.6-terra over e508203..HEAD ran four
+    passes: FAIL/11, FAIL/5, FAIL/3, then PASS. Every finding was re-derived by the
+    controller before acceptance and every fix proven to fire; the three fix packs are
+    1307aa4, 2cf86fe, 360ab3c. Suite: 13/13, 24/24, 21/21, 43/43.
+  failed: >
+    Nothing failed and stayed failed. Three review passes returned FAIL and each was
+    answered. Two caveats were recorded rather than fixed, on the reviewer's own advice:
+    the docs scan still cannot match a documented source with no extension at all, and
+    documented-destinations.txt is an exception list whose required reason is a
+    convention the parser does not enforce.
+  needed: >
+    A human gate on loop-003-5. Also on the table: loop-003-4 specifies provider "codex
+    or opencode" and Claude implemented it - the cross-model property is preserved
+    because the reviewer is codex, but authorship independence is not. The branch
+    feat/aaw-packaging-repair sits at 360ab3c and has never been pushed; a push is a
+    separate authorisation.
 
 todos:
   - id: "loop-003-1"
@@ -292,7 +313,7 @@ todos:
     evidence: "Schema, an example manifest, and the validating test"
     gate: "none"
     outcome: "Component detection has a real source of truth to read"
-    status: pending
+    status: completed
     complexity: high
     priority: high
   - id: "loop-003-2"
@@ -309,7 +330,7 @@ todos:
     evidence: "Both temporary-project runs with their output"
     gate: "none"
     outcome: "ACC-02 passes, and the false-positive that made the v0.1 detection unreliable is gone"
-    status: pending
+    status: completed
     complexity: high
     priority: high
   - id: "loop-003-3"
@@ -326,7 +347,7 @@ todos:
     evidence: "Two identical runs, plus the exit codes for a healthy and an unhealthy project"
     gate: "none"
     outcome: "Installation health becomes a check a machine can run, not only a conversation"
-    status: pending
+    status: completed
     complexity: high
     priority: high
   - id: "loop-003-4"
@@ -344,7 +365,7 @@ todos:
     evidence: "Full transcript of the temporary-project run, plus before/after file listings"
     gate: "none"
     outcome: "The install surface behaves the same on the second run as on the first"
-    status: pending
+    status: completed
     complexity: high
     priority: high
   - id: "loop-003-5"
@@ -360,7 +381,7 @@ todos:
     evidence: "Verdict, findings, reviewer model, and the human resolution or waiver of each finding"
     gate: "human"
     outcome: "The packaging branch is reviewed as a whole before it is proposed for a PR"
-    status: pending
+    status: completed
     complexity: medium
     priority: high
 

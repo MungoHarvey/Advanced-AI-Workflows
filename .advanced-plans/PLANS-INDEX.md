@@ -5,7 +5,7 @@
 | 1 | Four-Tool Integration v0.1 | complete (smoke PASS 2026-06-05) | [phases/phase-1/plan.md](phases/phase-1/plan.md) |
 | 2 | v0.1 Smoke-Findings Fix-Pack | passed (gate 2026-06-08, attempt 2) | [phases/phase-2/complete.md](phases/phase-2/complete.md) |
 | 3 | Safety Baseline and Herdr Pilot | passed with one open item (2026-08-26) | [phases/phase-3/complete.md](phases/phase-3/complete.md) |
-| 4 | gstack Sync and AAW Packaging Repair | in progress (loops 001-002 complete) | [phases/phase-4/plan.md](phases/phase-4/plan.md) |
+| 4 | gstack Sync and AAW Packaging Repair | in progress (loops 001-003 complete; loop-003-5 awaiting its human gate) | [phases/phase-4/plan.md](phases/phase-4/plan.md) |
 | 5 | Superpowers Behavioural Port | planned | [phases/phase-5/plan.md](phases/phase-5/plan.md) |
 | 6 | Advanced Planning Multi-Runtime Adapters | planned (loops deferred) | [phases/phase-6/plan.md](phases/phase-6/plan.md) |
 | 7 | AAW Multi-Host Routing and Installer | planned (loops deferred) | [phases/phase-7/plan.md](phases/phase-7/plan.md) |
@@ -27,6 +27,7 @@
 - Fork divergence re-audit: [evidence/2026-08-26-fork-divergence-reaudit.md](evidence/2026-08-26-fork-divergence-reaudit.md)
 - gstack sync record (phase 4 loop 001): [evidence/2026-08-26-phase-4-loop-001-gstack-sync.md](evidence/2026-08-26-phase-4-loop-001-gstack-sync.md)
 - packaging repair record (phase 4 loop 002): [evidence/2026-08-26-phase-4-loop-002-packaging-repair.md](evidence/2026-08-26-phase-4-loop-002-packaging-repair.md)
+- installation state record (phase 4 loop 003): [evidence/2026-08-26-phase-4-loop-003-installation-state.md](evidence/2026-08-26-phase-4-loop-003-installation-state.md)
 
 ### Workstream to phase mapping
 
@@ -77,7 +78,7 @@ Workstream 1A's Plannotator fast-forward is **withdrawn** — deprecated 2026-08
 |------|------|--------|
 | 001 | gstack-sync | **completed** (5/5 todos; cross-model review PASS; suite exit 1, all failures attributed) — [evidence](evidence/2026-08-26-phase-4-loop-001-gstack-sync.md) |
 | 002 | packaging-restore | **completed** (5/5 todos; cross-model review FAIL then PASS, one finding accepted and fixed; packaging test proven in four directions) — [evidence](evidence/2026-08-26-phase-4-loop-002-packaging-repair.md) |
-| 003 | packaging-determinism | pending |
+| 003 | packaging-determinism | **completed** (5/5 todos; manifest, detection, audit and a 43-check idempotency test; cross-model review FAIL x3 then PASS over four passes, every finding re-derived and every fix proven to fire; two caveats recorded) — [evidence](evidence/2026-08-26-phase-4-loop-003-installation-state.md) |
 
 ## Ralph Loops (Phase 5)
 

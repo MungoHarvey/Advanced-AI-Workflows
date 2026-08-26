@@ -15,10 +15,34 @@ Work towards v0.2.0 — Herdr-managed multi-runtime orchestration.
 Design: [`.advanced-plans/specs/2026-08-26-herdr-multi-runtime-orchestration-design.md`](.advanced-plans/specs/2026-08-26-herdr-multi-runtime-orchestration-design.md).
 
 ### Added
+
+> The packaging entries below live on `feat/aaw-packaging-repair`. That branch is complete and has
+> passed its cross-model review; it has not been merged, and it has never been pushed.
+
+- **`.aaw/installed.json` and its schema** — a manifest recording which components are installed,
+  at which version, and to which absolute native path, so a later reader can check the same paths
+  and disagree. Validated by `tests/packaging/validate-manifest.py`, which runs two validators over
+  a 24-fixture corpus and refuses to run at all rather than silently ignore a schema keyword it
+  does not implement.
+- **`.aaw/detect.py`** — detection that distinguishes a data directory from an installed
+  component, so a stale `.advanced-plans/` no longer reads as Advanced Planning being present.
+- **`tools/aaw-audit.py`** — a non-interactive installation audit with meaningful exit codes,
+  runnable in CI. Both of its environmental inputs, the profile and the clock, are arguments.
 - **`tests/packaging/`** — a fresh-clone packaging test and the manifest of documented install
   sources it enforces. Clones into a temporary directory, never inspects the working tree, and
-  reports every missing, empty, or untracked source rather than stopping at the first.
+  reports every missing, empty, or untracked source rather than stopping at the first. It also
+  scans the install documentation for skill paths and fails on any the manifest does not declare,
+  or that the documentation names and a fresh clone does not have.
+- **`tests/packaging/test-idempotency.sh`** — 43 checks proving install, refresh and uninstall are
+  safe to repeat, against a temporary project and a fake profile. Install runs three times, not
+  twice: on a first install appending and replacing are the same operation.
+- **`tests/packaging/documented-destinations.txt`** — the declared exceptions to the docs scan,
+  for paths the documentation names because an installer writes them in the user's project rather
+  than because this repository ships them. Empty, and says why.
 - **Loop 002 evidence record** — `.advanced-plans/evidence/2026-08-26-phase-4-loop-002-packaging-repair.md`.
+- **Loop 003 evidence record** — `.advanced-plans/evidence/2026-08-26-phase-4-loop-003-installation-state.md`,
+  including the four-pass cross-model review, every finding and its resolution, and the two caveats
+  recorded rather than fixed.
 
 - `docs/herdr-windows-operations.md`, `docs/upstream-sync-playbook.md`,
   `docs/herdr-kickoff-prompt.md` and `references/upstream-baseline-2026-08-26.json` —

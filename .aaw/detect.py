@@ -108,7 +108,9 @@ def component_specs(project_root, home):
                  _j(home, ".claude", "skills", "phase-plan-creator", "SKILL.md")),
             ],
             "version_file": "VERSION",
-            "notes": "A .advanced-plans/ directory is data, not an installation. See data_directories.",
+            "notes": "A .advanced-plans/ directory is data, not an installation. "
+                     "The audit JSON lists any such directories under data_directories; "
+                     "the installed.json manifest carries components only.",
         },
         {
             "name": "superpowers",

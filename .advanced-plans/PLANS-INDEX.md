@@ -6,8 +6,8 @@
 | 2 | v0.1 Smoke-Findings Fix-Pack | passed (gate 2026-06-08, attempt 2) | [phases/phase-2/complete.md](phases/phase-2/complete.md) |
 | 3 | Safety Baseline and Herdr Pilot | passed with one open item (2026-08-26) | [phases/phase-3/complete.md](phases/phase-3/complete.md) |
 | 4 | gstack Sync and AAW Packaging Repair | passed (gate 2026-08-26, attempt 2; one criterion waived) | [phases/phase-4/complete.md](phases/phase-4/complete.md) |
-| 5 | Superpowers Behavioural Port | current (2 loops decomposed, not started) | [phases/phase-5/plan.md](phases/phase-5/plan.md) |
-| 6 | Advanced Planning Multi-Runtime Adapters | planned (loops deferred) | [phases/phase-6/plan.md](phases/phase-6/plan.md) |
+| 5 | Superpowers Behavioural Port | passed (gate 2026-08-26, attempt 1; fork patch measures zero) | [phases/phase-5/complete.md](phases/phase-5/complete.md) |
+| 6 | Advanced Planning Multi-Runtime Adapters | current (planned, loops deferred) | [phases/phase-6/plan.md](phases/phase-6/plan.md) |
 | 7 | AAW Multi-Host Routing and Installer | planned (loops deferred) | [phases/phase-7/plan.md](phases/phase-7/plan.md) |
 | 8 | AAW Run Registry and Dispatcher | planned (loops deferred) | [phases/phase-8/plan.md](phases/phase-8/plan.md) |
 | 9 | Cross-Host E2E and Release | planned (loops deferred) | [phases/phase-9/plan.md](phases/phase-9/plan.md) |
@@ -29,6 +29,8 @@
 - packaging repair record (phase 4 loop 002): [evidence/2026-08-26-phase-4-loop-002-packaging-repair.md](evidence/2026-08-26-phase-4-loop-002-packaging-repair.md)
 - installation state record (phase 4 loop 003): [evidence/2026-08-26-phase-4-loop-003-installation-state.md](evidence/2026-08-26-phase-4-loop-003-installation-state.md)
 - phase 4 cold artefact: [phases/phase-4/complete.md](phases/phase-4/complete.md) · handoff: [phases/phase-4/handoff.md](phases/phase-4/handoff.md)
+- Superpowers behavioural port record (phase 5, both loops): [evidence/2026-08-26-superpowers-port.md](evidence/2026-08-26-superpowers-port.md)
+- phase 5 cold artefact: [phases/phase-5/complete.md](phases/phase-5/complete.md) · handoff: [phases/phase-5/handoff.md](phases/phase-5/handoff.md)
 
 ### Workstream to phase mapping
 

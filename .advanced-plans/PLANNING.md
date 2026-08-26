@@ -1,17 +1,17 @@
 # Planning State
 
-current_phase: 5
-phase_name: "Superpowers Behavioural Port"
-plan_file: .advanced-plans/phases/phase-5/plan.md
-loops_file: .advanced-plans/phases/phase-5/loops.md
-status: in progress — ralph-loop-001 COMPLETE 2026-08-26 (behaviour matrix written, cross-model design gate PASSED after a BLOCKED verdict was resolved). feat/aaw-packaging-repair merged into this branch (5524580), so the installation manifest is available; ralph-loop-002 todos 1-6 COMPLETE 2026-08-26. The ACC-04/ACC-05 behaviour proofs passed on the sixth round after catching two real defects in the routing block (rule 5 contradicted Brainstorming addition 3; the block never claimed precedence over a skill's own defaults). Both fixed and re-proven. The fork patch against upstream measures ZERO - mirror/upstream-2026-08-26 and upstream/main are the same commit. loop-002-7 CLOSED 2026-08-26 and with it ralph-loop-002 - all 7 todos completed. The cross-model gate ran two providers different from the implementer (codex on gpt-5.6-terra/medium, opencode on Qwen3.5-397B); both returned PASS WITH FINDINGS and both agreed the block does not over-reach into user instructions and that the fork should be published as a pure mirror retaining no patch, with the measured patch at zero. They contradicted each other on manifest gating and the controller adjudicated by reading the lines - codex was right. The human gate then resolved R1 as a CLASS rather than an instance - eleven sites in claude-md-routing.md now gate every companion-tool route on the manifest predicate with a named fallback, plus a default-deny catch-all; R2 narrowed to three named defaults; R3 declined with reason; R4 folded into the re-prove. Re-proven by three installer-built fixtures on one byte-identical envelope, including a broken-manifest fixture with every sentinel on disk that correctly reported everything as not installed. Phase 5 remains open on the unmeasured-harness item below.
-current_loop: ralph-loop-002
-gate_status: loop-001 design gate PASSED 2026-08-26 (reviewer codex/GPT-5.6 Sol, author claude/Opus 5 — ACC-18 satisfied)
-loops_total: 2
-todos_total: 11
-todos_done: 11
+current_phase: 6
+phase_name: "Advanced Planning Multi-Runtime Adapters"
+plan_file: .advanced-plans/phases/phase-6/plan.md
+loops_file: .advanced-plans/phases/phase-6/loops.md
+status: phase 6 not started - no loops decomposed. Phase 5 CLOSED 2026-08-26, gate PASSED on attempt 1 across three backends none of which was the implementer. The Superpowers port delivered all four intents through an AAW-owned fenced block and the fork patch measures ZERO, so mirror/upstream-2026-08-26 and upstream/main are the same commit. The gate found one real defect - a second tracked copy of the routing block still shipping at the repository root, carrying three .claude probes and seven ungated route arrows, orphaned when phase 4 moved the canonical copies - which was verified, traced and removed before closeout. Next action is to decompose phase 6 loops, or to close one of the open threads in phases/phase-5/handoff.md first.
+current_loop: null
+gate_status: pending - phase 6 is not yet gated. Phase 5 PASSED attempt 1 on 2026-08-26 (codex 91, code-review-agent/opencode 78, phase-goals-agent/claude 84; zero failed criteria, no loops to revert).
+loops_total: 0
+todos_total: 0
+todos_done: 0
 todos_pending: 0
-previous_phase: 4 — gate PASSED attempt 2, closed and compacted 2026-08-26
+previous_phase: 5 — gate PASSED attempt 1, closed and compacted 2026-08-26
 last_updated: 2026-08-26
 
 programme: "AAW v0.2 — Herdr-managed multi-runtime orchestration"

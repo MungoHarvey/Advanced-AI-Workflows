@@ -191,32 +191,22 @@ The `setup-with-claude` skill handles both of these steps automatically. To do i
 
 #### CLAUDE.md routing block
 
-Add the following to your project's `CLAUDE.md` (or create it if absent), between the fenced markers:
+The routing block has one canonical copy, and it is not reproduced here — the abridged copy
+this section used to carry had already drifted from it. The source is:
 
-```markdown
-<!-- aaw-routing:begin -->
-## Advanced AI Workflows routing
-
-**Ambiguous problem / strategy session:** invoke `/office-hours` (gstack). This is the front door for unclear scope, architecture decisions, or when a second opinion is needed before committing to an approach.
-
-**Known scope, unfamiliar codebase:** invoke `/plan-and-phase` (advanced-planning). Pass the gstack design doc content as the description argument if one has been produced.
-
-**Known scope, known codebase:** invoke `/new-phase` (advanced-planning). Pass the design doc content as the description argument if available.
-
-**Stuck on options mid-execution / need ideation:** invoke the superpowers brainstorming skill.
-
-**Need a plan drafted:** invoke the superpowers writing-plans skill.
-
-**Second opinion on a plan or implementation:** invoke gstack `/plan-ceo-review`, `/plan-eng-review`, `/plan-design-review`, or `/codex`.
-
-**After any gstack planning skill writes a design doc:** invoke `/gstack-to-plans` if it has not already fired. This copies the design doc from `~/.gstack/projects/{slug}/` to `.advanced-plans/specs/` and prints the next-step suggestion.
-
-## Superpowers preference overrides
-
-Save brainstorming output to: `.advanced-plans/specs/`
-Save writing-plans output to: `.advanced-plans/specs/`
-<!-- aaw-routing:end -->
 ```
+.claude/skills/setup-with-claude/references/claude-md-routing.md
+```
+
+Copy that file verbatim, including both `<!-- aaw-routing:begin -->` and
+`<!-- aaw-routing:end -->` markers, and append it to the end of your `CLAUDE.md`. Nothing
+outside the markers should be touched. The same file is what goes into `AGENTS.md` on a
+harness that reads that instead — the block is host-neutral and there is only one version
+of it.
+
+It detects Advanced Planning by reading `.aaw/installed.json`, not by looking for a
+`.advanced-plans/` directory, so it behaves correctly in a project that holds plans copied
+from elsewhere without the framework installed.
 
 #### Glue skill install
 

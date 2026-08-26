@@ -6,3 +6,4 @@
 {"event": "phase_closed", "phase": "phase-4", "attempt": 2, "timestamp": "2026-08-26T10:45:00Z", "advanced_to": "phase-5", "trigger": "run-gate-pass"}
 {"event":"gate_review","phase":"phase-5","loop":"ralph-loop-001","author_model":"claude-opus-5","reviewer_model":"gpt-5.6-sol","verdict":"BLOCKED","blocking":2,"major":1,"commit":"e4aad35","timestamp":"2026-08-26T13:11:03Z"}
 {"event":"loop_complete","phase":"phase-5","loop":"ralph-loop-001","todos_done":4,"todos_count":4,"todos_failed":0,"commit":"e6cefa9","timestamp":"2026-08-26T13:15:52Z"}
+{"event":"plan_revision","phase":"phase-5","loop":"ralph-loop-002","reason":"realigned todos and phase plan with the gate-approved behaviour matrix; fork patch target set to zero","commit":"871ccce","timestamp":"2026-08-26T13:26:39Z"}

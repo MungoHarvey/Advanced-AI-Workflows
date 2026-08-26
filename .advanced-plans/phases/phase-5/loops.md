@@ -146,7 +146,7 @@ todos:
     evidence: "Backup tag, mirror branch name and head SHA, both diff outputs, and the exact command that would publish it"
     gate: "none"
     outcome: "The fork can be taken to mirror by one reviewed command, and the old state is recoverable"
-    status: pending
+    status: completed
     complexity: low
     priority: high
   - id: "loop-002-2"
@@ -161,12 +161,12 @@ todos:
       - "the block reads .aaw/installed.json .components[advanced-planning].installed — no directory existence test anywhere in it"
       - "grep the block for .claude/ and .cursor/ and .opencode/ -> zero hits"
       - "SP-2 names the Architectural path explicitly and says Spike and Bounded are untouched"
-      - "grep the block for plannotator -> zero hits"
-      - "the AGENTS.md and CLAUDE.md variants say the same thing about SP-1, SP-2 and SP-3; only host mechanics differ"
-    evidence: "Both block texts and every grep output"
+      - "AMENDED mid-loop: the original check was `grep the block for plannotator -> zero hits`. Silence is the weaker outcome, because upstream Advanced Planning still ships a companion-detection skill that names Plannotator, and an agent reading both files needs to be told which one is current. The check is now: every mention of Plannotator in the block is an explicit do-not-use instruction, and none is a recommendation."
+      - "the block is ONE host-neutral file installed into both CLAUDE.md and AGENTS.md, not two variants. This is stronger than the original check that the two variants agree, because there is only one text. Verified by the host-probe grep above returning zero."
+    evidence: "The block text, every grep output, and the packaging suite result"
     gate: "none"
     outcome: "All four intents are expressed in a file AAW owns, so the fork needs no patch at all"
-    status: pending
+    status: completed
     complexity: high
     priority: high
   - id: "loop-002-3"

@@ -150,9 +150,31 @@ hooks, settings, and an installer. So Workstream 2 is **not** a from-scratch res
 "add `codex`, `opencode`, `cursor` alongside the existing `claude-code` and `cowork` platforms,
 and add the CI path audit". `docs/adapting-to-new-platforms.md` already exists as the contract.
 
-### 2.3 gstack — DISCREPANCY, Workstream 1A gstack is BLOCKED
+### 2.3 gstack — local checkout wrong; **fork re-cloned and baseline CONFIRMED**
 
-| Field | Baseline expected | Actually observed |
+#### 2.3.1 Resolution
+
+The fork was cloned fresh, full depth, to `C:\Users\mharvey2\Coding\gstack-fork` (2026-08-26).
+The pre-existing dirty `Coding\gstack` checkout was left untouched. Against the fresh clone every
+baseline claim verifies **exactly**:
+
+| Claim | Baseline | Verified |
+|---|---|---|
+| Fork head | `a5dc03b…` | `a5dc03bdd64124b302cb56927f0866edc0c11879` ✓ |
+| Upstream head | `ad84005…` | `ad8400543cd9ce8d07641362db48d44a95417e33` ✓ |
+| Divergence (upstream-only / fork-only) | 89 / 3 | `89  3` ✓ |
+| Fork-only commits are merges only | yes | `a5dc03bd`, `973fedc8`, `58479465` — all merge commits ✓ |
+| No net fork tree patch | yes | `git diff <merge-base> origin/main` is **empty** ✓ |
+
+Merge base is `029356e1f0693f22cb1fa4524c9b0f28ceab5a1b` and **is an ancestor of `upstream/main`**,
+so the fork is cleanly fast-forwardable to current upstream. The fork carries nothing worth keeping;
+the design's "replace the fork tree with current upstream" strategy holds without qualification.
+
+**Workstream 1A gstack is unpaused.** Base the sync branch on `gstack-fork`, not `Coding\gstack`.
+
+#### 2.3.2 The misleading local checkout (unchanged, for the record)
+
+| Field | Baseline expected | `Coding\gstack` as found |
 |---|---|---|
 | origin | `MungoHarvey/gstack.git` (fork) | **`garrytan/gstack.git` (upstream)** |
 | upstream remote | `garrytan/gstack.git` | **absent** |
@@ -166,24 +188,58 @@ and add the CI path audit". `docs/adapting-to-new-platforms.md` already exists a
 public upstream at `v1.58.4.0` — which is also *older* than the `v1.69.0.0` the baseline recorded
 as upstream. The `MungoHarvey/gstack` fork is not checked out anywhere on this machine.
 
-Per the kickoff prompt discrepancy rule, gstack is **paused**. It cannot be synced, and the
-"89 upstream-only / 3 fork-only / no net tree patch" claim cannot be re-verified from here.
+`C:\Users\mharvey2\Coding\gstack` must not be used for sync work: it is a shallow, depth-1, dirty
+clone of *public upstream* at `v1.58.4.0` — older than the `v1.69.0.0` upstream the baseline
+recorded, and with no fork remote at all. It appears to be a scratch/build checkout (it carries
+uncommitted `gstack/llms.txt` edits and an untracked `scripts/build-windows.js`). Left as found.
+
 Note also that the working gstack install used day-to-day is `~/.claude/skills/gstack`
-(v1.60.1.0 per the global CLAUDE.md), which matches neither this checkout nor the baseline.
+(v1.60.1.0 per the global CLAUDE.md), which matches neither checkout nor the baseline. Three
+different gstack versions are in play on this machine.
 
-### 2.4 Superpowers — DISCREPANCY, not present
+### 2.4 Superpowers — not present locally; **fork re-cloned and baseline CONFIRMED**
 
-There is **no Superpowers checkout on this machine**. Neither `C:\Users\mharvey2\Coding\superpowers`
-nor any sibling path exists, and there is no `superpowers` plugin installed.
-
-What *is* installed are the individual skills, deployed loose into `C:\Users\mharvey2\.claude\skills\`:
-`brainstorming`, `using-superpowers`, `writing-plans` — i.e. exactly the two patched files from the
-fork (`skills/brainstorming/SKILL.md`, `skills/using-superpowers/SKILL.md`) plus `writing-plans`,
+There was **no Superpowers checkout on this machine**, and no `superpowers` plugin installed. Only
+the individual skills were present, deployed loose into `C:\Users\mharvey2\.claude\skills\`:
+`brainstorming`, `using-superpowers`, `writing-plans` — the two patched files plus one sibling,
 copied out of their repository.
 
-Workstream 1A Superpowers is **paused**: the fork must be cloned before the behaviour matrix can be
-written, and the deployed loose skills must be diffed against fork and current upstream to recover
-the real AAW behavioural intent.
+The fork was cloned fresh, full depth, to `C:\Users\mharvey2\Coding\superpowers` (2026-08-26).
+Every baseline claim verifies **exactly**:
+
+| Claim | Baseline | Verified |
+|---|---|---|
+| Fork head | `fde9f97…` | `fde9f972a2a49fcaa116f53d59444f002589c34a` ✓ |
+| Upstream head | `b36e082…`, v6.3.0 | `b36e0829c6d0140e93cfef2ca599b1b07d4a7797`, `git describe` → `v6.3.0` ✓ |
+| Divergence | 241 / 4 | `241  4` ✓ |
+| Net patch paths | 2 skill files | `skills/brainstorming/SKILL.md` (+61/−10), `skills/using-superpowers/SKILL.md` (+22/−0) ✓ |
+
+Merge base `f2cbfbefebbfef77321e4c9abc9e949826bea9d7`. **Workstream 1A Superpowers is unpaused.**
+
+#### 2.4.1 Behaviour matrix — the four intents in the fork patch
+
+Recovered from `git diff <merge-base> origin/main`. These are what a re-port must preserve:
+
+| # | Intent | Where | Detection used | Verdict |
+|---|---|---|---|---|
+| SP-1 | Design doc saves to `.advanced-plans/specs/` when AP present, else upstream `docs/superpowers/specs/` | `brainstorming` step 6 + Documentation | `.claude/skills/phase-plan-creator/SKILL.md` exists | **port** — core AAW routing |
+| SP-2 | Terminal state invokes `phase-plan-creator` when AP present, else `writing-plans` | `brainstorming` flow graph + Implementation | same | **port** — core AAW routing |
+| SP-3 | Use `AskUserQuestion` for every clarifying question | `brainstorming` process | none | **do not port** — host-generic UX, not AAW-specific; propose upstream instead |
+| SP-4 | "Companion Tools" section recommending Advanced Planning **and Plannotator** | `using-superpowers` | `.claude/commands/plannotator-annotate.md` | **port AP half only** — Plannotator half is deprecated (§6.1) |
+
+Two problems block a naive replay of these files:
+
+1. **Detection is Claude-only.** All three probes are `.claude/…` paths, which design §7.3 forbids in
+   host-neutral core. A re-port needs host-neutral detection (an installation manifest, per §4.1#3).
+2. **Upstream has moved underneath the patch.** Current upstream `brainstorming/SKILL.md` now has a
+   "Three Paths" section (line 22) that did not exist at the merge base, and its flow graph and
+   Implementation section have been rewritten. Confirmed by inspection: upstream contains **zero**
+   occurrences of `advanced-planning` or `plannotator` anywhere under `skills/`.
+
+This is exactly the case the design anticipated — replaying the stale files would silently destroy
+the upstream three-path router. It also strengthens the design's stated preference: SP-1, SP-2 and
+the AP half of SP-4 should move into **AAW-owned routing**, letting the Superpowers fork become a
+pure mirror with zero patch.
 
 ### 2.5 Plannotator — MATCHES baseline exactly
 
@@ -238,9 +294,22 @@ installed" regardless of whether an adapter is present.
 |---|---|---|
 | Advanced AI Workflows | `3422a8c` | **match** (+1 unpushed local commit `bdfaa29`) |
 | Advanced Planning | `02b4b86`, v0.16.0 | **match** — but `core/`+`platforms/` already exist, reducing WS2 scope |
-| gstack | fork `a5dc03b` / upstream `ad84005` | **DISCREPANCY — paused.** Local checkout is upstream, shallow, dirty, at older `v1.58.4.0`; fork not present |
-| Superpowers | fork `fde9f97` / upstream `b36e082` | **DISCREPANCY — paused.** No checkout exists; only loose deployed skills |
+| gstack | fork `a5dc03b` / upstream `ad84005` | **match, after re-cloning the fork.** 89/3, no net patch, ff-able. Local `Coding\gstack` was the wrong repository |
+| Superpowers | fork `fde9f97` / upstream `b36e082` | **match, after cloning the fork.** 241/4, patch = the two named skill files |
 | Plannotator | fork `4db7fcc` / upstream `b381ecb` | **match** — clean ancestor, ff still available |
+
+**Net verdict: the recorded baseline was accurate in every particular.** Nothing upstream or in the
+forks had moved. The two apparent discrepancies were entirely artefacts of the *local working copies* —
+one wrong repository, one absent — and both are resolved by the fresh clones. No design target
+needed changing, and no workstream remains paused on baseline grounds.
+
+### 4.1 Checkouts to use for Workstream 1A
+
+| Repository | Use this path | Do not use |
+|---|---|---|
+| gstack | `C:\Users\mharvey2\Coding\gstack-fork` (fork + `upstream` remote, full depth) | `Coding\gstack` — upstream, shallow, dirty |
+| Superpowers | `C:\Users\mharvey2\Coding\superpowers` (fork + `upstream` remote, full depth) | — |
+| Plannotator | *deprecated — see §6.1* | — |
 
 ## 5. Workstream 0 exit-gate status: NOT MET, but closer than expected
 
@@ -298,3 +367,74 @@ than adding new scope.
 
 The open decision is whether the v0.1 tag is applied retrospectively to `3422a8c` (the closeout
 commit that completed v0.1) or whether versioning starts fresh at v0.2.0.
+
+---
+
+## 7. HOME split — blast-radius investigation
+
+Requested before deciding how far to take the fix. Read-only; nothing was changed.
+
+### 7.1 Which resolver each tool follows
+
+| Follows `HOME`/`HOMEDRIVE` (→ `M:\`) | Follows `USERPROFILE` (→ `C:\Users\mharvey2`) |
+|---|---|
+| Git (config), OpenSSH, Git Bash, R, zsh, vim, pnpm, uv | Claude Code, Codex, Cursor, Herdr *config*, gstack |
+
+Herdr straddles the two: its socket and config live under `AppData\Roaming` on `C:`, but its
+**integration probes resolve from `HOME`** — which is why it looked uninstalled (§1.1).
+
+### 7.2 Per-item impact of repointing `HOME` to `C:\Users\mharvey2`
+
+| Item | On `M:` | On `C:` | Impact of the move |
+|---|---|---|---|
+| `.gitconfig` | yes | yes | **none — byte-identical** (`diff` clean) |
+| `.ssh/` keys | `id_ed25519` | `id_ed25519` (same fingerprint `SHA256:FseJy7…`) **plus** `github_ed25519`, `authorized_keys`, `sockets`, `ssh_key_priv/pub` | **none — C: is a strict superset** |
+| `.ssh/config` | github.com, eddie, qwasar | same three **plus** `git.ecdf.ed.ac.uk`, `ServerAliveInterval` | **improvement — C: is more complete**; both reference identities by absolute `C:` paths already |
+| `.claude/` | `skills\gstack` stray only | full install | **improvement** |
+| `.gstack/` | `projects`, `sessions`, `slug-cache` | full incl. config, analytics, profiles | **improvement**, but M-side `projects`/`sessions` would need merging |
+| `.uv-venvs/` | `cell_state_characterisation` | same name present | none apparent |
+| `.Rprofile` | yes | **no** | orphaned — but it already hardcodes `C:/Users/mharvey2/R/library`, so copying it across is trivial |
+| `.Rhistory`, `.profile`, `.viminfo` | yes | no | orphaned — cosmetic, copy across |
+| `.pnpm-store/` | yes | no | orphaned — pnpm rebuilds it automatically |
+
+**Total real breakage: none.** Five orphaned items, all trivially copied or self-rebuilding.
+
+### 7.3 Evidence this has already bitten
+
+`M:\.ssh\config` carries a hand-written comment:
+
+> ```
+> # Git-Bash here runs with HOME=/m/, so it reads THIS file, not
+> # C:/Users/mharvey2/.ssh/config. Without this block ssh offers the Eddie key to
+> # GitHub and the push fails with "Permission denied (publickey)".
+> ```
+
+The split has already cost a debugging session and been papered over by duplicating config into
+`M:`. It is a standing tax, not a hypothetical one. The phase-2 gate finding (`3557bfa`) was the
+second instance; Herdr's invisible integrations are the third.
+
+### 7.4 The argument against a machine-wide change
+
+`M:` is a mapped network home drive on a `@ed.ac.uk` managed Windows machine. That mapping and the
+`HOMEDRIVE`/`HOMEPATH` pair are almost certainly set by Group Policy at logon. A local change would
+likely be **silently reverted at the next logon or policy refresh**, producing intermittent
+breakage that is far worse than the current stable split — the programme would then have runs that
+pass and runs that fail with no code change between them.
+
+This is not a claim that it is impossible, only that it cannot be verified from inside the session
+and would need to be confirmed against IT policy before being relied upon.
+
+### 7.5 Recommendation
+
+**Scoped fix, plus make the split visible.** Three parts:
+
+1. Pin `HOME` / `HOMEDRIVE` / `HOMEPATH` to `USERPROFILE` in the launcher that starts Herdr sessions
+   and any AAW-dispatched agent. Verified working (§1.1) — all four integrations report `current`.
+2. Add a `doctor` assertion: resolve every global path from `USERPROFILE`, never `HOME`/`~`, and
+   **report the split explicitly** rather than silently choosing. This generalises design §4.1#5
+   from "Git Bash `~`" to "any HOME-following resolver, including third-party tools".
+3. As a one-off convenience, copy the five orphan items to `C:` so both roots stay usable.
+
+This is durable against GPO, reversible, and turns the defect into something the tooling detects
+instead of something a gate has to catch after the fact. It leaves the machine-wide question open
+for you to raise with IT separately, without blocking the programme either way.

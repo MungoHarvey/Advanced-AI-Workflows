@@ -56,7 +56,7 @@ todos:
     evidence: "The behaviour matrix document"
     gate: "none"
     outcome: "The port has a specification, so nobody has to infer intent from a diff mid-implementation"
-    status: pending
+    status: completed
     complexity: medium
     priority: high
   - id: "loop-001-3"
@@ -73,7 +73,7 @@ todos:
     evidence: "A summary of what upstream changed in the two patched files, with the router section quoted"
     gate: "none"
     outcome: "The reason a file copy would be destructive is written down, with the evidence attached"
-    status: pending
+    status: completed
     complexity: medium
     priority: high
   - id: "loop-001-4"

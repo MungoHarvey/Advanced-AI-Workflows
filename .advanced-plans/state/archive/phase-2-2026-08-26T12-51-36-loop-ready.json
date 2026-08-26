@@ -1,0 +1,13 @@
+{
+  "loop_name": "ralph-loop-003",
+  "loop_file": ".advanced-plans/phases/phase-2/loops.md",
+  "task_name": "Redeploy global installs + verify + close findings",
+  "todos_count": 6,
+  "prepared_at": "2026-06-05T00:00:00Z",
+  "status": "ready",
+  "handoff_injected": {
+    "done": "Fast-forward merged meta-project/fix-structure-md-stale-paths into advanced-planning main (fa799d3) and pushed to MungoHarvey/advanced-planning via HTTPS; origin/main tracking ref synced.",
+    "failed": "",
+    "needed": ""
+  }
+}

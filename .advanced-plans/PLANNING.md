@@ -32,6 +32,7 @@ resolved_decisions:
     carries a prose fallback, R4 discharged by building all three re-prove fixtures with
     project_ops.py install rather than by hand. Evidence and the fixture table are in
     evidence/2026-08-26-superpowers-port.md."
+  - "Phase-6 shared Python runtime, decided 2026-08-27: mechanism (c) RESOLVE A RECORDED SOURCE PATH, with (d) detect-and-degrade as a non-optional guard. The commands resolve the source checkout from a host-neutral .advanced-plans/runtime.json written by every adapter installer; nothing is duplicated and nothing goes on PATH. Rejected (a) copy-into-install-tree because it puts an Nth copy of executable code in every project and install_audit, the machinery that would police the drift, compares by mtime - already a carried limitation. Rejected (b) console-script shim as the only option adding a packaging system and mutating PATH. (c)'s known weakness is that a moved or renamed checkout breaks it, which is what sync-install and --refresh exist to repair and what the guard makes legible. Loops 004 and 005 write their three adapter specifications against this."
   - "Phase-4 gate, attempt 1: the second failing criterion - no global installer path resolves through ~ or HOME - was fixed rather than waived, in 3b19a49 on feat/aaw-packaging-repair (2026-08-26)."
 
 blocking_decisions:

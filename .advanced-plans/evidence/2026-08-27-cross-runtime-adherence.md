@@ -412,6 +412,15 @@ delivery. The global `~/.claude` copy of the skill was re-synced in the same pas
   this workspace has not been trusted"* and completed anyway. The fixture's settings
   file is a decoy, so ignoring it is the correct behaviour, but the run is therefore
   not evidence about settings-driven routing.
+- **The agy runs were model-pinned, and that was not incidental.** All three passed
+  `--model gemini-3.1-pro-high --effort high` explicitly. agy's default, established
+  2026-08-27, is `gemini-3.7-flash-high` — a *flash* model, and one that follows the
+  head of the catalogue rather than a stored setting (it read 3.6 Flash on 2026-08-26
+  and moved to 3.7 with the 1.1.22 bump). So an unpinned re-run would not reproduce
+  these results on the same model, and might not reproduce them on the same model
+  twice. The pin is recorded here because "an agent's self-reported model is not
+  evidence" is already a finding of this programme; for agy the out-of-band channel is
+  `~/.gemini/antigravity-cli/log/cli-*.log`, which logs the resolved model label per run.
 - Fixtures and results are under the session scratchpad at `adherence-runs/`. As with
   the R1 round, they are **not tracked**, so this record is narrative rather than
   re-derivable — the same limitation phase 5 already carried forward, unchanged.

@@ -129,6 +129,15 @@ finding and it is recorded here rather than argued away.
   `ACC-RESULT.md` reports and the worker transcripts live in the session scratchpad, so a later
   reviewer has the narrative and not the artefacts. The strongest argument yet for tracking the
   fixtures under `tests/`.
+  **CLOSED 2026-08-27** in `b772134`. `tests/adherence/` now carries the fixture builder,
+  the envelope, all 15 recorded reports across five runtimes with a per-round
+  `MANIFEST.json` giving each invocation and model, an `expected.json`, and a
+  `check_results.py` that grades expectation-match and fabrication mechanically. The
+  grading was mutation-tested rather than assumed: a fabricated command, a
+  filesystem-probing answer on `broken-manifest` and a decoy-taken-as-installation spec
+  path were each injected and each caught. Read-only runs are distinguished from
+  declines by the manifest's `mode`, so cursor and agy are not failed for a permission
+  the operator withheld.
 - **The mirror is prepared, not published.** `origin/main` in the superpowers fork is still
   `fde9f97` and still carries all four intents. Publishing needs
   `git push origin mirror/upstream-2026-08-26:main --force-with-lease`, which is outside the

@@ -77,8 +77,16 @@ is empty — the measured patch is zero.
   to give.
 - Measure block adherence on **claude** and **codex** — every round so far is opencode only.
   Claude's half needs one trust dialog cleared per fresh worktree.
-- Decide whether the acceptance fixtures become a tracked test under `tests/`. Until then the
-  behavioural proofs are narrative, not re-derivable.
+- **The acceptance fixtures are tracked.** `tests/adherence/` carries the fixture
+  builder, the envelope, all 15 recorded reports across five runtimes, an
+  `expected.json` and a mutation-tested `check_results.py`. Closed 2026-08-27 in
+  `b772134`; the behavioural proofs are re-derivable rather than narrative.
+- **The `writing-plans` gap is closed.** The cross-runtime round found the block
+  silent on a skill that is manifest-installed but absent from disk; four of five
+  runtimes named `writing-plans` anyway and codex declined. `c83c90e` states that
+  the manifest gates the tool, not each of its skills, at the point of use in all
+  five skill-naming sites. The four recorded cells that predate it are marked
+  `DIVERGED` in `tests/adherence/expected.json` and clear on a re-run.
 - Publish the mirror: `git push origin mirror/upstream-2026-08-26:main --force-with-lease`,
   in the superpowers repository. User's to run.
 - Open **one** PR: `docs/herdr-v0.2-import` → `main` (50 commits, fast-forwardable).

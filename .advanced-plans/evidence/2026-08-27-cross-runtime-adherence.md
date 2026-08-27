@@ -37,7 +37,7 @@ and no tool. Delivery is therefore part of what is being tested, not an assumpti
 | **claude** | all-installed | `/office-hours` | `brainstorming` | `/run-gate` | `.advanced-plans/specs/…` | `/new-phase` |
 | **claude** | only-superpowers | NONE | `brainstorming` | NONE | `docs/superpowers/specs/…` | `writing-plans` |
 | **claude** | broken-manifest | NONE | NONE | NONE | `docs/design/…` | conversation |
-| **cursor** | — | \_blocked\_ | | | | |
+| **cursor** | broken-manifest | NONE | NONE | NONE | n/a (read-only) | conversation |
 | **antigravity** | — | \_blocked\_ | | | | |
 
 Every cell matched. **No runtime named a command that is not in the block**
@@ -171,7 +171,62 @@ particular skill is absent. The default-deny catch-all covers naming an *uninsta
 tool's* command; it does not cover naming a *missing skill inside an installed
 tool*. Recorded, not fixed here.
 
+## cursor, measured read-only — and why that was enough
+
+Added 2026-08-27, after the sections above were written.
+
+The first attempt at cursor failed for a reason worth recording: `--trust` clears the
+workspace-trust gate but does **not** grant the agent write or shell tools. The run
+printed nothing at all and left no `ACC-RESULT.md`, which looks identical to a crash.
+`-f` / `--yolo` is the flag that actually allows commands. That distinction is not
+obvious from the refusal message, which names `--trust`, `--yolo` and `-f` together as
+if they were interchangeable.
+
+The write-capable form stayed unavailable to the controller. So cursor was measured a
+different way: `-p --trust --mode ask`, which is **read-only**, with the envelope
+amended by one sentence — *you cannot create or edit any file; print `ACC-RESULT.md`'s
+contents to stdout instead*. Everything else in `TASK.md` unchanged.
+
+That trade gives up SP-1's write half — nothing lands on disk, so there is no spec-file
+path to check — and it keeps the part the `broken-manifest` fixture exists to test.
+The discriminator is not *where the file goes*; it is **whether the runtime believes the
+manifest over the filesystem**. Every sentinel is on disk and the manifest is truncated,
+so a filesystem-prober names three commands and a manifest-reader answers `NONE` three
+times. Read-only does not blunt that.
+
+**cursor answered `NONE` three times**, and its reasoning names the rule rather than the
+conclusion:
+
+> project rules require treating every component as NOT installed when the manifest is
+> malformed, without inferring install state from on-disk skill directories.
+
+Two details make this a stronger result than the bare row suggests. It reported the
+manifest as *"truncated mid-key under `components.gstack`"* — it parsed far enough to
+locate the break rather than pattern-matching a failure. And its environment block lists
+**`gstack-to-plans` as a component separate from `gstack`**, which is the distinction
+`cd920df` introduced. A runtime reading the pre-fix text had no reason to name it at all.
+That is delivery evidence for the fix as well as adherence evidence for the block.
+
+The fixture was byte-untouched afterwards — every file still at its rebuild timestamp —
+which is what a read-only mode should produce and is worth checking rather than assuming.
+The transcript is saved in the fixture as `ACC-RESULT-readonly.md`.
+
+**antigravity remains blocked.** `agy --mode plan` — its *read-only* mode — still
+auto-denies: *"a tool required the `command` permission that headless mode cannot prompt
+for."* Plan mode does not lower the bar, because agy needs `command` to read at all. The
+two escapes are a persistent `permissions.allow` rule in its `settings.json`, which would
+broaden a provider's permissions and is outside this session's authority, or
+`--dangerously-skip-permissions`, which the controller's own classifier refuses in every
+mode including the read-only one. So agy is the one runtime here that cannot be measured
+without the operator, and the reason is a permission model with no read-only escape
+hatch, not a herdr or fixture problem.
+
 ## What is still not measured
+
+**Superseded in part, later the same day.** The paragraph below was written when both
+cursor and antigravity were blocked. cursor has since been measured read-only and passed
+— see *cursor, measured read-only* above. Only antigravity is still outstanding, and the
+two bullets remain the accurate account of why each refused:
 
 **cursor and antigravity are blocked, not failed.** Both have headless print modes,
 and both refuse to act in a fresh directory without an explicit permission grant that
@@ -194,10 +249,22 @@ took far longer than the others. It also means this one fixture is partly
 contaminated by real global state - in the direction that makes the test harder and
 more realistic, not easier.
 
-So the honest state of the finding is: **it was three-quarters closed.** Adherence is
-now demonstrated on three harnesses that read two different instruction files, by
-three different vendors, including one measured against an actively contradicting
-global instruction. It is still unmeasured on cursor and antigravity.
+So the honest state of the finding is: **it is now four-fifths closed.** Adherence is
+demonstrated on **four** harnesses reading two different instruction files, by four
+different vendors — codex, claude, opencode from the earlier rounds, and cursor — one of
+them measured against an actively contradicting global instruction and one measured
+read-only. Only antigravity is unmeasured, and it is blocked by its own permission model
+rather than by anything about the block.
+
+One further change on 2026-08-27: **the `gemini` CLI was uninstalled** (`npm uninstall -g
+@google/gemini-cli`, was 0.57.0). It had no stored API key, was hit by the B9 npm-shim
+bug, had no herdr integration, and every routing document already said to use `agy`
+instead — so it was a name on `PATH` that could only ever be a mistake. `~/.gemini` was
+deliberately left in place: it is **antigravity's** state directory, 145 MB of it,
+including herdr's own `antigravity-cli` hook at `config/hooks/herdr-agent-state.ps1`.
+The two programs share a directory name and nothing else, which is exactly the confusion
+the removal is meant to end. `agy` verified intact afterwards at 1.1.22, and all five
+herdr integrations still report `current`.
 
 ## What the fix cost to verify
 

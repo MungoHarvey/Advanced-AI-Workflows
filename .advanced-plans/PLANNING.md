@@ -4,15 +4,15 @@ current_phase: 6
 phase_name: "Advanced Planning Multi-Runtime Adapters"
 plan_file: .advanced-plans/phases/phase-6/plan.md
 loops_file: .advanced-plans/phases/phase-6/loops.md
-status: phase 6 not started - no loops decomposed. Phase 5 CLOSED 2026-08-26, gate PASSED on attempt 1 across three backends none of which was the implementer. The Superpowers port delivered all four intents through an AAW-owned fenced block and the fork patch measures ZERO, so mirror/upstream-2026-08-26 and upstream/main are the same commit. The gate found one real defect - a second tracked copy of the routing block still shipping at the repository root, carrying three .claude probes and seven ungated route arrows, orphaned when phase 4 moved the canonical copies - which was verified, traced and removed before closeout. Next action is to decompose phase 6 loops, or to close one of the open threads in phases/phase-5/handoff.md first.
-current_loop: null
-gate_status: pending - phase 6 is not yet gated. Phase 5 PASSED attempt 1 on 2026-08-26 (codex 91, code-review-agent/opencode 78, phase-goals-agent/claude 84; zero failed criteria, no loops to revert).
-loops_total: 0
-todos_total: 0
+status: phase 6 DECOMPOSED 2026-08-27 - 6 loops, 30 todos, none started. Phase 5 CLOSED 2026-08-26 (gate PASSED attempt 1 across three backends, none of them the implementer); its two carried limitations were both closed post-gate on 2026-08-27 in c83c90e (the routing block now states that the manifest gates the TOOL, not each of its skills) and b772134 (the block-adherence fixtures, 15 recorded reports and a mutation-tested grader are tracked under tests/adherence/). Phase 6 works in a DIFFERENT repository - advanced-planning at 02b4b86, v0.16.0 - and its first loop fixes a defect found during decomposition: the shared Python runtime is unreachable from any installed project, so 13 call sites across 6 installed commands are dead. Interim workaround for the controller: PYTHONPATH=C:/Users/mharvey2/Coding/advanced-planning.
+current_loop: ralph-loop-001 (pending, not started)
+gate_status: pending - phase 6 is decomposed but not started, and not yet gated. Phase 5 PASSED attempt 1 on 2026-08-26 (codex 91, code-review-agent/opencode 78, phase-goals-agent/claude 84; zero failed criteria, no loops to revert).
+loops_total: 6
+todos_total: 30
 todos_done: 0
-todos_pending: 0
+todos_pending: 30
 previous_phase: 5 — gate PASSED attempt 1, closed and compacted 2026-08-26
-last_updated: 2026-08-26
+last_updated: 2026-08-27
 
 programme: "AAW v0.2 — Herdr-managed multi-runtime orchestration"
 design_spec: .advanced-plans/specs/2026-08-26-herdr-multi-runtime-orchestration-design.md

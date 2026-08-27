@@ -40,7 +40,9 @@ and no tool. Delivery is therefore part of what is being tested, not an assumpti
 | **cursor** | all-installed | `/office-hours` | `brainstorming` | `/run-gate` | not written (read-only) | `/new-phase` |
 | **cursor** | only-superpowers | NONE | `brainstorming` | NONE | named `docs/superpowers/specs/…` | `writing-plans` |
 | **cursor** | broken-manifest | NONE | NONE | NONE | not written (read-only) | conversation |
-| **antigravity** | — | \_blocked\_ | | | | |
+| **antigravity** | all-installed | `/office-hours` | `brainstorming` | `/run-gate` | named `.advanced-plans/specs/…` | `/new-phase` |
+| **antigravity** | only-superpowers | NONE | `brainstorming` | NONE | named `docs/superpowers/specs/…` | `writing-plans` |
+| **antigravity** | broken-manifest | NONE | NONE | NONE | not written (read-only) | NONE |
 
 Every cell matched. **No runtime named a command that is not in the block**
 — checked mechanically, by extracting every `routed_to` value and testing it against
@@ -173,13 +175,13 @@ particular skill is absent. The default-deny catch-all covers naming an *uninsta
 tool's* command; it does not cover naming a *missing skill inside an installed
 tool*. Recorded, not fixed here.
 
-**Updated 2026-08-27: cursor broke the tie, 2–1 for the block.** Run on the same fixture,
-cursor named `writing-plans` — following the block's stated chain, as claude did, rather
-than checking the disk as codex did. So two of three runtimes treat the block's fallback
-chain as authoritative and one verifies it against the filesystem first.
+**Updated 2026-08-27: 4–1 for the block.** Run on the same fixture, both cursor
+and antigravity named `writing-plans` — following the block's stated chain, as claude did,
+rather than checking the disk as codex did. So four of five runtimes treat the block's
+fallback chain as authoritative and one verifies it against the filesystem first.
 
 That makes codex the outlier, not the consensus, but it does not make codex wrong: it
-checked and the skill genuinely was not there. What the 2–1 split actually shows is that
+checked and the skill genuinely was not there. What the 4–1 split actually shows is that
 the block's silence on this case is load-bearing — it decides the answer for the majority
 who follow it literally, and those readers will name a skill that does not exist. The gap
 is worth closing on that basis rather than on the strength of one dissent.
@@ -261,6 +263,38 @@ appears verbatim in the block, checked mechanically, same as the other runtimes.
 All three fixtures were byte-untouched afterwards, verified by comparing each file's
 mtime against the run's start rather than by trusting the mode flag.
 
+**antigravity, measured 2026-08-27 — the round is closed.** The blocker described below
+was real and is now resolved the only way it could be: the operator ran the three
+commands. `agy --mode plan` still cannot be driven by the controller, because the only
+escape is `--dangerously-skip-permissions` and the controller's own classifier refuses
+that flag in every mode. Read-only mode does not lower the bar, since agy needs the
+`command` permission to read at all. That asymmetry against cursor stands and is recorded
+as B13.
+
+Under the operator's grant, **agy passed all three fixtures**, matching the other four
+runtimes cell for cell, with zero fabricated names across nine `routed_to` and
+`terminal_step` values.
+
+- **`all-installed`** — `/office-hours`, `brainstorming`, `/run-gate`, `/new-phase`, and
+  it quoted the predicate itself: *"verifying that `.components["<component>"]["installed"]
+  == true`"*. It reported `gstack-to-plans` as not installed while gstack was, and did not
+  invoke it. That is the **second independent confirmation of the `cd920df` fix**, from a
+  different vendor than cursor, on the only fixture where the two components diverge.
+- **`only-superpowers`** — decoy ignored, spec named at `docs/superpowers/specs/…`,
+  terminal step `writing-plans`.
+- **`broken-manifest`** — three `NONE`s, and the reason names the rule rather than the
+  symptom: *"AGENTS.md explicitly forbids inferring installation from directory presence,
+  so no components can be determined as installed."*
+
+Two details worth keeping. agy is the **only** runtime that answered `NONE` for
+`terminal_step` on `broken-manifest` as well — the other four fell through to describing
+conversation. Both are right; agy simply read the field as *which command comes next*
+and answered that there is none. And its prose carried the fixture's own house rule on
+British spelling, which is incidental but is evidence the whole instruction file was
+read, not just the fenced block.
+
+All three fixtures were byte-untouched afterwards, verified against run start times.
+
 **antigravity remains blocked.** `agy --mode plan` — its *read-only* mode — still
 auto-denies: *"a tool required the `command` permission that headless mode cannot prompt
 for."* Plan mode does not lower the bar, because agy needs `command` to read at all. The
@@ -271,7 +305,7 @@ mode including the read-only one. So agy is the one runtime here that cannot be 
 without the operator, and the reason is a permission model with no read-only escape
 hatch, not a herdr or fixture problem.
 
-## What is still not measured
+## The one-harness limitation, and how it closed
 
 **Superseded in part, later the same day.** The paragraph below was written when both
 cursor and antigravity were blocked. cursor has since been measured read-only and passed
@@ -299,12 +333,17 @@ took far longer than the others. It also means this one fixture is partly
 contaminated by real global state - in the direction that makes the test harder and
 more realistic, not easier.
 
-So the honest state of the finding is: **it is now four-fifths closed.** Adherence is
-demonstrated on **four** harnesses reading two different instruction files, by four
-different vendors — codex, claude, opencode from the earlier rounds, and cursor, the last
-of these on all three fixtures — one of them measured against an actively contradicting
-global instruction and one measured read-only. Only antigravity is unmeasured, and it is blocked by its own permission model
-rather than by anything about the block.
+So the honest state of the finding is: **closed.** Adherence is demonstrated on **five**
+harnesses reading two different instruction files, from five different vendors — opencode
+from the earlier rounds, plus codex, claude, cursor and antigravity here, the last four on
+three fixtures each. Fifteen fixture-runs, every cell matching, zero fabricated command
+names. One was measured against an actively contradicting global instruction and two were
+measured read-only.
+
+The limitation codex raised at the phase-5 gate — *all seven behavioural rounds measured
+one harness* — no longer holds. What replaced it is narrower and is stated in *What the
+read-only runs do not cover* below: cursor and antigravity were measured without write
+access, so their SP-1 evidence is a **named** path rather than a file on disk.
 
 One further change on 2026-08-27: **the `gemini` CLI was uninstalled** (`npm uninstall -g
 @google/gemini-cli`, was 0.57.0). It had no stored API key, was hit by the B9 npm-shim
@@ -315,6 +354,25 @@ including herdr's own `antigravity-cli` hook at `config/hooks/herdr-agent-state.
 The two programs share a directory name and nothing else, which is exactly the confusion
 the removal is meant to end. `agy` verified intact afterwards at 1.1.22, and all five
 herdr integrations still report `current`.
+
+## What the read-only runs do not cover
+
+cursor and antigravity were measured with no write access, so three things are weaker for
+them than for codex, claude and opencode:
+
+- **SP-1's write half.** Both *named* the correct spec location — `.advanced-plans/specs/`
+  with Advanced Planning installed, `docs/superpowers/specs/` without — but neither put a
+  file there. A runtime that reports the right path and then writes elsewhere would pass
+  this and fail the real thing.
+- **The idempotency and byte-preservation claims** are untested on these two, because
+  nothing was written to preserve.
+- **The envelope differed by one sentence** — *print `ACC-RESULT.md` to stdout instead of
+  writing it*. Every other instruction was identical and `cmp`-verified across fixtures,
+  but this is not the byte-identical envelope the earlier rounds used.
+
+None of these touches the discriminator, which is whether the runtime believes the
+manifest over the filesystem, and that is fully exercised read-only. But *"five runtimes
+pass"* should be read as *"three write-verified, two read-verified"*.
 
 ## What the fix cost to verify
 

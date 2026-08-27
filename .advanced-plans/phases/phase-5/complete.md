@@ -119,6 +119,12 @@ finding and it is recorded here rather than argued away.
   judged it non-disqualifying; the Claude reviewer named the five criteria it touches (SP-1,
   SP-2, ACC-05, the amended Architectural-path-only criterion, and ACC-04 by extension). It
   weakens confidence in each without failing any.
+  **CLOSED 2026-08-27.** Adherence is now demonstrated on five harnesses from five
+  vendors — opencode, codex, claude, cursor and antigravity — the last four on three
+  fixtures each, fifteen fixture-runs, every cell matching, zero fabricated command names.
+  What remains is narrower and is stated in the evidence: cursor and antigravity were
+  measured read-only, so their SP-1 evidence is a *named* path rather than a file on disk.
+  See `.advanced-plans/evidence/2026-08-27-cross-runtime-adherence.md`.
 - **The behavioural evidence is not independently re-derivable.** The fixtures, the
   `ACC-RESULT.md` reports and the worker transcripts live in the session scratchpad, so a later
   reviewer has the narrative and not the artefacts. The strongest argument yet for tracking the

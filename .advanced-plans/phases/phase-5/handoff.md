@@ -63,6 +63,12 @@ is empty — the measured patch is zero.
   digest were done by hand again. Unchanged since phase 4.
 
 ## Open threads (not blocking phase 6)
+- **The one-harness limitation is closed.** Five runtimes, five vendors, fifteen
+  fixture-runs, all passing. cursor and antigravity had to be measured read-only —
+  cursor because `-f` is refused to the controller, antigravity because its only escape
+  is `--dangerously-skip-permissions`, which the classifier refuses in every mode and
+  which the operator therefore ran. Their SP-1 evidence is a named path, not a written
+  file; everything else is on a par with the write-verified three.
 - Adherence is now measured on **codex and claude** as well as opencode — three vendors,
   two instruction files, one of them against an actively contradicting global `CLAUDE.md`.
   It found two block defects, both fixed in `cd920df` post-gate. **cursor and antigravity

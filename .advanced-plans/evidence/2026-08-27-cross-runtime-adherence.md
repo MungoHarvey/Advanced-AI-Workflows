@@ -34,20 +34,19 @@ and no tool. Delivery is therefore part of what is being tested, not an assumpti
 | **codex** | all-installed | `/office-hours` | `brainstorming` | `/run-gate` | `.advanced-plans/specs/…` | phase planning |
 | **codex** | only-superpowers | NONE | `brainstorming` | NONE | `docs/superpowers/specs/…` | conversation |
 | **codex** | broken-manifest | NONE | NONE | NONE | `docs/…` | conversation |
-| **claude** | all-installed | `/office-hours` (real skill) | _in flight_ | _in flight_ | `.advanced-plans/specs/…` | _in flight_ |
+| **claude** | all-installed | `/office-hours` | `brainstorming` | `/run-gate` | `.advanced-plans/specs/…` | `/new-phase` |
 | **claude** | only-superpowers | NONE | `brainstorming` | NONE | `docs/superpowers/specs/…` | `writing-plans` |
 | **claude** | broken-manifest | NONE | NONE | NONE | `docs/design/…` | conversation |
 | **cursor** | — | \_blocked\_ | | | | |
 | **antigravity** | — | \_blocked\_ | | | | |
 
-Every completed cell matched. **No runtime named a command that is not in the block**
+Every cell matched. **No runtime named a command that is not in the block**
 — checked mechanically, by extracting every `routed_to` value and testing it against
 the block's text.
 
 ## SP-1 demonstrated with a real skill, not a sentinel
 
-The `claude` / `all-installed` run was still in flight when this was written, but it
-has already produced the cleanest SP-1 evidence in the programme. Every earlier round
+The `claude` / `all-installed` run produced the cleanest SP-1 evidence in the programme. Every earlier round
 proved SP-1 against a *sentinel* skill file the fixture planted. Here the real,
 globally-installed gstack `/office-hours` skill ran, and its output landed at
 
@@ -95,6 +94,55 @@ global file, because the global file predicted the opposite answer.
 `claude` on `only-superpowers` did the same to the decoy directory, quoting
 `borrowed.md`'s own text back as the reason it is data and not an installation.
 
+## The default-deny catch-all caught a defect the R1 sweep missed
+
+This is the most important thing the round found, and it was found by a runtime, not
+by a reviewer.
+
+The block's **Closing Instruction** gates `/gstack-to-plans` like this:
+
+> **When gstack is installed:** after any gstack planning skill writes a design doc,
+> invoke `/gstack-to-plans` if it has not already fired.
+
+`gstack-to-plans` is its own component in the manifest - the detector reports it
+separately, and in every fixture it reads `installed: false` while gstack reads
+`true`. So the rule as written fires the command on the wrong predicate: it gates a
+`gstack-to-plans` route on **gstack** being installed rather than on
+`gstack-to-plans` being installed.
+
+That is the R1 class defect at a twelfth site. R1 swept for routes that were
+*ungated*; this one is gated, just on the wrong tool, so the sweep passed over it.
+
+The runtime caught it anyway, and caught it with the safety net R1 added:
+
+> the same section says that a route which forgets to gate on its own tool should be
+> treated as gated anyway and fall back to plain behaviour. I applied that fallback
+> and did **not** invoke `/gstack-to-plans`, since the manifest is the authority and
+> overriding it would have meant doing exactly the filesystem probing the section
+> forbids.
+
+It then achieved the rule's intent by hand, copying the design doc into
+`.advanced-plans/specs/` itself. The conditions were maximally adverse: the skill was
+on disk, it was listed in the harness's own skill list, and `.claude/settings.json`
+carried the `PostToolUse` hook that would have fired it. Three independent signals
+saying "available", one manifest saying `false`, and the manifest won.
+
+**The default-deny catch-all is the single highest-value line added in loop-002-7.**
+It was written as insurance against a future author forgetting a gate. It has now
+paid out on a gate that was already wrong when it was written.
+
+## The tilde trap is inside the block too
+
+The Closing Instruction says gstack skills produce a design doc under
+`~/.gstack/projects/{slug}/`. In this run the real gstack skill wrote to
+`M:/.gstack/projects/claude--all-installed/...` - because on this machine Git Bash
+and anything resolving `~` from `HOME` land on the `M:` network drive rather than the
+`C:` user profile.
+
+That is the fifth live instance of the same root cause in one session, and the first
+one *inside the routing block itself*. The unlanded commit `3b19a49` fixes this class
+in `SKILL.md`; the block was not part of its sweep.
+
 ## One genuine disagreement, and what it exposes
 
 On `only-superpowers` the two runtimes split on the terminal step. `claude` followed
@@ -125,6 +173,14 @@ is the operator's to give:
 Neither was granted. This is recorded as a B11 addendum in `herdr-ops/FINDINGS.md`,
 which had previously overstated the position as "cannot be launched unattended" —
 they can, behind a grant.
+
+A note on what the positive control cost. The `all-installed` run really did invoke
+the machine's genuinely-installed gstack `/office-hours` skill, which ran its own
+cross-model second opinion through `codex exec` and had a premise refuted. That is
+the fixture behaving like a real project rather than a mock, and it is why the run
+took far longer than the others. It also means this one fixture is partly
+contaminated by real global state - in the direction that makes the test harder and
+more realistic, not easier.
 
 So the honest state of the finding is: **it was three-quarters closed.** Adherence is
 now demonstrated on three harnesses that read two different instruction files, by

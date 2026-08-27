@@ -1,0 +1,94 @@
+{
+  "phase": "phase-6",
+  "loop": "ralph-loop-001",
+  "todo": "loop-001-5",
+  "recorded": "2026-08-27",
+  "reviewer": {
+    "provider": "codex",
+    "model": "gpt-5.6-sol",
+    "effort": "high",
+    "invocation": "codex.cmd exec -m gpt-5.6-sol -c model_reasoning_effort=high -s read-only --skip-git-repo-check --cd . \"$(cat envelope)\" < /dev/null",
+    "differs_from_implementer": true,
+    "note": "Run as a one-shot `codex exec`, not a Herdr agent pane. CLAUDE.md prefers real worker panes; the one-shot form was chosen because it is read-only by construction, which is what this todo's allowed_paths ('none - read-only') requires, and because it sidesteps the B1/B3/B9 lifecycle faults. This IS a genuine cross-model check: a different vendor's model read the diff and returned four findings the implementer had not seen. The three earlier controller substitutions in loop 001 are therefore not repeated here."
+  },
+  "reviewed_through": "8cd3705",
+  "verdict": "CHANGES REQUESTED",
+  "required_coverage": {
+    "uninstall": "Reviewer did not answer this in its own words. NOT COVERED - the todo's first check is unsatisfied. The controller's own answer, recorded here so the gap is visible rather than papered over: uninstall now has to remove .advanced-plans/runtime.json and .advanced-plans/bin/ap.py in addition to .claude/. Nothing is placed outside the project and nothing goes on PATH, so a missed uninstall leaves two inert files, not a broken machine, and a later reinstall overwrites both. This was the cheapest column of the loop-001-3 table and remains so.",
+    "upgrade_in_place": "Reviewer did not answer this in its own words. NOT COVERED - the todo's first check is unsatisfied. Controller evidence stands from loop-001-4: the manifest write sits outside the scaffold-exists guard in both installers, verified live by re-running install.ps1 over a project whose source_root pointed at C:/nowhere - planning data preserved, path repaired. Pinned for both installers by test_installer_records_the_runtime_outside_the_scaffold_guard. The two-checkouts-on-one-machine case the envelope raised is handled by the same property: whichever installer ran last wins, and the guard names the manifest when the loser's path is stale.",
+    "python_not_on_path": "Reviewer did not answer this in its own words. NOT COVERED - the todo's first check is unsatisfied. Controller's answer, given plainly rather than as invented coverage: this is entirely outside the guard. Every call site begins with the literal token `python`. If that token does not resolve - no launcher on Windows, an unactivated venv, a python3-only machine, or the Microsoft Store stub - the failure happens in the shell before any Advanced Planning code runs, so no launcher diagnostic can fire. Carried to the phase gate as an open item, unfixed and unclaimed."
+  },
+  "drift_question": {
+    "asked": true,
+    "answered": false,
+    "note": "The envelope asked directly whether the mechanism duplicates code that can drift. The reviewer did not answer in those terms. It did surface the closest real instance: finding 1 shows install paths that ship the CALL SITES without the launcher, which is a reachability gap rather than a drift gap. The todo's second check is therefore also unsatisfied."
+  },
+  "findings": [
+    {
+      "id": 1,
+      "severity": "P1",
+      "title": "Supported installers distribute commands without their required launcher",
+      "locations": [
+        "setup/claude-code/install.sh:168",
+        "setup/claude-code/install.ps1:146",
+        "platforms/claude-code/install.sh:88"
+      ],
+      "controller_reproduced": true,
+      "reproduction": "Confirmed all three. Both setup installers exit 0 from the --global branch before the runtime block. platforms/claude-code/install.sh - 7047 bytes, a third installer the implementer did not know existed - copies commands at line 90 and never writes runtime.json or bin/ap.py. A globally-installed command run in a project that was never project-installed fails with python's own \"can't open file ... ap.py\".",
+      "resolution": "ESCALATED TO THE HUMAN GATE. Not a repair: the fix requires choosing where a globally-installed command finds its launcher, which changes the shape of all 13 call sites and is inherited by the three adapters loops 004-005 will build. That is the same class of decision the loop-001-3 gate took, and the controller declines to take it unilaterally."
+    },
+    {
+      "id": 2,
+      "severity": "P1",
+      "title": "/sync-install cannot repair the stale runtime it depends on",
+      "locations": [
+        "platforms/claude-code/commands/sync-install.md:46",
+        "platforms/claude-code/commands/sync-install.md:108"
+      ],
+      "controller_reproduced": true,
+      "reproduction": "On a real scratch install: with a stale source_root, `ap.py install_audit` - step 2's own command - returns exit 3, for which step 2 documented no handling; with the launcher removed it returns exit 2, which step 2 treated as a configuration error and stopped on. The repair at 4b was unreachable in both cases it existed for.",
+      "resolution": "FIXED in fdc2ab9. The repair is now step 1b, ahead of the first launcher call, and step 2 documents exit 3 explicitly so it is never read as an audit verdict. Re-verified on the same install: both branches now reached. Revert-proven by test_the_guard_only_names_repairs_that_exist, which now asserts offset ordering rather than merely string presence - the exact weakness the reviewer named."
+    },
+    {
+      "id": 3,
+      "severity": "P2",
+      "title": "Subdirectory reachability is masked by absolute-path testing",
+      "locations": [
+        "platforms/python/tests/test_ap_launcher.py:145",
+        "platforms/claude-code/commands/next-loop.md:77"
+      ],
+      "controller_reproduced": true,
+      "reproduction": "The relative invocation from a project subdirectory exits 2 with python's own \"can't open file ... ap.py\", before find_manifest() runs. The walk-up was inert as shipped.",
+      "resolution": "FIXED in fdc2ab9, by correcting the claim rather than the code. The test is renamed to what it actually proves - walk-up works for an ABSOLUTE launcher path - the real limit is pinned by its own test, and a second test asserts that no command changes directory before invoking the launcher. Contract 6 now states that commands run from the project root, consistent with every other path they name. The walk-up is retained, not removed: it is the route an out-of-project launcher would take, which is exactly what finding 1's decision may require."
+    },
+    {
+      "id": 4,
+      "severity": "P2",
+      "title": "Valid JSON with the wrong shape bypasses the actionable guard",
+      "locations": [
+        "platforms/python/ap_launcher.py:145"
+      ],
+      "controller_reproduced": true,
+      "reproduction": "`[]` raised AttributeError: 'list' object has no attribute 'get'; {\"source_root\": 1} raised AttributeError: 'int' object has no attribute 'strip'. Both are raw tracebacks naming a launcher internal - precisely the failure mode the guard exists to replace.",
+      "resolution": "FIXED in fdc2ab9. The manifest is validated as an object with a string source_root; all four wrong shapes - [], {\"source_root\": 1}, a bare string, and null - now exit 3 naming the shape found, with no traceback. Revert-proven: removing the validation fails all four parametrised cases."
+    }
+  ],
+  "reviewer_limitations": [
+    "Could not run the full pytest suite - no writable temporary directory in its sandbox. It collected 22 launcher tests and confirmed the source-checkout --check path passed.",
+    "Answered none of the three required-coverage questions in its own words, and did not answer the drift question. Both of the todo's checks are therefore unsatisfied, and the loop's own gate should decide whether the four findings it did return are worth more than the coverage it skipped."
+  ],
+  "controller_actions": {
+    "findings_fixed": [
+      2,
+      3,
+      4
+    ],
+    "findings_escalated": [
+      1
+    ],
+    "every_finding_independently_reproduced_before_acting": true,
+    "commit": "fdc2ab9",
+    "suite_after": "425 passed / 6 failed (the same 6 CRLF failures carried from main)",
+    "ast_check": "clean as CI runs it"
+  }
+}

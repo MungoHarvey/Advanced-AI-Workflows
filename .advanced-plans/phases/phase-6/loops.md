@@ -70,7 +70,8 @@ todos:
     evidence: "The call-site table and the count. The controller's own count over the INSTALLED copies was 13 sites across 6 commands (next-loop, new-phase, plan-and-phase, next-phase, run-gate, sync-install); a different number from source is a finding, not a discrepancy to smooth over"
     gate: "none"
     outcome: "The blast radius is a number derived from the repository, not from the controller's recollection"
-    status: pending
+    status: completed
+    result: "DONE 2026-08-27. 13 call sites across 6 commands, using 6 modules - matching the controller's independent count over the installed copies exactly, so there is no discrepancy to report. All 6 modules exist; the second defect this todo watched for is not present. THE FINDING IS THE ZERO ROWS: platforms/claude-code/agents/, core/agents/, core/skills/ and platforms/cowork/ contain none. The runtime is an ADAPTER-LAYER dependency of the Claude Code adapter, not a core one, and the one non-Claude adapter that exists solves the same problem with a POSIX checkpoint.sh needing no Python. Full table in evidence/2026-08-27-shared-python-runtime.md. PROVIDER SUBSTITUTION: derived by the controller, not by the assigned codex worker."
     complexity: low
     priority: high
   - id: "loop-001-2"
@@ -89,7 +90,8 @@ todos:
     evidence: "The install transcript, the directory listing, and both invocations with exit codes and stderr"
     gate: "none"
     outcome: "The defect is reproduced from a clean install, so the fix has a failing case to close and the loop cannot end on a claim"
-    status: pending
+    status: completed
+    result: "DONE 2026-08-27. install.ps1 -Project into an empty scratch dir exits 0 and lands .claude/{commands,agents,schemas,skills,settings.json} plus a .advanced-plans/ scaffold; platforms/ is absent, confirmed by reading the installer's copy calls and not only by listing the result. All three probes fail from the installed project with ModuleNotFoundError (history_log, state_manager, install_audit) and the same import succeeds from the source repo - the control that proves this is reachability, not the module. The installer's own closing instructions send a new user to /new-phase, whose line 125 is one of the thirteen. PROVIDER SUBSTITUTION: run by the controller, not by the assigned opencode worker."
     complexity: medium
     priority: high
   - id: "loop-001-3"
@@ -107,7 +109,8 @@ todos:
     evidence: "The costed options table and the recorded decision"
     gate: "human"
     outcome: "The mechanism is chosen once, on stated grounds, before three adapters are built on top of it — this is the fork the rest of the phase inherits"
-    status: pending
+    status: in_progress
+    result: "OPTIONS DRAFTED 2026-08-27, DECISION OPEN. Four mechanisms costed against five axes in evidence/2026-08-27-shared-python-runtime.md. Controller recommends (c) resolve a recorded source path, with (d) detect-and-degrade as a non-optional guard under whichever is chosen. Against (a) copy-into-install-tree: it puts an Nth copy of executable code in every project, and install_audit - the machinery that would police it - compares by mtime, a limitation already on the carried-items list. Against (b) console-script shim: the only option that adds a packaging system and mutates PATH. For (c): zero duplication, no new subsystem, and the only one already demonstrated to work here. AWAITING the human gate; loop-004-1 writes its adapter specification against whatever is chosen."
     complexity: medium
     priority: high
   - id: "loop-001-4"

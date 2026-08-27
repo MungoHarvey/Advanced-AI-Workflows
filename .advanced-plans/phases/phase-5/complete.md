@@ -127,8 +127,15 @@ finding and it is recorded here rather than argued away.
   `fde9f97` and still carries all four intents. Publishing needs
   `git push origin mirror/upstream-2026-08-26:main --force-with-lease`, which is outside the
   controller's authority and is the user's to run.
-- **`feat/aaw-packaging-repair` and `fix/install-audit-diverged-state` are pushed, not merged.**
-  No pull request has been opened on either.
+- **The branch picture recorded here was wrong, and was corrected on 2026-08-27.**
+  `fix/install-audit-diverged-state` does not exist, locally or on the remote — its
+  work (`3ae6121`, `6e94cf5`) is inside `feat/aaw-packaging-repair`. That branch's
+  pushed tip `360ab3c` is already an ancestor of `docs/herdr-v0.2-import`, so a pull
+  request from it to `main` would be a strict subset of the controller branch. What is
+  genuinely unlanded is a single local commit, `3b19a49`, which resolves every
+  installer-owned global path from `%USERPROFILE%` instead of `~`; it is unpushed and
+  in neither branch. `main` is 50 commits behind the controller branch and adds
+  nothing to it. So there is **one** pull request to open, not two.
 - **The glue skill still has zero AskUserQuestion callouts** although phase 1 accepted it on
   having them at three ambiguous branches. Carried from phase 4, unchanged.
 - **`.advanced-plans/installed.json` schema question left open by `63f029a`**: whether the

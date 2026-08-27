@@ -21,8 +21,10 @@ is empty — the measured patch is zero.
 - Controller branch `docs/herdr-v0.2-import` — pushed.
 - Superpowers fork: `mirror/upstream-2026-08-26` prepared locally, zero-diff against upstream.
   `origin/main` still `fde9f97` and still carrying the old patch. **Not published.**
-- `feat/aaw-packaging-repair` and `fix/install-audit-diverged-state` — pushed, **not merged, no
-  PR opened**.
+- `feat/aaw-packaging-repair` — pushed tip `360ab3c`, **already an ancestor of the
+  controller branch**. `fix/install-audit-diverged-state` **does not exist**; this line
+  was wrong when written and was corrected 2026-08-27. One local commit `3b19a49`
+  (`%USERPROFILE%` path fix) is unpushed and in no branch.
 - `main` @ `3422a8c`, tag `v0.1.0`.
 - Suites green: packaging 4/4, idempotency 56/56.
 
@@ -67,7 +69,9 @@ is empty — the measured patch is zero.
   behavioural proofs are narrative, not re-derivable.
 - Publish the mirror: `git push origin mirror/upstream-2026-08-26:main --force-with-lease`,
   in the superpowers repository. User's to run.
-- Open PRs for `feat/aaw-packaging-repair` and `fix/install-audit-diverged-state`.
+- Open **one** PR: `docs/herdr-v0.2-import` → `main` (50 commits, fast-forwardable).
+  Land `3b19a49` onto it first — cherry-pick verified clean, drops raw `~/.claude`
+  occurrences in the glue skill from 19 to 5.
 - Re-sync the global `~/.claude` copy of `setup-with-claude` — its registered description still
   advertises four-tool integration including the deprecated Plannotator.
 - Install `jq`, enable Windows Developer Mode, re-run the gstack suite to retire the phase-4

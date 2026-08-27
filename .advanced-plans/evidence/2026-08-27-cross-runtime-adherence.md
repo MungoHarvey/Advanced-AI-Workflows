@@ -37,7 +37,9 @@ and no tool. Delivery is therefore part of what is being tested, not an assumpti
 | **claude** | all-installed | `/office-hours` | `brainstorming` | `/run-gate` | `.advanced-plans/specs/…` | `/new-phase` |
 | **claude** | only-superpowers | NONE | `brainstorming` | NONE | `docs/superpowers/specs/…` | `writing-plans` |
 | **claude** | broken-manifest | NONE | NONE | NONE | `docs/design/…` | conversation |
-| **cursor** | broken-manifest | NONE | NONE | NONE | n/a (read-only) | conversation |
+| **cursor** | all-installed | `/office-hours` | `brainstorming` | `/run-gate` | not written (read-only) | `/new-phase` |
+| **cursor** | only-superpowers | NONE | `brainstorming` | NONE | named `docs/superpowers/specs/…` | `writing-plans` |
+| **cursor** | broken-manifest | NONE | NONE | NONE | not written (read-only) | conversation |
 | **antigravity** | — | \_blocked\_ | | | | |
 
 Every cell matched. **No runtime named a command that is not in the block**
@@ -171,6 +173,17 @@ particular skill is absent. The default-deny catch-all covers naming an *uninsta
 tool's* command; it does not cover naming a *missing skill inside an installed
 tool*. Recorded, not fixed here.
 
+**Updated 2026-08-27: cursor broke the tie, 2–1 for the block.** Run on the same fixture,
+cursor named `writing-plans` — following the block's stated chain, as claude did, rather
+than checking the disk as codex did. So two of three runtimes treat the block's fallback
+chain as authoritative and one verifies it against the filesystem first.
+
+That makes codex the outlier, not the consensus, but it does not make codex wrong: it
+checked and the skill genuinely was not there. What the 2–1 split actually shows is that
+the block's silence on this case is load-bearing — it decides the answer for the majority
+who follow it literally, and those readers will name a skill that does not exist. The gap
+is worth closing on that basis rather than on the strength of one dissent.
+
 ## cursor, measured read-only — and why that was enough
 
 Added 2026-08-27, after the sections above were written.
@@ -210,6 +223,43 @@ That is delivery evidence for the fix as well as adherence evidence for the bloc
 The fixture was byte-untouched afterwards — every file still at its rebuild timestamp —
 which is what a read-only mode should produce and is worth checking rather than assuming.
 The transcript is saved in the fixture as `ACC-RESULT-readonly.md`.
+
+
+### All three fixtures, not just the discriminator
+
+The section above was written after one cursor fixture. The other two were run the same
+way shortly afterwards, because **a `NONE`-only result is not evidence on its own** — it
+is also exactly what a runtime that never read the block produces. The positive control
+is what separates those, and it is the reason every runtime here is run on three fixtures
+rather than the interesting one.
+
+cursor passed all three, matching codex and claude cell for cell:
+
+- **`all-installed`** — `/office-hours`, `brainstorming`, `/run-gate`, classification
+  *Architectural*, terminal step `/new-phase`. The gates did not simply suppress
+  everything.
+- **`only-superpowers`** — the decoy fixture, carrying a planted
+  `.advanced-plans/specs/borrowed.md`. cursor reported Advanced Planning as not installed
+  and said so in terms: *"Determined solely by reading `.aaw/installed.json` (did not
+  infer from `.advanced-plans/` or skill directories on disk)."*
+- **`broken-manifest`** — three `NONE`s, as above.
+
+**`all-installed` turned out to be the strongest single test of the `cd920df` fix in the
+programme, by accident.** That fixture has `gstack: true` and `gstack-to-plans: false` —
+precisely the split the old wording collapsed. cursor invoked `/office-hours`, which is
+gated on gstack, and did **not** invoke `/gstack-to-plans`. Under the pre-fix text a
+reader following the rule literally had every reason to fire it, because gstack was
+installed and that was the stated condition. The fix is therefore not just present in the
+shipped file; it changes behaviour in the one configuration that distinguishes it.
+
+Two smaller things the read-only mode did not cost after all. On `only-superpowers` cursor
+**named** the spec path it would have written — `docs/superpowers/specs/…`, the upstream
+default, not an AAW path — which recovers SP-1's *location* claim even with nothing on
+disk. And the fabrication check ran normally: every `routed_to` value cursor produced
+appears verbatim in the block, checked mechanically, same as the other runtimes.
+
+All three fixtures were byte-untouched afterwards, verified by comparing each file's
+mtime against the run's start rather than by trusting the mode flag.
 
 **antigravity remains blocked.** `agy --mode plan` — its *read-only* mode — still
 auto-denies: *"a tool required the `command` permission that headless mode cannot prompt
@@ -251,9 +301,9 @@ more realistic, not easier.
 
 So the honest state of the finding is: **it is now four-fifths closed.** Adherence is
 demonstrated on **four** harnesses reading two different instruction files, by four
-different vendors — codex, claude, opencode from the earlier rounds, and cursor — one of
-them measured against an actively contradicting global instruction and one measured
-read-only. Only antigravity is unmeasured, and it is blocked by its own permission model
+different vendors — codex, claude, opencode from the earlier rounds, and cursor, the last
+of these on all three fixtures — one of them measured against an actively contradicting
+global instruction and one measured read-only. Only antigravity is unmeasured, and it is blocked by its own permission model
 rather than by anything about the block.
 
 One further change on 2026-08-27: **the `gemini` CLI was uninstalled** (`npm uninstall -g

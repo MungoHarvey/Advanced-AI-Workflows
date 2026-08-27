@@ -63,6 +63,12 @@ is empty — the measured patch is zero.
   digest were done by hand again. Unchanged since phase 4.
 
 ## Open threads (not blocking phase 6)
+- Adherence is now measured on **codex and claude** as well as opencode — three vendors,
+  two instruction files, one of them against an actively contradicting global `CLAUDE.md`.
+  It found two block defects, both fixed in `cd920df` post-gate. **cursor and antigravity
+  remain unmeasured**: both refuse a fresh directory in print mode without an
+  operator-granted flag (`--trust` / `--dangerously-skip-permissions`), which is the user's
+  to give.
 - Measure block adherence on **claude** and **codex** — every round so far is opencode only.
   Claude's half needs one trust dialog cleared per fresh worktree.
 - Decide whether the acceptance fixtures become a tracked test under `tests/`. Until then the

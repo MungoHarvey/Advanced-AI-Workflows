@@ -131,6 +131,13 @@ saying "available", one manifest saying `false`, and the manifest won.
 It was written as insurance against a future author forgetting a gate. It has now
 paid out on a gate that was already wrong when it was written.
 
+**Fixed in `cd920df`, after the gate.** The Closing Instruction now opens *"This route
+needs **two** components, and they are separate manifest entries. Check both."*, gates the
+invocation on `gstack-to-plans` with gstack as the precondition, and states the
+not-installed branch explicitly - copy the design doc by hand into whatever *Where Plans
+and Specs Are Written* names for this project. The discovery above is recorded inline in
+the block, so the next reader sees why the rule is shaped that way.
+
 ## The tilde trap is inside the block too
 
 The Closing Instruction says gstack skills produce a design doc under
@@ -142,6 +149,11 @@ and anything resolving `~` from `HOME` land on the `M:` network drive rather tha
 That is the fifth live instance of the same root cause in one session, and the first
 one *inside the routing block itself*. The unlanded commit `3b19a49` fixes this class
 in `SKILL.md`; the block was not part of its sweep.
+
+**Fixed in `cd920df`.** The block no longer names a `~` path. It says the doc lands in
+gstack's own projects directory under the user profile, and that the profile must be
+resolved the way the host does - `%USERPROFILE%` on Windows, `$HOME` on POSIX - and never
+from a literal `~`. The only `~` left in the block is inside that warning sentence.
 
 ## One genuine disagreement, and what it exposes
 
@@ -186,6 +198,36 @@ So the honest state of the finding is: **it was three-quarters closed.** Adheren
 now demonstrated on three harnesses that read two different instruction files, by
 three different vendors, including one measured against an actively contradicting
 global instruction. It is still unmeasured on cursor and antigravity.
+
+## What the fix cost to verify
+
+Both defects were fixed on 2026-08-27 in `cd920df`, recorded as **post-gate**, on the
+precedent phase 5 already set: the orphan-file removal that closed the gate's major
+finding also landed after the reviewers saw the tree, and the user accepted the gate on
+the grounds that a strict improvement to a tree that had already passed does not need a
+re-gate. The same reasoning applies here and the same decision was taken. No re-gate.
+
+The block went 214 -> 230 lines, 12553 -> 13577 bytes, still pure LF. Re-checked after
+the edit:
+
+| Check | Result |
+|---|---|
+| fresh-clone suite | 13/13 |
+| manifest-schema suite | 24/24 |
+| audit suite | 21/21 |
+| idempotency suite | 56/56 |
+| packaging suite | 4/4 |
+| `grep '-> Invoke\|-> Use the'` (ungated route arrows) | none |
+| host-specific paths in the block (`.claude/`, `.cursor/`, `.opencode/`, `.agents/`) | zero |
+| gate phrasing | 2 gstack, 6 Advanced Planning, 1 superpowers, 1 gstack-to-plans |
+
+Then the three fixtures were rebuilt from scratch through `project_ops.py install`, and
+the corrected text was confirmed present in **both** `AGENTS.md` and `CLAUDE.md` in all
+three, with no `~/.gstack` path anywhere. That last step is the one that matters: the
+edit is only real if the installer ships it, and the R4 finding from loop-002-7 exists
+precisely because a fixture whose block was placed by hand proves nothing about
+delivery. The global `~/.claude` copy of the skill was re-synced in the same pass;
+`diff -r` against the repo copy is clean.
 
 ## Method notes
 

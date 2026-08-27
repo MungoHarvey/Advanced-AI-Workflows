@@ -136,6 +136,16 @@ finding and it is recorded here rather than argued away.
   installer-owned global path from `%USERPROFILE%` instead of `~`; it is unpushed and
   in neither branch. `main` is 50 commits behind the controller branch and adds
   nothing to it. So there is **one** pull request to open, not two.
+- **Two block defects were found after the gate, on 2026-08-27, and fixed in `cd920df`.**
+  The cross-runtime adherence round that closes the one-harness limitation above also found
+  that the Closing Instruction gated `/gstack-to-plans` on **gstack** rather than on
+  `gstack-to-plans` — the R1 class at a twelfth site, missed because the route *was* gated,
+  just on the wrong component — and that the block named a literal `~/.gstack/...` path,
+  which resolves to the `M:` network drive on this machine. Both were found by a runtime
+  rather than a reviewer, and the first was caught by loop-002-7's default-deny catch-all
+  paying out on a gate that was already wrong when it was written. Recorded post-gate on
+  the same precedent as the orphan-file removal above; suites re-run and installer delivery
+  re-verified. See `.advanced-plans/evidence/2026-08-27-cross-runtime-adherence.md`.
 - **The glue skill still has zero AskUserQuestion callouts** although phase 1 accepted it on
   having them at three ambiguous branches. Carried from phase 4, unchanged.
 - **`.advanced-plans/installed.json` schema question left open by `63f029a`**: whether the

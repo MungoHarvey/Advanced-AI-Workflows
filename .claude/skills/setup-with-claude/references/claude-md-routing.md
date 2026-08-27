@@ -197,13 +197,29 @@ route to it, and treat any companion list that still names it as out of date.
 
 ### Closing Instruction — /gstack-to-plans Fallback
 
-**When gstack is installed:** after any gstack planning skill writes a design doc,
-invoke `/gstack-to-plans` if it has not already fired. **When it is not**, no gstack skill
-can have written a design doc, so this rule never applies — do not go looking for one.
+This route needs **two** components, and they are separate manifest entries. Check both.
+
+**When gstack-to-plans is installed** (and gstack is too, since otherwise no gstack skill
+can have written anything): after any gstack planning skill writes a design doc, invoke
+`/gstack-to-plans` if it has not already fired.
+
+**When gstack-to-plans is not installed:** there is no command to invoke. If gstack *is*
+installed and a design doc was written, copy it into the location named in *Where Plans and
+Specs Are Written* by hand — that is the outcome this rule exists to produce, and it does
+not need the command. **When gstack is not installed:** no gstack skill can have written a
+design doc, so the rule never applies — do not go looking for one.
+
+Gating this on gstack alone was a real defect, caught at runtime on 2026-08-27 in a project
+where gstack read `installed: true` and `gstack-to-plans` read `installed: false` while its
+skill file sat on disk. The manifest entry for the tool being *invoked* is the one that
+decides, every time.
 
 This applies to: `/office-hours`, `/plan-ceo-review`, `/plan-eng-review`,
-`/plan-design-review`, `/codex` — any gstack skill that produces a design doc under
-`~/.gstack/projects/{slug}/`.
+`/plan-design-review`, `/codex` — any gstack skill that produces a design doc in gstack's
+own projects directory (`.gstack/projects/{slug}/` under the user profile). Resolve that
+profile the way the host does — `%USERPROFILE%` on Windows, `$HOME` on POSIX — and never
+from a literal `~`, which on a domain Windows machine can point at a network drive that no
+detection will look at.
 
 Where this harness supports write hooks, `setup-with-claude` installs one that fires this
 automatically when a matching file is written. This closing instruction is the manual

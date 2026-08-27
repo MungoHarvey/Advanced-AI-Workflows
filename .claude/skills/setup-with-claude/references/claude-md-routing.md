@@ -32,6 +32,12 @@ Three things follow from that, and they matter:
 - **If `.aaw/installed.json` is missing, unreadable, or malformed, treat every component as
   NOT installed** and follow the plain upstream behaviour of whatever skill you are in. Do
   not guess, and do not write to a path that this project has given you no evidence exists.
+- **The manifest gates the tool, not each of its skills.** A component marked installed
+  means its skills are *expected* here, not proven to be here. Where a rule below names a
+  specific skill, load it before relying on it; if its body is not there, say plainly that
+  the tool is installed but that skill is missing, and take the same branch you would take
+  if the tool were absent. Naming a skill you could not load is the same defect as naming a
+  command that does not exist.
 
 Below, "**when Advanced Planning is installed**" always means exactly that predicate, and
 so does the same phrasing for `gstack` and `superpowers`.
@@ -59,7 +65,8 @@ When a user presents a new request, route to the right tool using these rules �
    → **When Advanced Planning is installed:** invoke `/plan-and-phase`. The command runs
    an exploration step before phase planning.
    → **When it is not:** explore the codebase first, then plan — with the `writing-plans`
-   skill if superpowers is installed, and in conversation if it is not.
+   skill if superpowers is installed *and that skill is actually there*, and in
+   conversation if it is not.
    Use when: the user knows what to build but this codebase or project is new. Supply the
    gstack design doc content as the description argument if one has been archived.
 
@@ -67,15 +74,16 @@ When a user presents a new request, route to the right tool using these rules �
    → **When Advanced Planning is installed:** invoke `/new-phase`. It skips the
    exploration step.
    → **When it is not:** plan directly — with the `writing-plans` skill if superpowers is
-   installed, and in conversation if it is not.
+   installed *and that skill is actually there*, and in conversation if it is not.
    Use when: the user knows what to build and the codebase is already understood from prior
    work. Supply the gstack design doc content as the description argument if one has been
    archived.
 
 4. **Need ideation mid-execution, stuck on options, or exploring trade-offs**
    → **When superpowers is installed:** use the `brainstorming` skill. Load it from
-   wherever this harness keeps its skills and follow it. See *Brainstorming* below for the
-   three additions this project makes to it.
+   wherever this harness keeps its skills and follow it. If it is not there, say so and take
+   the *when it is not* branch instead. See *Brainstorming* below for the three additions
+   this project makes to it.
    → **When it is not:** explore the approaches in conversation. The *Brainstorming*
    section below still describes what this project wants from that conversation, but there
    is no skill to load and no three-path classification to announce.
@@ -87,7 +95,8 @@ When a user presents a new request, route to the right tool using these rules �
    is this project's route from an approved spec to executable work, and for that job it
    **supersedes** `writing-plans` — see *Brainstorming*, addition 3.
    → **When it is not installed:** use the `writing-plans` skill if superpowers is
-   installed, and write the plan in conversation if neither tool is.
+   installed *and that skill is actually there*, and write the plan in conversation
+   otherwise.
    Use when: a spec or design doc is approved and a detailed task-by-task plan is needed.
 
 6. **Need a second opinion on a plan, design, or completed work**
@@ -153,7 +162,10 @@ framework is there.
 The skill's own terminal step is the `writing-plans` skill. When Advanced Planning is
 installed, go to **phase planning** instead (`/plan-and-phase` for a codebase you have not
 explored, `/new-phase` for one you have), passing the approved spec as the description.
-When Advanced Planning is not installed, use `writing-plans` exactly as the skill says.
+When Advanced Planning is not installed, use `writing-plans` exactly as the skill says —
+provided superpowers is installed *and that skill is actually there*. If it is not, say so
+and take the design to its finished, approved artefact in conversation; do not name
+`writing-plans` as the terminal step on the strength of the manifest alone.
 
 ### Where Plans and Specs Are Written
 

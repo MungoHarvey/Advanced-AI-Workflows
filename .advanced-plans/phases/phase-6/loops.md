@@ -233,7 +233,7 @@ todos:
     evidence: "The schema file and a field-by-field mapping to §9.2"
     gate: "none"
     outcome: "A dispatched task has a contract that can be validated before it is sent, not after it has gone wrong"
-    status: pending
+    status: completed
     complexity: medium
     priority: high
   - id: "loop-002-3"
@@ -252,7 +252,7 @@ todos:
     evidence: "The schema file and a field-by-field mapping to §9.3"
     gate: "none"
     outcome: "Evidence has a shape the controller can check, and the schema itself says the worker's prose is not the evidence"
-    status: pending
+    status: completed
     complexity: medium
     priority: high
   - id: "loop-002-4"

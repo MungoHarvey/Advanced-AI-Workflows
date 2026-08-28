@@ -762,3 +762,32 @@ the inconsistency is in its usage-error convention. Already on the carried list.
 not by reading it. Four correction rounds inside stage D; the mechanism the whole
 todo exists to establish — two adapters installing one shared skill without either
 deleting the other's — now holds in both languages and survives being run twice.
+
+## CORRECTION 2026-08-28 — the harness check count in this file is wrong
+
+This file reports the controller harness as **31/31** (and the stage-D repair
+envelopes report **26 functional checks**). Both figures are undercounts of the
+same instrument.
+
+Measured by tallying its own PASS/FAIL lines per section:
+
+| section | checks |
+|---|---|
+| 1. merge proof | 8 (4 x two languages) |
+| 2. two-phase uninstall | 26 (13 x two languages) |
+| 3. differential | 2 |
+| 4. sole-owner residual tree | 5 |
+| **total** | **41** |
+
+"26" was section 2 alone; "31" was sections 2 and 4. Sections 1 and 3 were
+omitted from both counts. Re-run at `31b7667`: **41 PASS, 0 FAIL, exit 0**,
+measured without a pipe.
+
+**No conclusion in this file changes** — every check passed then and passes now,
+and the round-4 defect was found by section 4 either way. What was wrong was the
+number, not the verdict.
+
+It is recorded because this loop's own lesson was that a count which does not add
+up is worth chasing even when it looks cosmetic: that is precisely how the
+wrong-prune-path defect was found, after it had first been written off as a
+reporting difference. Applying that standard to my own reporting is not optional.

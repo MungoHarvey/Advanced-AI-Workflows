@@ -232,3 +232,55 @@ human gate — and the loop's own check line already enumerated all five. Correc
 document it cites. A dated correction note is added at that paragraph rather than a rewrite, since
 the design is the programme's signed artefact and §9.3's earlier correction was made under an
 explicit decision. Whether §7.3 should be restated properly is a call for the phase gate.
+
+
+---
+
+## Amendment — 2026-08-28, after loop-004-1, before loop-004-2
+
+**The specification loop-004-1 produced cannot be built under loop-004-2's `allowed_paths`.**
+
+Found by reading the specification against the loops that consume it, before dispatching 004-2.
+Two independent instances, same shape.
+
+**1. The shared skill payload.** The envelope asked loop-004-1 to *decide* what happens when both
+adapters install into the same project rather than discover it in loop-004-4. It decided: one
+shared, byte-identical copy at `platforms/shared/agent-skills/advanced-planning/`, created by
+004-2, consumed unchanged by 004-3, with a digest conflict rather than a silent overwrite, and an
+uninstall that must not remove a copy the other adapter still registers. That is the right answer
+and it is not buildable: `platforms/shared/` was in neither build loop's `allowed_paths`. A builder
+obeying its constraints — the mechanism by which these loops are actually bounded — would have had
+to violate them or make two diverging copies, which is the outcome the decision exists to prevent.
+
+**2. §7.3 requirement 4 has never been implementable.** The specifier checked whether production
+code validates state against the canonical schemas instead of assuming it does.
+`platforms/python/state_manager.py` serialises, parses and checks one completion enum; it validates
+nothing. The repository's real validator is `minischema.py`, a 374-line library under
+`platforms/python/tests/` — the one directory the AST check excludes. So *"validate the same core
+JSON schemas without rewriting paths to a host-private state directory"* is a requirement that no
+adapter can satisfy by wiring itself to code that exists. A shared production module,
+`platforms/python/state_validate.py`, is a prerequisite for both adapters. `platforms/python/` was
+also outside both build loops' `allowed_paths`.
+
+This is a requirement the plan has carried since it was written, and it was found by reading the
+code the requirement would have to call.
+
+**Changes, all to loop-004:**
+
+1. `loop-004-2.allowed_paths` gains `platforms/shared/` and `platforms/python/`, with the reason.
+   It gains two checks: the shared payload created once and installed byte-identical with a
+   conflict on mismatch; and `state_validate.py` existing, standard-library only, resolving schemas
+   from the recorded `source_root`, and reached through `ap.py`.
+2. `loop-004-3` gains a check that it consumes the shared payload rather than forking it, reuses
+   the validator rather than writing a second one, and that installing in either order leaves one
+   identical tree. `platforms/shared/` is read, not written, for that todo.
+3. `loop-004-4`'s fixture run gains the both-orders install as an explicit case — the only place
+   the collision decision is exercised on a host rather than asserted.
+
+`core/` remains forbidden to every build todo. Nothing here relaxes the no-fork rule; both changes
+widen a path constraint to accommodate a shared location, which is the opposite of forking.
+
+**Carried, not fixed here:** `DEFAULT_SCANNED_ROOTS` does not include `platforms/codex/`,
+`platforms/opencode/` or `platforms/shared/`. Two of the three directories loop-004 creates will be
+invisible to the audit ralph-loop-003 spent five todos building — the same scan-surface gap as
+`core/schemas/` and `core/state/`, now named in six places and still not scheduled.

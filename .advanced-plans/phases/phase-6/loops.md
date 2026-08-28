@@ -499,14 +499,14 @@ todos:
     evidence: "One specification document covering both adapters, contract by contract, with the codex commit constraint called out"
     gate: "none"
     outcome: "Two adapters are specified against the published contract before code exists, so neither is reverse-engineered from the Claude Code one"
-    status: pending
+    status: completed
     complexity: high
     priority: high
   - id: "loop-004-2"
     content: "Build the Codex adapter: platforms/codex/ and setup/codex/, installing and registering the core skills without forking any of them"
     repository: "advanced-planning"
     base_sha: "loop-004-1"
-    allowed_paths: ["platforms/codex/", "setup/codex/", "docs/"]
+    allowed_paths: ["platforms/codex/", "setup/codex/", "platforms/shared/", "platforms/python/", "docs/"]  # widened 2026-08-28: loop-004-1 put the shared skill payload at platforms/shared/ (the collision decision) and found that no production code validates state against the core schemas, so platforms/python/state_validate.py is a prerequisite. core/ stays forbidden
     forbidden_paths: ["<standard programme forbidden set>", "advanced-planning/.advanced-plans/", "core/", "setup-antigravity.js"]
     provider: "opencode"
     worktree_owner: "herdr"
@@ -516,6 +516,8 @@ todos:
       - "the adapter installs skills to .agents/skills/<name>/SKILL.md and guidance to the AGENTS.md fenced block, per §7.2"
       - "an adapter README exists covering setup, quick start, and the top three failure modes — the checklist in docs/adapting-to-new-platforms.md requires it"
       - "path_audit still exits 0, and the new host tokens under platforms/codex/ are correctly NOT flagged"
+      - "the shared skill payload is created ONCE at platforms/shared/agent-skills/advanced-planning/ and installed byte-identical to .agents/skills/advanced-planning/SKILL.md. A destination that differs is an install CONFLICT reported with both digests, never an overwrite"  # added 2026-08-28 from loop-004-1
+      - "§7.3 State I/O is a prerequisite, not a claim: platforms/python/state_validate.py exists, uses only the standard library, validates all SIX core/state schemas, resolves them from the recorded source_root rather than expecting core/ in the installed project, and is reached through ap.py. state_manager.py does NOT validate - loop-004-1 checked"  # added 2026-08-28
       - "Contract 6: setup/codex/ writes .advanced-plans/runtime.json and copies the launcher, both OUTSIDE the scaffold guard; every call site reaches the runtime through the launcher and none uses bare -m or sys.path.insert. Prove it by INSTALLING into a scratch project and running a module there — this is loop-001's defect, and reading the installer is how it survived thirteen call sites the first time"  # added 2026-08-28
     evidence: "The tree, the install run, and the hash comparison proving no core skill was forked"
     gate: "none"
@@ -527,7 +529,7 @@ todos:
     content: "Build the OpenCode adapter: platforms/opencode/ and setup/opencode/, on the same terms"
     repository: "advanced-planning"
     base_sha: "loop-004-2"
-    allowed_paths: ["platforms/opencode/", "setup/opencode/", "docs/"]
+    allowed_paths: ["platforms/opencode/", "setup/opencode/", "docs/"]  # platforms/shared/ is READ for this todo, not written: 004-2 creates the payload, 004-3 consumes it unchanged
     forbidden_paths: ["<standard programme forbidden set>", "advanced-planning/.advanced-plans/", "core/", "setup-antigravity.js"]
     provider: "opencode"
     worktree_owner: "herdr"
@@ -537,6 +539,7 @@ todos:
       - "adapter README with the top three failure modes"
       - "path_audit exits 0"
       - "Contract 6, same terms and same proof as loop-004-2: install into a scratch project and run a module there"  # added 2026-08-28
+      - "NO divergent copy of the shared payload: this todo consumes platforms/shared/ as 004-2 created it and reuses state_validate.py rather than writing a second validator. Installing codex-then-opencode and opencode-then-codex must leave ONE identical skill tree"  # added 2026-08-28 from loop-004-1
     evidence: "The tree, the install run, and the hash comparison"
     gate: "none"
     outcome: "OpenCode installs and registers the same named core skills"
@@ -553,6 +556,7 @@ todos:
     worktree_owner: "herdr"
     checks:
       - "on each host: create one phase, decompose one loop, and emit one external task envelope that validates against the loop-002-2 schema"
+      - "install BOTH adapters into one fixture project, in both orders, and show one identical .agents/skills/ tree. This is the only place loop-004-1's collision decision is exercised on a real host rather than asserted"  # added 2026-08-28
       - "the envelope is validated by the loop-002-4 validator, not by eye"
       - "idle, done and terminal silence are not completion evidence — read the produced files and check them"
       - "record the invocation and model for each run, the way tests/adherence/MANIFEST.json does, so a re-run is reproducible"

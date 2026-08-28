@@ -374,7 +374,7 @@ todos:
     evidence: "The diff and the rule list"
     gate: "none"
     outcome: "The success criterion — the CI path audit fails on any host-specific path in core/ — has an implementation"
-    status: pending
+    status: completed
     complexity: medium
     priority: high
   - id: "loop-003-3"

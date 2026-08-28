@@ -106,6 +106,17 @@ Codex correctly marked one thing **unverified**: the concrete inventory of Claud
 and the grammar of host permission syntax exist nowhere in the repository. Neither vocabulary is
 written down, so 003-2 is defining it, not implementing it.
 
+> **Correction, 2026-08-28, after loop-003-2.** The first half of that is wrong, and running the
+> rule is what disproved it. The inventory *is* written down — in example `outcome:` fields inside
+> the core skills' own reference docs: `core/skills/ralph-loop-planner/references/todo-schema.md:154`
+> ("No occurrences of 'Claude Code', 'Cowork', 'slash command', 'Agent tool', or 'TodoWrite' appear
+> in any core/skills/ SKILL.md file"), `core/skills/plan-todos/references/todo-schema.md:134` (the
+> same plus `.claude/`), and two shorter variants at `:96` and `:110`. The project had stated its own
+> definition of a Claude-only name four times, as worked examples of a verifiable todo, and nobody
+> had turned it into a check. 003-2's rule is built from that list rather than an invented one — see
+> `2026-08-28-loop-003-2-host-neutrality-rule.md`. The claim about permission *grammar* stands: no
+> such grammar is written down anywhere.
+
 ## Nine defects in the module, none of which this loop asked about
 
 Verified controller-side, not taken on the worker's word:

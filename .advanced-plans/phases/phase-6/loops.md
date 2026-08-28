@@ -428,7 +428,7 @@ todos:
     evidence: "The verification, and the ci.yml diff if one was needed"
     gate: "none"
     outcome: "The enforcement is in CI, and CI's own description of it is true"
-    status: pending
+    status: completed
     complexity: low
     priority: medium
 

@@ -529,7 +529,7 @@ todos:
     content: "Build the OpenCode adapter: platforms/opencode/ and setup/opencode/, on the same terms"
     repository: "advanced-planning"
     base_sha: "loop-004-2"
-    allowed_paths: ["platforms/opencode/", "setup/opencode/", "docs/"]  # platforms/shared/ is READ for this todo, not written: 004-2 creates the payload, 004-3 consumes it unchanged
+    allowed_paths: ["platforms/opencode/", "setup/opencode/", "docs/", "platforms/python/tests/"]  # platforms/shared/ is READ for this todo, not written: 004-2 creates the payload, 004-3 consumes it unchanged. platforms/python/tests/ ADDED 2026-08-28: the unplanned coverage todo parametrised test_adapter_lifecycle.py over adapters so that adding OpenCode is one tuple, but 004-3 could not reach the file to add it, and the suite would have stayed single-adapter. The widening is APPEND-ONLY: 004-3 may add one tuple to _ADAPTERS and may not alter any existing test logic, fixture or assertion. Same shape as 004-1's platforms/shared/ finding - a shared location the build loop was forbidden to touch.
     forbidden_paths: ["<standard programme forbidden set>", "advanced-planning/.advanced-plans/", "core/", "setup-antigravity.js"]
     provider: "opencode"
     worktree_owner: "herdr"

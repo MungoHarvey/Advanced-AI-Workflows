@@ -165,3 +165,137 @@ Loops 004 and 005 add three adapters that will each need the same runtime by the
 mechanism chosen here is the one all three inherit, and loop-004-1's adapter specification is
 written against it. That is why this is a human gate and why it sits in loop 001 rather than
 wherever the plan's deliverable table would have put it.
+
+---
+
+## Post-gate: the cross-vendor panel, and mechanism B′ (2026-08-28)
+
+The loop-001-5 human gate was answered **"Pass, but re-ask the three questions"**. Before
+re-asking, the controller sent the mechanism itself to an independent panel, because the
+question the codex reviewer had left unanswered — what happens on a *global* install — turned
+out to be the one the mechanism got wrong.
+
+### The panel
+
+Three reviewers, three vendors, one envelope, run as real Herdr worker panes via
+`multi-model-review`. Artefacts:
+`~/.herdr/reviews/advanced-planning-20260827-180113/` (`COMPILED.md`, plus one file per
+reviewer).
+
+| Reviewer | Critical findings | Verdict |
+|---|---|---|
+| agy (`gemini-3.7-flash-high`) | 3 | Yes |
+| cursor (`cursor-grok-4.6-medium`) | 3 | No |
+| opencode (Qwen3.5 397B) | 4 | No |
+
+**Cursor's review was the one that mattered**, and it reshaped the implementation:
+
+1. `ProjectWithoutManifest` was raised *before* any global fallback could be consulted, so the
+   boundary stop and the fallback were mutually exclusive — the fallback could never fire in
+   the case it existed for.
+2. A **nested git repository** inherited the enclosing checkout's runtime, silently.
+3. `HOME` and `USERPROFILE` disagree under Git Bash on Windows, so an install and a lookup
+   could resolve different homes.
+
+All three were real and all three are now closed. This is the argument for rotating reviewers
+across vendors rather than asking the same one twice: the two reviewers who returned "Yes" and
+"No" respectively did not find any of them.
+
+### The panel contradicted the recorded decision
+
+The controller's own recommendation at the gate was `~/.claude/bin/ap.py`. That contradicts
+**contract 6**, which the controller had itself written three commits earlier: the runtime
+record is host-neutral and belongs in `.advanced-plans/`, never in an adapter's own directory.
+A `~/.claude/` location would have made the next adapter write a second record — the exact
+failure contract 6 exists to prevent. Separately, a literal `~` in
+`runpy.run_path('~/...')` was verified to crash: `run_path` does no tilde expansion.
+
+Both were reported to the user, and the gate was re-put as a choice. The user selected:
+
+> **B′ — host-neutral, global installer only.** `~/.advanced-plans`, not `~/.claude`; project
+> installer unchanged; `cmd.exe` still excluded; silent fallback blocked in-project by
+> b6989c0's boundary stop.
+
+### Where the implementation departs from the sketch, and why
+
+The option preview said *"runpy … `os.path.expanduser()` at the 6 inline sites"* and *"13 call
+sites change once"*. **Neither is what was built**, and the departure is deliberate:
+
+- `os.path.expanduser()` follows `$HOME`. On this machine `$HOME` under Git Bash is routinely
+  a mapped network drive while native Python reads `USERPROFILE` — the two disagree, so
+  `expanduser` resolves to a directory the installer never wrote to. Finding 3 above is exactly
+  this hazard.
+- No single literal works across bash, PowerShell and native Python, so "change the call sites
+  once" has no correct value to change them *to*.
+
+Instead the **installers rewrite the launcher path** in the commands they copy, to one absolute
+forward-slash path. Source call sites keep the project-relative form and are unchanged in
+meaning. This satisfies every property B′ was chosen for — host-neutral location, project
+installer untouched, no silent fallback — without depending on a home-directory notion that
+differs between the shell and the interpreter.
+
+The cost is a new coupling: the rewrite must be a **pure path substitution**, because
+`install_audit` normalises exactly one canonical launcher path back out before hashing. The
+first pass rewrote *bare* call sites into *quoted* ones, so source and installed could never
+converge and the audit reported **6 files permanently stale** on a clean install — drift no
+`/sync-install` could settle. The repair was to quote the source, and the convention is now
+pinned by `test_every_source_call_site_is_in_the_substitutable_form` rather than living
+implicitly inside three `sed` scripts.
+
+### Two defects the panel missed, found by running it
+
+Neither of these is visible by reading. Three reviewers read this code and none reported them.
+
+1. **The record was read from the caller's profile.** An install-time home and a run-time home
+   could therefore disagree, which is the same class of fault as finding 3 and survived the fix
+   for it. The installed launcher now prefers the manifest **beside itself**, which cannot
+   disagree with the install that wrote it. It refuses that when the launcher's own project
+   *encloses* the directory being resolved — that is precisely the borrowing the boundary stop
+   exists to refuse, and the first fix re-opened the hole (three boundary tests caught it). The
+   residual case is stated in the docstring rather than hidden.
+2. **The six in-line `runpy` call sites raised a raw traceback**, not the guard — i.e. the
+   exact failure the guard had been written to replace, still occurring at half the call sites.
+   `bootstrap()` now catches `Unreachable`, reports, and exits 2.
+
+### Live proof
+
+- A full `install.ps1 -Global` redirected via `$env:USERPROFILE` to a scratch profile: the real
+  profile's `.claude/commands` fingerprint and file count were byte-identical before and after.
+  (The real `~/.advanced-plans/` does already exist — `specs/` only, dating from June and July,
+  unrelated to this work and not written by it.)
+- From a **scaffolded-but-never-installed** project: the shell call site exits 0 and names the
+  manifest it used; the in-line `runpy` call site returns the checkout root; a real module runs
+  from it.
+- `install_audit --layers source,global` against that install: **0 stale** (was 6).
+- All four new behaviours revert-proven — each removal breaks its own test.
+
+### Correction to the earlier record
+
+The loop-001-4 and loop-001-5 events both state that advanced-planning has
+`core.autocrlf=true` and that this is the cause of *"the 6 pre-existing test failures"*.
+**Both halves are wrong.** Measured 2026-08-28: `core.autocrlf` is **false**, and `main` fails
+**1** test, not 6 — `test_sandbox_leaves_real_working_tree_untouched`, which points at an
+unrelated checkout path under `Documents/Coding/`.
+
+The five `install_idempotency` failures were **introduced by this controller's own edits**: the
+editing tools silently convert LF files to CRLF, which rewrote whole files (5306 insertions for
+an 861-line change), broke those five tests, and would have committed three `#!/bin/sh`
+installers that no POSIX shell could execute. Every file was normalised back to LF and the
+commit amended before anything left the branch; the four earlier commits on the branch were
+audited and are clean.
+
+The underlying hazard is real and remains open: advanced-planning has **no `.gitattributes`**,
+so nothing catches this. That is the item to carry — not the autocrlf claim, which was never
+true.
+
+The claim's origin is worth naming, because it is the kind of error that repeats. Two repos
+were conflated:
+
+| | `core.autocrlf` | `.gitattributes` |
+|---|---|---|
+| Advanced-AI-Workflows (the controller checkout) | `true` | present |
+| advanced-planning (the repo being changed) | `false` | **absent** |
+
+`autocrlf=true` is AAW's setting, and AAW also has a `.gitattributes`, so AAW is safe on both
+counts. advanced-planning has neither protection. The original note took the setting from the
+repo the controller was standing in rather than the repo it was editing.

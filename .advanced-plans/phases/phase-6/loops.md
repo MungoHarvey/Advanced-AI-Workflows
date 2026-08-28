@@ -519,10 +519,10 @@ todos:
       - "the shared skill payload is created ONCE at platforms/shared/agent-skills/advanced-planning/ and installed byte-identical to .agents/skills/advanced-planning/SKILL.md. A destination that differs is an install CONFLICT reported with both digests, never an overwrite"  # added 2026-08-28 from loop-004-1
       - "§7.3 State I/O is a prerequisite, not a claim: platforms/python/state_validate.py exists, uses only the standard library, validates all SIX core/state schemas, resolves them from the recorded source_root rather than expecting core/ in the installed project, and is reached through ap.py. state_manager.py does NOT validate - loop-004-1 checked"  # added 2026-08-28
       - "Contract 6: setup/codex/ writes .advanced-plans/runtime.json and copies the launcher, both OUTSIDE the scaffold guard; every call site reaches the runtime through the launcher and none uses bare -m or sys.path.insert. Prove it by INSTALLING into a scratch project and running a module there — this is loop-001's defect, and reading the installer is how it survived thirteen call sites the first time"  # added 2026-08-28
-    evidence: "The tree, the install run, and the hash comparison proving no core skill was forked"
+    evidence: ".advanced-plans/evidence/2026-08-28-loop-004-2-codex-adapter.md — final commit 4fa486f on loop-004-codex (LOCAL ONLY). All eight checks re-verified against the final tree by running the adapter: 8 skills installed, 0 forked (7 from core/skills/, advanced-planning from platforms/shared/, digests equal); Contract 6 proven by running history_log through .advanced-plans/bin/ap.py in an installed project with PYTHONPATH unset; state_validate resolves all six core/state schemas from the recorded source_root in a project containing no core/, accepting a valid loop-complete document and rejecting a type error and an enum violation. Stage D took four rounds on the skill-ownership.json mechanism, which was written, read once and destroyed. Controller harness 31/31 with two vacuity probes at printed substitution counts. CARRIED: the Codex adapter has no behavioural test coverage in platforms/python/tests/ — test_uninstall.py binds only to setup/claude-code/ and no test anywhere asserts a residual tree after a complete uninstall, which is why every defect here was found by hand"
     gate: "none"
     outcome: "Codex installs and registers the same named core skills Claude Code does"
-    status: pending
+    status: completed
     complexity: high
     priority: high
   - id: "loop-004-3"

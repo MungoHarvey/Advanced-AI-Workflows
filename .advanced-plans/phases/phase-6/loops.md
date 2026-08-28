@@ -271,7 +271,7 @@ todos:
     evidence: "The fixture files, the test file, and the pytest output naming each invalid case"
     gate: "none"
     outcome: "The schemas are enforced rather than published, and each rule has a case that proves it fires"
-    status: pending
+    status: completed
     complexity: high
     priority: high
   - id: "loop-002-5"

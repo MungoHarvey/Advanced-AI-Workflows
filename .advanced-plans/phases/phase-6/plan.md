@@ -91,3 +91,56 @@ that exist, add the two run-contract schemas, and add the CI path audit. Estimat
 ## Ralph Loops
 
 To be decomposed after the Phase 5 gate passes.
+
+*(Decomposed 2026-08-27 — see `loops.md`: 6 loops, 30 todos. The line above is left as
+written; it describes the plan's state at authoring, not now.)*
+
+## Amendment — 2026-08-28, after loop-002-1
+
+Loop-002-1 settled where the two run-contract schemas live, and found that this plan's own
+Key Deliverables table sends them to the wrong directory. The original text above is left
+intact for provenance; where the two disagree, **this amendment governs.**
+
+**The location is wrong; the form is right.** The table gives:
+
+| External task envelope | JSON Schema | `advanced-planning`: `core/schemas/` | ← wrong |
+| Collected evidence schema | JSON Schema | `advanced-planning`: `core/schemas/` | ← wrong |
+
+Both belong in `core/state/`, as draft-07 JSON Schema:
+
+- `core/state/external-task-envelope.schema.json`
+- `core/state/collected-evidence.schema.json`
+
+Two reasons, and the second is the decisive one.
+
+1. **The split is by role, not by file type.** `core/schemas/` holds prose specifications of
+   documents a human or agent **authors** — `handoff`, `phase-plan`, `ralph-loop`, `todo`.
+   `core/state/` holds JSON Schema for contracts exchanged at a **process boundary** —
+   `loop-ready`, `loop-complete`, `gate-verdict`, `gate-failure-context`. `core/state/README.md`
+   is titled *"State Bus Protocol"* and its Files table names the writer and reader of each.
+   Mutability is not the line: `gate-verdict` is immutable and lives in `core/state/` regardless.
+   Both new artefacts are boundary contracts — the envelope validated before dispatch, the
+   collected evidence before it advances any state.
+
+2. **`core/schemas/` is validated by nothing.** CI job 2 (`schema-validation`) globs
+   `core/state/*.json` and only that. A `.json` file placed in `core/schemas/` would be checked
+   by no job at all, while also being the only JSON file in a directory of prose. So the
+   original location would have founded a third convention *and* left the result unvalidated.
+
+**Consequently `ci.yml` needs no change** for these two files — which is a property of the
+corrected location, not a coincidence.
+
+**A defect in job 2, found while establishing that.** The job calls `json.loads()` and nothing
+else. Run against its exact logic, a schema with a typo'd keyword (`"requried"`) and a plain
+`{"hello": "world"}` both pass. It proves a file is JSON, not that it is a valid JSON Schema,
+and it never loads a fixture. This matters for loop-002-4, whose ≥5 invalid fixtures must each
+fail for a *different named reason* — a typo'd keyword makes every one of those assertions
+vacuous while the suite still reports green. **Loop-002-5's work is therefore strengthening
+that check, not extending the glob**, and its success criterion should be read that way.
+
+**Not changed by this amendment:** `docs/*.schema.md` remains a legitimate third convention —
+LOCKED compaction contracts, a status marker none of the four `core/schemas/` files carries.
+Neither new schema belongs there; neither is a compaction artefact and neither is frozen.
+
+Full reasoning, including the independent cross-model review and where the controller's own
+first answer was wrong: `.advanced-plans/evidence/2026-08-28-loop-002-1-schema-location.md`.

@@ -214,6 +214,14 @@ AAW will use `.agents/skills/` as the shared project location for Codex, OpenCod
 
 Advanced Planning v0.17.0 will separate core protocol from host mechanics. Each adapter must implement five contracts already described conceptually in `docs/adapting-to-new-platforms.md`:
 
+> **Correction, 2026-08-28.** That document now defines **six** contracts, not five. `Contract 6 —
+> Shared Python Runtime` was added to it on 2026-08-27 by this programme's own phase-6 loop-001,
+> after this paragraph was written, and it is the contract that decides whether an adapter works
+> outside the source checkout. The five numbered requirements below are unaffected — they are §7.3's
+> own list, which is a different list from the document's contracts. Any adapter specified against
+> this section must also satisfy Contract 6; phase 6's loop-004 was amended on 2026-08-28 to say so
+> after being written against the stale count.
+
 1. **Discovery:** install and expose the planning skills.
 2. **Invocation:** map phase, loop, gate, resume, and compact actions into the host's skill invocation model.
 3. **Delegation:** run worker/reviewer roles using either the host's native subagents or an external AAW/Herdr task.

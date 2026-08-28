@@ -470,7 +470,7 @@ prompt: |
 ```yaml
 ---
 name: "ralph-loop-004"
-task_name: "Codex and OpenCode adapters — the five contracts, each proven on its own host, neither forking a core skill"
+task_name: "Codex and OpenCode adapters — the six contracts, each proven on its own host, neither forking a core skill"  # five -> six, 2026-08-28: see plan.md amendment
 max_iterations: 3
 on_max_iterations: escalate
 
@@ -481,7 +481,7 @@ handoff_summary:
 
 todos:
   - id: "loop-004-1"
-    content: "Write the adapter specification for both hosts before either is built: for Codex and for OpenCode, fill in all five contracts from docs/adapting-to-new-platforms.md and the four extra requirements in design §7.3"
+    content: "Write the adapter specification for both hosts before either is built: for Codex and for OpenCode, fill in all SIX contracts from docs/adapting-to-new-platforms.md and the five requirements in design §7.3"  # amended 2026-08-28: the doc has six contracts, not five, and §7.3 lists five requirements, not four
     repository: "advanced-planning (read) + Advanced-AI-Workflows evidence/"
     base_sha: "loop-003-5"
     allowed_paths: [".advanced-plans/evidence/"]
@@ -494,6 +494,7 @@ todos:
       - "Contract 3 state directory: .advanced-plans/state/ for both, and the reason it is NOT a host-private directory"
       - "Contract 4 skills directory: .agents/skills/<name>/SKILL.md per design §7.2 for both hosts"
       - "Contract 5 checkpoints: git for both — but codex CANNOT commit from a linked worktree, so the codex adapter must say who commits instead. That is a real constraint, not a footnote"
+      - "Contract 6 shared Python runtime: state that the installer writes .advanced-plans/runtime.json and copies platforms/python/ap_launcher.py to .advanced-plans/bin/ap.py, and that it does BOTH OUTSIDE any scaffold guard. A --global install carries the three extra obligations in the same section. This contract was added to the doc on 2026-08-27 by loop-001 and is the one an adapter is most likely to omit, because omitting it produces a tree that looks complete and fails only when installed"
       - "§7.3 additions: discovery, invocation, delegation, state I/O, and the human gate. §7.4 gives the per-host Plannotator fallback text; Plannotator is DEPRECATED in AAW, so state the host-neutral manual review command instead and do not carry the Plannotator wording forward"
     evidence: "One specification document covering both adapters, contract by contract, with the codex commit constraint called out"
     gate: "none"
@@ -515,6 +516,7 @@ todos:
       - "the adapter installs skills to .agents/skills/<name>/SKILL.md and guidance to the AGENTS.md fenced block, per §7.2"
       - "an adapter README exists covering setup, quick start, and the top three failure modes — the checklist in docs/adapting-to-new-platforms.md requires it"
       - "path_audit still exits 0, and the new host tokens under platforms/codex/ are correctly NOT flagged"
+      - "Contract 6: setup/codex/ writes .advanced-plans/runtime.json and copies the launcher, both OUTSIDE the scaffold guard; every call site reaches the runtime through the launcher and none uses bare -m or sys.path.insert. Prove it by INSTALLING into a scratch project and running a module there — this is loop-001's defect, and reading the installer is how it survived thirteen call sites the first time"  # added 2026-08-28
     evidence: "The tree, the install run, and the hash comparison proving no core skill was forked"
     gate: "none"
     outcome: "Codex installs and registers the same named core skills Claude Code does"
@@ -534,6 +536,7 @@ todos:
       - "skills to .agents/skills/, guidance to the AGENTS.md fenced block; opencode.json is touched ONLY for plugins, permissions or extra instructions, per §7.2"
       - "adapter README with the top three failure modes"
       - "path_audit exits 0"
+      - "Contract 6, same terms and same proof as loop-004-2: install into a scratch project and run a module there"  # added 2026-08-28
     evidence: "The tree, the install run, and the hash comparison"
     gate: "none"
     outcome: "OpenCode installs and registers the same named core skills"
@@ -582,8 +585,12 @@ prompt: |
   Done: [inject prior.handoff_summary.done]
 
   ## Objective
-  Add the Codex and OpenCode adapters beside the Claude Code and Cowork ones, per the five
+  Add the Codex and OpenCode adapters beside the Claude Code and Cowork ones, per the SIX
   contracts in `docs/adapting-to-new-platforms.md` and the five requirements in design §7.3.
+  The sixth contract — shared Python runtime — was added to that doc on 2026-08-27 by this
+  phase's own loop-001, after the design paragraph that says "five" was written. An adapter
+  that omits it reproduces loop-001's defect on a new host: thirteen call sites that resolve
+  only when the working directory happens to be the source checkout.
   Both install to `.agents/skills/` and merge guidance into `AGENTS.md`, per §7.2.
 
   ## Specify before building
@@ -606,6 +613,8 @@ prompt: |
   - [ ] both adapters specified contract by contract before either is built
   - [ ] `platforms/codex/` + `setup/codex/` and `platforms/opencode/` + `setup/opencode/` exist
   - [ ] no core skill is forked, proven by digest
+  - [ ] each installer writes `.advanced-plans/runtime.json` and the launcher outside the
+        scaffold guard, proven by installing into a scratch project and running a module there
   - [ ] one phase, one loop and one validated external task on each host, run by that host
   - [ ] a third provider has reviewed both, and the human gate is confirmed real on each host
 ---

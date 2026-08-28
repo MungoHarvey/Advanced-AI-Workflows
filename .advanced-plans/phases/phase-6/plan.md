@@ -182,3 +182,53 @@ per `docs/path-conventions.md:31-36` and are outside every root, so "core files 
 host directory" is not enforced over all of `core/`. Widening the roots is a larger change than
 adding a rule and will surface hits in files nobody has looked at. Whether to do it now is a call
 for that todo to state and justify, either way.
+
+
+---
+
+## Amendment — 2026-08-28, after loop-003-5, before loop-004-1
+
+**Loop 004 specifies five adapter contracts. `docs/adapting-to-new-platforms.md` defines six.**
+
+Found by reading the doc against the loop that cites it, before dispatching loop-004-1.
+
+`### Contract 6 — Shared Python Runtime` appears in that document at line 77 and is absent from
+loop-004-1's checks, from loop-004-2's, and from loop-004-3's. It is not a minor contract: five of
+the twelve items in the doc's own *Minimum Adapter Checklist* concern it, and it is the contract
+that decides whether an adapter works anywhere other than the source checkout.
+
+**Why the omission is dangerous rather than untidy.** Contract 6 is the manifest-and-launcher rule
+— the installer writes `.advanced-plans/runtime.json`, copies `platforms/python/ap_launcher.py`
+to `.advanced-plans/bin/ap.py`, and does both *outside* any "planning data already exists, skip
+the scaffold" guard. That is exactly the defect **ralph-loop-001 of this phase** was created to
+fix, after finding the shared Python runtime unreachable from every installed project and thirteen
+dead call sites across six installed commands. Two adapters built to loop-004 as written would
+reproduce that defect on two new hosts, and it would not be visible in either tree: the failure
+appears only when the adapter is installed somewhere and a module is run.
+
+**Why it was omitted — the cause is datable, and it is ours.** Design §7.3 reads *"Each adapter
+must implement five contracts already described conceptually in
+`docs/adapting-to-new-platforms.md`"*. That paragraph was written on 2026-08-26. **Contract 6 was
+added to the doc on 2026-08-27, by loop-001's own fix.** The plan inherited the design's "five" and
+nothing propagated the sixth contract forward. The phase created a new adapter obligation and did
+not tell its own later loops about it — which is the same class of failure as a check that reports
+green over ground it does not examine, expressed across documents rather than inside one.
+
+**Changes, all to loop-004:**
+
+1. `task_name`, `loop-004-1.content` and the loop `prompt` say **six** contracts, with the reason.
+2. `loop-004-1` gains a Contract 6 check requiring the specification to state the manifest, the
+   launcher, the scaffold-guard rule, and the three extra `--global` obligations.
+3. `loop-004-2` and `loop-004-3` each gain a Contract 6 check that must be proven by **installing
+   into a scratch project and running a module there**, not by reading the installer. Reading the
+   installer is how this survived thirteen call sites the first time.
+4. The loop's success criteria gain the same item.
+
+**A second, smaller correction in the same place.** `loop-004-1.content` said *"the four extra
+requirements in design §7.3"*. §7.3 lists **five** — discovery, invocation, delegation, state I/O,
+human gate — and the loop's own check line already enumerated all five. Corrected to five.
+
+**Carried, not fixed here:** design §7.3's "five contracts" sentence is now false about the
+document it cites. A dated correction note is added at that paragraph rather than a rewrite, since
+the design is the programme's signed artefact and §9.3's earlier correction was made under an
+explicit decision. Whether §7.3 should be restated properly is a call for the phase gate.

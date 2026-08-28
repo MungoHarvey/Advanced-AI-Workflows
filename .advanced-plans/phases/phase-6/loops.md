@@ -411,7 +411,7 @@ todos:
     evidence: "Both runs with exit codes, the clean git status, and the new test"
     gate: "none"
     outcome: "The audit is proven to fail, which is what makes a green run mean anything — a check that never fails is not a check"
-    status: pending
+    status: completed
     complexity: low
     priority: high
   - id: "loop-003-5"

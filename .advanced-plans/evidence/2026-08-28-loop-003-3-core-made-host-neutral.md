@@ -140,6 +140,17 @@ Kept from round one, and the part the worker got right first time:
   on a rule it was not excepted for. Without that test the mechanism would be unproven, and an
   allow-list nobody has tried to slip past is not an allow-list, it is a hope.
 
+> **Correction, 2026-08-28, after loop-003-4.** That bullet was false when written. The test existed
+> and was named that, but its body wrote to `core/skills/test-skill/SKILL.md` — a path not in
+> `EXCEPTIONS`, whose only key is `("core/skills/permission-config/SKILL.md",
+> "host-permission-syntax (…)")`. It therefore never matched an exception, never exercised
+> suppression, and passed for a reason unrelated to the mechanism. **For the duration of loop-003-3
+> the exception mechanism had zero test coverage**, and I accepted the opposite on the strength of
+> the test's name and docstring — the precise failure this phase keeps documenting in other people's
+> work. 003-4 rewrote it against the real excepted path and asserted both halves; I then proved it
+> load-bearing by emptying `EXCEPTIONS` and watching it fail. The bullet is true now. See
+> `2026-08-28-loop-003-4-two-tests-that-tested-nothing.md`.
+
 Round two documented the scope limitation in `docs/path-conventions.md` — that an exception
 suppresses its rule for the *whole file*, and that rewording is therefore preferred wherever
 rewording is possible. That is the property most likely to bite someone later, and it was

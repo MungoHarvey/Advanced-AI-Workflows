@@ -288,7 +288,7 @@ todos:
     evidence: "The ci.yml diff and the deliberate-corruption run"
     gate: "none"
     outcome: "A malformed schema stops the build instead of shipping"
-    status: pending
+    status: completed
     complexity: low
     priority: medium
 

@@ -321,6 +321,7 @@ Required fields:
   "manager": "herdr",
   "repository": "C:/src/superpowers",
   "base_ref": "upstream/main",
+  "base_sha": "b36e0829c6d0140e93cfef2ca599b1b07d4a7797",
   "branch": "sync/upstream-2026-08-26",
   "allowed_paths": ["skills/brainstorming/", "skills/using-superpowers/", "tests/"],
   "forbidden_paths": [".advanced-plans/state/"],
@@ -348,7 +349,7 @@ Validation rules:
 {
   "schema_version": 1,
   "run_id": "20260826T153012Z-superpowers-sync-7fd2",
-  "status": "review_required",
+  "status": "review",
   "agent": {
     "provider": "codex",
     "herdr_agent": "superpowers-sync",
@@ -357,12 +358,12 @@ Validation rules:
   "git": {
     "worktree": "C:/src/.worktrees/superpowers/sync-upstream-2026-08-26",
     "base_sha": "b36e0829c6d0140e93cfef2ca599b1b07d4a7797",
-    "head_sha": "full-result-sha",
+    "head_sha": "dfc537ddf172ae95910df6ee2ee97525d76d3068",
     "dirty": false,
     "changed_paths": ["skills/brainstorming/SKILL.md"]
   },
   "checks": [
-    {"command": "project-defined test command", "exit_code": 0, "output_sha256": "digest"}
+    {"command": "project-defined test command", "exit_code": 0, "output_sha256": "78125febce3006a70a3e8c1660f59efd4fb30246e98f6b776480887b17f37f31"}
   ],
   "policy": {
     "path_scope_passed": true,
@@ -375,6 +376,8 @@ Validation rules:
 ```
 
 The worker's prose is one evidence item. The collector independently calculates changed paths, diff summary, commit identity, and check exit codes.
+
+`status` takes its value from the §10 run lifecycle, lower-cased: one of `declared`, `prepared`, `running`, `blocked`, `review`, `completed`, `failed`, `interrupted`, `cancelled`. The example above shows `review`, which is the state a collected result is written in — the gates have not yet been evaluated. There is no separate `review_required` status; §10 is the single definition of the state set, and `core/state/collected-evidence.schema.json` enforces it.
 
 ## 10. Run lifecycle
 

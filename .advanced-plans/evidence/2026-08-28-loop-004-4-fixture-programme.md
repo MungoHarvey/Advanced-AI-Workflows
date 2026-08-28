@@ -115,7 +115,7 @@ The host asked for permission to read
 `~\.herdr\worktrees\advanced-planning\loop-004-cigate\core\state`.
 
 My first reading was that it had wandered outside its fixture. **That was wrong, and
-worth recording as wrong**, because the truth is worse. `runtime.json`, written by
+worth recording as wrong**, because the truth is more structural. `runtime.json`, written by
 `setup/opencode/install.sh`, contains:
 
 ```json
@@ -131,10 +131,36 @@ host was following the installed runtime's own resolution, correctly. Consequenc
 
 - The "fixture project" is **not self-contained and not isolated**. Every verb it
   runs executes code from a *herdr worktree of a local, unpushed branch*.
-- Herdr worktrees are transient. **When that worktree is removed, every project ever
-  installed from it silently breaks.** Nothing warns at install time.
+- Herdr worktrees are transient, so a project installed from one is bound to a path
+  that will predictably disappear. **Nothing warns at install time.**
 - `ADVANCED_PLANNING_ROOT` is unset, so nothing was overriding this — it is the
   default behaviour of the installer.
+- The mechanism is `AP_SOURCE_ROOT="$REPO_ROOT"`, replicated verbatim across **six**
+  installer files (`setup/{claude-code,codex,opencode}/install.{sh,ps1}`). A project
+  install points at the checkout it was installed from, by design; the hazard is
+  installing from a checkout that is itself disposable.
+- **No real project on this machine is affected.** A bounded sweep of `~/Coding` and
+  `~/.herdr/worktrees` finds `runtime.json` only in two scratch install dirs inside
+  the `loop-004-codex` worktree — a worker's own test artefacts. The control for that
+  sweep found all 4 fixture copies, so the negative is real and not vacuous. This is
+  latent, not live.
+
+**A correction to my own finding, measured after I first wrote it.** I had written
+that a removed checkout makes installs *"silently break"*. **That is wrong, and the
+truth is to the runtime's credit.** Repointing a copied fixture's `source_root` at a
+nonexistent path gives, on both `--check` and a real verb:
+
+```
+advanced-planning: …/runtime.json records source_root = 'C:/nonexistent/…', but there
+is no platforms\python\__init__.py under it - the checkout has most likely been moved,
+renamed or deleted
+advanced-planning: fix: re-run the installer …, or run /sync-install, or edit …
+```
+
+Exit `3`. It names the file, the key, and three fixes. That is precisely the loud,
+actionable failure this phase has been demanding everywhere else — so the defect is
+narrower than I first stated: not silent breakage, but an install-time binding to a
+disposable checkout with no warning **at install time**.
 
 This also *rehabilitates* the runtime: `state_validate external-task-envelope` works
 fine from the fixture, resolving the schema and reporting 15 missing required

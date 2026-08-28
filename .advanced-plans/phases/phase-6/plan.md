@@ -144,3 +144,41 @@ Neither new schema belongs there; neither is a compaction artefact and neither i
 
 Full reasoning, including the independent cross-model review and where the controller's own
 first answer was wrong: `.advanced-plans/evidence/2026-08-28-loop-002-1-schema-location.md`.
+
+## Amendment — 2026-08-28, after loop-003-1
+
+Loop-003-1 read `platforms/python/path_audit.py` and found that **loop-003-2 as scoped cannot be
+completed without leaving the test suite red.** The original loop text is left intact for
+provenance; where the two disagree, **this amendment governs.**
+
+`platforms/python/tests/test_path_audit.py:237-252` is
+`TestFalsePositiveGuard::test_claude_skills_ref_is_not_flagged`. It writes
+``Load skill from `.claude/skills/plan-todos/SKILL.md`.`` into `core/agents/worker.md` and asserts
+**no violation**, under a test name and docstring that call the reference *legitimate*.
+
+That is precisely the behaviour design §7.3 forbids — a host directory inside `core/` — and
+precisely what loop-003-2 exists to start failing. The test is not hypothetical either:
+`core/agents/worker.md` is one of five real files under `core/` carrying host tokens today.
+
+Loop-003-2's `allowed_paths` were `["platforms/python/path_audit.py", "docs/path-conventions.md"]`.
+The test file does not become writable until loop-003-4, so the todo had no way to land a green
+suite.
+
+**Two changes, both to loop-003-2:**
+
+1. `allowed_paths` gains `platforms/python/tests/test_path_audit.py`.
+2. A check is added requiring that the guard be **inverted and renamed, not deleted.** A test
+   asserting the old wrong behaviour must become one asserting the new right behaviour, so the
+   guard survives the change rather than being removed by it. Deleting it would leave the new rule
+   with no test of its most important boundary.
+
+Nothing else in loop-003 changes. In particular loop-003-4 keeps its own mutation test: 003-2's
+inverted guard proves the rule fires on a fixture, and 003-4 proves it fires end-to-end through the
+CLI and exits 1.
+
+**A decision loop-003-2 must name rather than make silently.** Only `core/agents/` and
+`core/skills/` are scanned roots. `core/schemas/` and `core/state/` are canonical parts of `core/`
+per `docs/path-conventions.md:31-36` and are outside every root, so "core files must contain no
+host directory" is not enforced over all of `core/`. Widening the roots is a larger change than
+adding a rule and will surface hits in files nobody has looked at. Whether to do it now is a call
+for that todo to state and justify, either way.

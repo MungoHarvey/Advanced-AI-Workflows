@@ -353,14 +353,14 @@ todos:
     evidence: "A statement of the current three rules, the scoped directories, and the exact gap against design §7.3 — core files must contain no host directory, no host-only tool name and no host-specific permission syntax"
     gate: "none"
     outcome: "The change is understood as adding a rule that applies only under core/, not as widening a rule that would then fire on legitimate installed-runtime paths"
-    status: pending
+    status: completed
     complexity: low
     priority: high
   - id: "loop-003-2"
     content: "Add a core/-scoped host-neutrality rule covering host directories, host-only tool names and host permission syntax"
     repository: "advanced-planning"
     base_sha: "loop-003-1"
-    allowed_paths: ["platforms/python/path_audit.py", "docs/path-conventions.md"]
+    allowed_paths: ["platforms/python/path_audit.py", "docs/path-conventions.md", "platforms/python/tests/test_path_audit.py"]  # widened 2026-08-28 after loop-003-1 - see plan.md amendment
     forbidden_paths: ["<standard programme forbidden set>", "advanced-planning/.advanced-plans/", "setup-antigravity.js"]
     provider: "opencode"
     worktree_owner: "herdr"
@@ -369,6 +369,7 @@ todos:
       - "host-only tool and agent names flagged under core/: the Claude Agent/Task tool, subagent_type, and slash-command syntax only one host has"
       - "host permission syntax flagged under core/: settings.json permission rules, opencode.json, .cursor/rules"
       - "the rule fires ONLY under core/ — platforms/claude-code/ must still be allowed to say .claude/, which is the entire point of an adapter"
+      - "test_path_audit.py::TestFalsePositiveGuard::test_claude_skills_ref_is_not_flagged currently asserts the OPPOSITE of this rule, on core/agents/worker.md. INVERT and RENAME it - do not delete it. A guard that asserted the old wrong behaviour must become one that asserts the new right behaviour"
       - "docs/path-conventions.md is the stated source of truth for canonical paths and gains the new rule"
     evidence: "The diff and the rule list"
     gate: "none"

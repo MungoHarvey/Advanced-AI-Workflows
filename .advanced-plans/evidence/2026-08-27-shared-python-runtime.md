@@ -255,7 +255,7 @@ Neither of these is visible by reading. Three reviewers read this code and none 
    residual case is stated in the docstring rather than hidden.
 2. **The six in-line `runpy` call sites raised a raw traceback**, not the guard — i.e. the
    exact failure the guard had been written to replace, still occurring at half the call sites.
-   `bootstrap()` now catches `Unreachable`, reports, and exits 2.
+   `bootstrap()` now catches `Unreachable`, reports, and exits 3 (`EXIT_UNREACHABLE`); there is no exit 2 from the guard — exit 2 is CPython's own "can't open file", which means the launcher never ran.
 
 ### Live proof
 
@@ -299,3 +299,125 @@ were conflated:
 `autocrlf=true` is AAW's setting, and AAW also has a `.gitattributes`, so AAW is safe on both
 counts. advanced-planning has neither protection. The original note took the setting from the
 repo the controller was standing in rather than the repo it was editing.
+
+---
+
+## The follow-up envelope: the three questions, answered (2026-08-28)
+
+The gate answer required the three unanswered checks — **uninstall**, **upgrade in place**,
+and **python-not-on-PATH** — to be answered by someone other than the controller. Sequenced
+after the mechanism settled, because B′ changed what the uninstall answer is.
+
+Envelope: `<scratchpad>/followup-envelope.md`. Answers: `<scratchpad>/followup/answer-*.md`.
+Both reviewers ran **one-shot and read-only**, so none of the herdr agent-lifecycle blockers
+(B1/B3/B9) applied.
+
+| Reviewer | Transport | Result |
+|---|---|---|
+| agy `gemini-3.1-pro-high` | `agy-review.sh` (stream-json) | **failed — no output** |
+| opencode (Qwen3.5 397B) | `opencode run --agent plan` | answered, 5.5 KB |
+| cursor `cursor-grok-4.6-high` | `cursor-agent -p --mode ask --trust` | answered, 10.8 KB |
+
+### agy could not run at all, and CLAUDE.md overstates it
+
+`agy` exited 0 having produced nothing, with this on stderr:
+
+> `jetski: no output produced — a tool required the "command" permission that headless mode
+> cannot prompt for, so it was auto-denied.`
+
+This qualifies the note in CLAUDE.md that agy "runs one-shot properly, which makes it the
+best-behaved reviewer in the fleet". It one-shots a *conversation* fine; it cannot **use tools**
+headlessly without an allow-rule in its settings, so it cannot review code it has to read. The
+panel on 2026-08-27 worked because that envelope carried the diff inline. Any review that
+requires the reviewer to open files needs either that allow-rule or a different reviewer. Not
+worked around here: adding one would be broadening a provider's permissions.
+
+### The answers
+
+**Q1 — Uninstall. There is no uninstall path.** Confirmed independently: `grep -rn -i
+'uninstall\|--remove'` across `setup/` and `platforms/claude-code/install.sh` returns nothing.
+Both reviewers agree. What is left behind: `.claude/` entire, and `.advanced-plans/` containing
+*both* planning data and the two mechanism files; for a global install, `<home>/.claude/` and
+`<home>/.advanced-plans/`.
+
+Cursor made the sharper point, which the controller's own framing had missed: **the mechanism
+files sit in the same directory as user data**, so there is no way to remove the mechanism
+without deciding what to do about the planning artefacts beside it. It also separated two
+failure modes the controller had treated as one:
+
+- *stale record, launcher present* → **diagnosable**, exit 3, names manifest, key and repair.
+  Verified live: pointing `source_root` at a deleted path produces exactly that.
+- *launcher deleted, commands still present* → **not diagnosable by this system.** CPython dies
+  with "can't open file" before `ap.py` runs. That is the pre-guard failure this whole change
+  was written to replace, still reachable by a partial delete.
+
+Both reviewers judged this a product gap rather than a launcher bug, and cursor costed the
+fix: remove `.claude/` plus `.advanced-plans/{runtime.json,bin/}` and leave planning artefacts
+— "a page of docs plus a small script. Cheap." **Not done here** and carried as an open item.
+
+**Q2 — Upgrade in place. The setup/ installers repair a stale path; the adapter installer did
+not.** Both reviewers correctly described the `setup/` behaviour: the runtime write sits
+outside the scaffold guard, so a second install from a moved checkout repairs `source_root`.
+
+The two reviewers then **diverged, and the divergence was the finding**:
+
+- opencode concluded *"Both installers repair stale paths on re-run… They are consistent."* It
+  cited `setup/claude-code/install.sh` and `install.ps1` and **never opened
+  `platforms/claude-code/install.sh`**, though the envelope named it (0 occurrences in its
+  answer).
+- cursor opened it and reported that its **project path writes no `runtime.json` and copies no
+  launcher at all** — the original defect intact in the one code path nobody had re-read.
+
+Verified and **fixed** in `686aee2`, with `test_every_installer_project_path_records_the_runtime`
+parameterised over all three installers. The existing test covered the two under `setup/` and
+said nothing about the third.
+
+Separately, the controller found by *running* the same question that this installer's
+`--global` block referenced `$REPO_ROOT`, a variable that file never defines — so under `set -e`
+it half-installed: commands copied, launcher paths not rewritten, exit 1. Fixed in `f9c8bd6`
+with `test_no_installer_reads_a_variable_it_never_assigns`.
+
+So Q2's honest answer is: **the mechanism was not consistent across installers, in two
+independent ways, and one of them was invisible to the reviewer that only read.**
+
+**Q3 — Python not on PATH. Genuinely outside the boundary, and both reviewers agree.**
+Confirmed live: `python: command not found` (exit 127) under `sh`; `'python' is not recognized`
+under PowerShell. No Advanced Planning code runs, so no guard can fire.
+
+Cursor added detail the controller had not considered: the Windows Store stub prints its own
+message and exits, and under Python 2 the file is *opened* and dies on `import pathlib` with a
+raw traceback. It also noted the launcher deliberately treats interpreter-level failure as a
+different class — `docs/adapting-to-new-platforms.md` already says CPython exits before the
+guard can speak.
+
+Both recommended the same cheap thing and nothing more: a prerequisite line in
+`setup/claude-code/README.md`. **Not done here**, carried.
+
+Cursor also flagged that `platforms/claude-code/commands/next-phase.md` lines 366 and 558 use
+`python3 -c` for a hashlib call — verified present, and a worse default than `python` on
+Windows. Those do not route through `ap.py`, so it is a separate pre-existing defect.
+Carried.
+
+**Q4 — Does the mechanism duplicate code that can drift?** Both said the launcher's
+stdlib-only constraint is a sound reason, not a rationalisation, and that the pinning test is
+an adequate control. Cursor pushed harder and was right on two counts:
+
+1. The reason justifies the launcher not importing `install_audit`. It does **not** justify
+   `install_audit` keeping its own copy — `install_audit` runs after bootstrap and can import
+   `ap_launcher`. Removing that copy is a few lines.
+2. The USERPROFILE-before-HOME rule exists in **at least five** places once the installers are
+   counted (`ap_launcher.global_home`, `install_audit.resolve_global_home`, `ap_home_fs` in two
+   shell installers, `Get-ApGlobalHome` in PowerShell). The Python test pins two of the five,
+   and "the real drift risk is the shell/PowerShell copies, which is how this class of bug
+   actually ships."
+
+Neither is fixed here. Both are carried, and (2) is the more serious.
+
+### What this round says about reviewers
+
+The pattern from the 2026-08-27 panel repeated exactly. The reviewer that opened the files
+found a real defect; the reviewer that answered from the two files it expected returned a
+confident "they are consistent" that was false. Neither is a bad reviewer — but a verdict is
+only worth what the reviewer actually read, and **an answer's confidence carries no information
+about its coverage.** The controller check that caught the other half was running the case, not
+reading about it.

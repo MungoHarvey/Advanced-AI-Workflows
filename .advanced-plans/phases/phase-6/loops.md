@@ -211,7 +211,7 @@ todos:
     evidence: "A short note stating the chosen location and form for each of the two schemas, the reason, and the ci.yml change required"
     gate: "none"
     outcome: "The two schemas join an existing convention instead of founding a third one"
-    status: pending
+    status: completed
     complexity: low
     priority: high
   - id: "loop-002-2"

@@ -392,7 +392,7 @@ todos:
     evidence: "The first-run output, the resolution of each hit, and the final run"
     gate: "none"
     outcome: "core/ is host-neutral in fact, and any exception is visible with its reason attached"
-    status: pending
+    status: completed
     complexity: medium
     priority: high
   - id: "loop-003-4"

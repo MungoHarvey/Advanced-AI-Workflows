@@ -1,8 +1,11 @@
 # loop-004-4 — the fixture programme, run on the hosts themselves
 
 - **Date:** 2026-08-28
-- **Status:** **IN PROGRESS — both hosts blocked on approval dialogs that are the
-  operator's to clear.** Everything below is measured; nothing is projected.
+- **Status:** **opencode half COMPLETE** (both stages, verified controller-side).
+  **codex stage 1 COMPLETE and verified; codex stage 2 NOT SENT** — the pane is
+  parked on a rate-limit dialog that is the operator's to clear, and the account
+  is at 98% of its weekly limit (see *The quota finding*).
+  Everything below is measured; nothing is projected.
 - **Hosts:** opencode (`fxoc`, pane `w2:p1A`), codex (`fxcx`, pane `w2:p1B`)
 - **Fixtures:** `<scratchpad>/fixtures-004-4/fx-opencode`, `fx-codex`
 - **Repositories touched:** none. This loop writes only fixtures and this record.
@@ -105,9 +108,56 @@ The approval event it appended:
 It used the **`timestamp`** key, not `ts` — which is the tool's own convention and
 further evidence that the 22 `ts` entries in the programme log are hand-append drift.
 
-**No external-task envelope was written.** The host stalled at a permission dialog
-before it got there, so stage 2 is incomplete and `state_validate` was never
-exercised by the host.
+The host then stalled at a permission dialog before writing the envelope. **The
+operator granted it, and stage 2 then completed.** Final state: 31 files, an
+`envelope-001.json`, a second history event, and a modified `PLANNING.md`.
+
+### Stage 2 used the runtime seven times — which *scopes* the stage-1 finding
+
+| | stage 1 (`phase`) | stage 2 (post-approval) |
+|---|---|---|
+| `ap.py` invocations | **0** | **7** |
+
+Stage 2 called `history_log`, `state_validate` (twice exploring the interface,
+once for real), `--help` and `--check`. So the runtime is reachable and *is* used
+wherever a function exists. The stage-1 finding therefore narrows to exactly what
+it should be: **it is the `phase` verb that has no runtime path**, not the runtime
+that is unreachable. Read from the live session DB read-only (127 parts, 24 shell
+commands), never from a copy.
+
+### The dialog was caused by the binding, and the transcript proves it
+
+The host ran `ap.py --check` (which prints the resolved `source_root`) and then
+issued three commands against
+`...\.herdr\worktrees\advanced-planning\loop-004-cigate\core\schemas`, the last a
+recursive search of that whole worktree for `*envelope*`. It was following the
+installed runtime's own resolution, exactly as the corrected finding below states.
+**It was not wandering.**
+
+### The envelope validates cleanly — and describes a repository that does not exist
+
+`envelope-001.json` passes `state_validate external-task-envelope` with **exit 0**,
+controller-side. The same invocation form was proven able to fail in the same
+breath: deleting `base_sha` gives exit 1, *"Missing required property: 'base_sha'"*.
+
+But the fixture **is not a git repository** (`fatal: not a git repository`), and the
+envelope declares `repository`, `base_ref: "main"`, `base_sha` of forty zeros,
+`branch: "phase-1/health-flag"` and `isolation: "worktree"`. Invalid-fixtures exist
+for `envelope-base-ref-without-sha.json` and `envelope-base-sha-abbreviated.json`,
+so *shape* is policed. **Reality is not.** A forty-zero SHA is well-formed and
+meaningless, and nothing downstream would discover that until a worker tried to
+check the branch out.
+
+**The host found this itself and disclosed it, unprompted**, after tabulating all
+three git probes at exit 128:
+
+> *"Git metadata: The envelope schema requires `base_ref` and `base_sha`
+> (40-character SHA). This fixture directory is not a git repository, so I could
+> not resolve real values. I used placeholder values (`main` and 40 zeros). The
+> validation still passed because the schema validates format, not semantic
+> correctness."*
+
+That is the finding stated better than I had it, by the host under test.
 
 ## The finding this loop actually turned up
 
@@ -174,6 +224,140 @@ The fixture installs eight skills and that is not one of them. The host invented
 plausible skill name rather than choosing from what the adapter had put on disk —
 and nothing in the flow would have caught it.
 
+## The codex half — stage 1, and the findings it replicates
+
+codex keeps a per-session rollout at
+`~/.codex/sessions/2026/08/29/rollout-...-01a04c3e-....jsonl` (70 records). That
+file, not the pane and not the host's summary, is the evidence below.
+
+### The invocation manifest, from the rollout
+
+| Field | Value |
+|---|---|
+| model / effort | **`gpt-5.6-terra` / `medium`** (`turn_context`, the only such record) |
+| cli_version | `0.150.1`, originator `codex-tui` |
+| sandbox | `workspace-write`, `network_access: false`, write confined to the fixture |
+| approval_policy | `on-request` |
+| tokens | 248,215 in / 4,314 out (816 reasoning) |
+| **service_tier** | **absent from `turn_context`** — consistent with `features.fast_mode = false` |
+
+### Stage 1: the gate held, proved from disk
+
+Against `snap-fx-codex-before.txt` (27 rows): **1 added**
+(`.advanced-plans/phases/phase-1/plan.md`), **0 removed**, **0 modified**, over
+**27 common paths actually compared**. `state/` empty, no `loop-ready.json`, no
+`history.jsonl`. The check was proven able to fail in the same form: a planted
+line in `README.md` produced `README.md a5759e3ddffd -> a02f9bd15d71`, and the
+file was restored to its recorded sha `a5759e3ddffd`.
+
+The plan carries the gate in its *content* too, not merely on disk — its final
+section reads *"Not decomposed. This section remains intentionally deferred
+pending `APPROVE phase-1`."*
+
+### Finding 1 replicates on a second, independent host
+
+| | opencode stage 1 | codex stage 1 |
+|---|---|---|
+| tool calls | `bash` ×8, `read` ×1, `write` ×1 | `exec` ×8 (7 shell + 1 `apply_patch`) |
+| **`ap.py` invocations** | **0** | **0** |
+| `ap.py` existence tests | 1 (`Test-Path`) | 1 (`Test-Path`) |
+
+Two hosts, two adapters, two vendors, same result: **the `phase` verb never
+touches the runtime.** It is a property of the skill, not of a host.
+
+The count was taken from the extracted `cmd` fields only, and the extractor was
+checked both ways: a planted `python .advanced-plans/bin/ap.py state_validate x`
+raises the count to 1. This matters, because the single `ap.py` *mention* in the
+codex transcript sits in a `;`-joined line
+(`python --version; Test-Path -LiteralPath .advanced-plans/bin/ap.py; ...`) —
+a naive "contains python and ap.py" test scores it as an invocation. That is
+defect instance 7 exactly; splitting on `;` before testing is what avoids it.
+
+### Finding 2 generalises: *both* hosts run PowerShell on Windows
+
+All 7 codex shell commands are PowerShell — `Get-Content -Raw -LiteralPath`,
+`Test-Path -LiteralPath`, `New-Item -ItemType Directory -Force`,
+`Get-ChildItem -Force | Select-Object -ExpandProperty`. As with opencode, exactly
+one fragment (`python --version`) is valid POSIX `sh`, and it is embedded in a
+`;`-joined PowerShell line.
+
+So this is not "opencode's `bash` tool is misnamed". **On Windows, neither host
+executes POSIX shell**, and any skill, envelope or contract that prescribes it
+will not run as written on either. Nothing in either adapter says so.
+
+### A new finding: the host misreported its own model
+
+codex was asked for three identity facts. It correctly declined two — the launch
+command line (*"cannot determine from the available environment"*) and the
+reasoning effort. Then it **asserted the third and got it wrong**:
+
+> *"Model: GPT-5.6 Sol."*
+
+Its own `turn_context` records `gpt-5.6-terra`, effort `medium`; it was launched
+`codex.cmd -m gpt-5.6-terra -c model_reasoning_effort=medium`; and the pane status
+line read `gpt-5.6-terra med…`. Three independent channels against one self-report.
+
+This is worth separating from the disclosure pattern recorded elsewhere in this
+programme. A host that carefully declines what it cannot observe can still state a
+*wrong* fact confidently about itself — because **a self-report is a string the
+model produced, not a fact it read.** That is this phase's defect class, appearing
+in the one place there is no filesystem to check against. It is also direct support
+for the standing rule that out-of-band evidence beats asking a worker what it is:
+here the rollout file is that evidence, and it is better than `argv`, which a
+`pane run` launch does not populate usefully.
+
+## The quota finding — codex *does* expose usage, and it is nearly exhausted
+
+Every `token_count` event in the rollout carries a `rate_limits` object. In this
+session, all **9 of 9** carried one, identical:
+
+```json
+{"primary": {"used_percent": 98.0, "window_minutes": 10080,
+             "resets_at": 1788452855}, "secondary": null}
+```
+
+`window_minutes: 10080` is seven days; `resets_at` is **2026-09-03 16:27 UTC**.
+It is not a one-off — reading the last value from each of the eight most recent
+rollouts gives a monotone series across two days, every one naming the same reset:
+
+| session (local mtime) | model / effort | `used_percent` |
+|---|---|---|
+| 08-28 14:07 | terra / medium | 85 |
+| 08-28 14:09 | terra / medium | 86 |
+| 08-28 15:00 | **sol / xhigh** | **94** |
+| 08-28 16:14 | terra / medium | 95 |
+| 08-28 17:00 | luna / medium | 95 |
+| 08-28 17:03 | **sol / xhigh** | **97** |
+| 08-28 20:02 | sol / high | 98 |
+| 08-29 07:41 | terra / medium | **98** |
+
+**Two consequences.**
+
+1. **CLAUDE.md's "No CLI in this fleet exposes usage or quota" is too strong.** It
+   is right that no *subcommand* reports it — `codex --help` has no usage verb.
+   But the number is on disk, in a documented per-session file, updated every
+   turn. Quota-aware routing for codex can be *proactive*, not merely reactive to
+   rate-limit errors. The claim should be narrowed to the other CLIs.
+2. **codex is at 98% of its weekly limit with five days to reset.** The pane
+   confirms it independently: after finishing stage 1 it painted *"Approaching
+   rate … Switch to gpt-5…"* with a three-option menu.
+
+The value is account-wide at the moment of writing, so the deltas above are *not*
+attributable solely to the session that recorded them — other panes ran in between.
+What is attributable is the shape: the two `sol`/`xhigh` sessions bracket the
+largest single jumps (86→94 and 95→97). That is consistent with, but does not by
+itself prove, xhigh Sol being the expensive call.
+
+### And herdr reports that pane as `done`, not `blocked`
+
+`agent list` gives `fxcx` `agent_status: "done"`, seq 1011, while the pane is
+sitting on that three-option menu awaiting a keypress. The *task* did complete —
+so `done` is not a lie — but **a follow-up prompt sent now would be consumed by the
+menu, not by codex.** CLAUDE.md records lagging/selective `blocked` detection for
+cursor and correct two-channel reporting for claude; it says nothing about this
+shape on codex, where a system-initiated modal appears *after* a completed turn.
+Read the pane before dispatching to a codex agent, exactly as the cursor rule says.
+
 ## Honesty note — the defect class, sixth and seventh instances, both mine
 
 This phase's recurring defect is *a check whose subject is a string it built rather
@@ -195,16 +379,44 @@ it showed the verb works. **Do not conclude a capability is missing from a grep.
 The rule holds and keeps earning its place: run the check in both directions, require
 it to change, and print the row count so a vacuous pass cannot masquerade as a clean one.
 
-## Blocked — both hosts, both on dialogs that are the operator's
+### A retraction, before it reached the record
 
-| Host | Pane | Dialog |
-|---|---|---|
-| opencode `fxoc` | `w2:p1A` | *Access external directory* `…\loop-004-cigate\core\state` |
-| codex `fxcx` | `w2:p1B` | *Do you trust the contents of this directory?* |
+I was drafting the envelope finding as *the host invented plausible git metadata
+rather than reporting that it could not be resolved*. **That is the opposite of
+what happened.** The host ran all three git probes, tabulated their exit-128
+failures, named the placeholders it had used and explained why validation passed
+anyway. It reported the impossibility and then proceeded with disclosed
+placeholders — which is the correct behaviour, and it is the framing above.
 
-Neither was answered. `--wait` returned exit 0 on the opencode prompt **while the
-agent sat at the dialog** — the documented returns-on-`blocked` trap, and a reminder
-that a background task's exit status is not evidence of completion.
+The near-miss is worth recording because of where it came from: I had the finding
+before I had read the host's own words for it, and the finding *sounded* better
+with a culprit. Note the symmetry with the codex model misreport in the same loop —
+disclosure and manufacture both occurred today, in different hosts, and only
+reading the underlying record distinguishes them.
+
+### An environment trap that produced two identical failures
+
+The Bash tool's **quoted** heredoc (`python - <<'PY'`) collapses `\\` to `\` before
+Python sees it: `s = "a\\b"` arrives as `"a\b"` and prints `len: 2`. This broke the
+same extraction regex twice with a misleading `re.error: unterminated character
+set`, because `[^"\\]` became `[^"\]`. A Windows path in a heredoc'd string fails
+earlier still, at compile time, with `truncated \UXXXXXXXX escape`. Both counts
+above were therefore taken with **no regex at all** — `json.JSONDecoder().raw_decode`
+for extraction and `str.split(';')` for the segment test.
+
+## Dialogs — all operator-cleared, none answered by a worker or by me
+
+| Host | Pane | Dialog | Outcome |
+|---|---|---|---|
+| opencode `fxoc` | `w2:p1A` | *Access external directory* `…\loop-004-cigate\core\state` | operator cleared; stage 2 completed |
+| codex `fxcx` | `w2:p1B` | *Do you trust the contents of this directory?* | operator cleared; stage 1 completed |
+| codex `fxcx` | `w2:p1B` | *Approaching rate … Switch to gpt-5…* (3 options) | **open — blocks stage 2** |
+
+`--wait` returned exit 0 on the opencode prompt **while the agent sat at the
+dialog** — the documented returns-on-`blocked` trap, and a reminder that a
+background task's exit status is not evidence of completion. The third dialog is
+worse in kind: `agent_status` reads `done`, not `blocked`, so nothing but reading
+the pane reveals it.
 
 ## Carried
 
@@ -223,5 +435,15 @@ that a background task's exit status is not evidence of completion.
 - Four codex probe panes (`w2:p1C`–`w2:p1F`) were created for the invalidated
   isolation experiment and have been closed.
 - The `using-superpowers` assignment above deserves a check in the real flow.
-- Stage 2 remains unfinished on both hosts: no external-task envelope, no
-  host-side `state_validate`, and the codex half has not started.
+- **codex stage 2 is not sent.** Everything else in this loop is complete. It needs
+  the rate-limit dialog cleared *and* a decision about spending the remaining ~2%
+  of the weekly codex quota on it.
+- **CLAUDE.md, two corrections earned here.** (a) *"No CLI in this fleet exposes
+  usage or quota"* — narrow it to exclude codex, whose rollout files carry
+  `rate_limits` per turn; (b) add the `done`-over-a-modal shape to the pane-reading
+  rule, which currently names only cursor.
+- The `phase`-verb finding is now replicated on two hosts, so it is a property of
+  the skill. Worth a permanent test rather than another fixture run.
+- The envelope schema polices shape, not reality. A semantic check — *does
+  `repository` resolve to a git repo, does `base_sha` exist in it* — is the obvious
+  follow-on, and would have caught a forty-zero SHA.

@@ -308,6 +308,56 @@
       ],
       "f8_note": "F8 is narrowed, not closed: the adapter-vs-adapter comparison now exists for the global install path only",
       "suite": "759 passed, 1 failed (the same pre-existing absolute-path failure)"
+    },
+    {
+      "date": "2026-08-29",
+      "authorised_by": "operator, in session: F6 next, implemented by a worker",
+      "repository": "advanced-planning",
+      "branch": "loop-004-cigate",
+      "commit": "1ce77fa",
+      "pushed": false,
+      "findings_resolved": [
+        "F6"
+      ],
+      "findings_still_open": [
+        "F4",
+        "F5",
+        "F7",
+        "F8",
+        "F9",
+        "F10"
+      ],
+      "f6": "the POSIX collision check iterated only the top level of a skill directory while the PowerShell twin used -Recurse, so a divergent references/*.md installed silently on POSIX and was caught on Windows",
+      "uncovered_by_the_fix": "the COPY of a skill is recursive but the REWRITE loop was not, so nested files under a core skill were copied and never rewritten. Fixed in the same commit: both rewrite loops are now recursive in both languages, which also drops a hardcoded 'references' special case that would throw on any skill lacking that subdirectory",
+      "new_finding": {
+        "id": "F10",
+        "severity": "not yet triaged by a reviewer; found by the controller",
+        "claim": "a shell global install and a PowerShell global install produce byte-different copies of every skill file",
+        "mechanism": "ap_rewrite_call_sites uses sed -i, which converts CRLF to LF on this platform; the PowerShell Set-ApCallSites uses ReadAllText/WriteAllText and preserves line endings. The rewrite runs over every .md in the destination whether or not it contains a call site, so it mutates files it has no business changing",
+        "measured": "all 21 installed skill .md files are CRLF, and NO file under core/skills contains a launcher call site at all. sed -i on core/skills/phase-plan-creator/references/phase-plan-template.md shrinks it from 8626 to 8336 bytes -- 290 CR bytes -- changing nothing else",
+        "not_fixed_and_why": "fixing it changes the installed bytes of every skill file and deserves its own decision: normalise to LF in both languages, or preserve the source line endings in both. Folding that into an F6 commit would have been scope the operator did not authorise",
+        "how_it_surfaced": "it was invisible until the collision check became recursive and the rewrite-aware comparison had something to compare. The same CRLF trap cost this phase a controller defect earlier (instance 10); this is the shipped-code instance of it"
+      },
+      "delegation": "implemented by an opencode/Qwen worker in this worktree at the operator's instruction, verified here. The worker's first run reported '50 skipped' because sh was absent from its PATH and it initially stated sh was unavailable on this machine, which is false -- sh is at /usr/bin/sh. Its change had therefore never been executed, and it had in fact broken a test. Running the shell half here is what caught it. It reported its lack of verification plainly both times, which is what made the gap recoverable",
+      "how_it_was_proven": "the new nested-divergence tests fail at 619c924 for sh in both hosts -- 'installer exited 0 despite nested file divergence' -- and pass for ps1, which never had the defect. That asymmetry is the finding. The before-tree was a git-archive extract confirmed byte-identical to the HEAD blob by diff",
+      "controller_defect": "instance 13: the guard comparing the archive extract to the HEAD blob applied cut -f1 to one side only and compared it against the other side's full 'hash  -' output, so it reported a mismatch that did not exist. It failed safe, and diff settled it. Third time this phase that a check's subject was a string I constructed rather than a fact I read",
+      "suite": "767 passed, 1 failed (the same pre-existing absolute-path failure)"
+    },
+    {
+      "date": "2026-08-29",
+      "event": "push_attempted_and_rejected",
+      "authorised_by": "operator, in session: authorise pushing advanced-planning",
+      "outcome": "REJECTED for all six branches. GitHub refused: 'refusing to allow an OAuth App to create or update workflow .github/workflows/ci.yml without workflow scope'. Every branch touches that file, so the scope gap blocks all of them. Nothing reached the remote; origin still has only main, original and fix/install-audit-diverged-state",
+      "branches_still_local": [
+        "fix/shared-runtime-reachability",
+        "loop-002-envelope",
+        "loop-003-hostneutral",
+        "loop-004-cigate",
+        "loop-004-codex",
+        "loop-004-opencode"
+      ],
+      "clearing_it": "needs `gh auth refresh -s workflow` run by the operator. Granting that scope is broadening provider permissions, which the controller is not authorised to do",
+      "controller_defect": "instance 12: the push loop printed 'pushed <branch>' unconditionally because it was not gated on the exit status, so six failures were reported as six successes until ls-remote contradicted them"
     }
   ]
 }

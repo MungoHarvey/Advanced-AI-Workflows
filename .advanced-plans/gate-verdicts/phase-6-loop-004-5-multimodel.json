@@ -283,6 +283,31 @@
         "F4_to_F9": "out of the scope the operator authorised"
       },
       "suite": "755 passed, 1 failed. The failure is test_self_heal_integration.py:586, which fails identically at unmodified HEAD on a hard-coded absolute path"
+    },
+    {
+      "date": "2026-08-29",
+      "authorised_by": "operator, in session: clear the global rewrite-fork",
+      "repository": "advanced-planning",
+      "branch": "loop-004-cigate",
+      "commit": "619c924",
+      "pushed": false,
+      "supersedes": "amendment 1's not_fixed_and_why.global_dual_install, which recorded the global path as still unreachable. True when written; not now. Amendment 1 is left as written",
+      "defect": "--global copies the shared skill and then rewrites the COPY to an absolute launcher. The next adapter to install globally compared the raw repo source against that rewritten destination and exited 1. The two adapters rewrite to the identical path, so they agree -- the check was comparing the wrong two things, not detecting a real fork",
+      "fix": "the collision check takes an optional launcher and, when given one, compares what THIS installer would write. The project branch passes nothing and keeps a raw-vs-raw comparison, so it is unchanged",
+      "how_it_was_proven": "the real installers run into a sandboxed profile, sh and PowerShell, both directions. At the parent commit the second --global install exits 1 with ownership ['codex']; with the fix it exits 0, reports 'shared; unchanged' for all 8 skills, and records ['codex', 'opencode']. The PowerShell baseline was taken from a git-archive extract verified byte-identical to the HEAD blob, not inferred from the sh run -- the two collision checks are separate code",
+      "coverage_added": "TestGlobalDualAdapterInstall -- the first test anywhere to pass --global, and the first to compare one adapter against the other, which is the F8 gap that let this reach a live run. G.1 fails on the unfixed installers in both languages. G.2 asserts the shared skill still calls an ABSOLUTE launcher and fails when the rewrite is removed -- which would otherwise satisfy G.1 while leaving every global install unable to resolve its launcher from another directory",
+      "side_effect": "the ownership guard from amendment 1 is now exercised on the global path for the first time: the first global uninstall keeps bin/ap.py for the remaining adapter, the second removes it. Previously only provable on the project path",
+      "controller_defect": "instance 11 of the phase's defect class, and mine: the guard asserting the HEAD extract lacked the fix searched for '[string]$Launcher', which already exists in HEAD on a different function, so it reported the extract as fixed when it was not. The SHA-256 comparison against the git blob is what settled it. A check whose subject is a string I chose rather than a fact I read",
+      "findings_still_open": [
+        "F4",
+        "F5",
+        "F6",
+        "F7",
+        "F8",
+        "F9"
+      ],
+      "f8_note": "F8 is narrowed, not closed: the adapter-vs-adapter comparison now exists for the global install path only",
+      "suite": "759 passed, 1 failed (the same pre-existing absolute-path failure)"
     }
   ]
 }

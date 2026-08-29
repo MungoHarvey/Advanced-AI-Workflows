@@ -1,10 +1,12 @@
 # loop-004-4 — the fixture programme, run on the hosts themselves
 
 - **Date:** 2026-08-28
-- **Status:** **opencode half COMPLETE** (both stages, verified controller-side).
-  **codex stage 1 COMPLETE and verified; codex stage 2 NOT SENT** — the pane is
-  parked on a rate-limit dialog that is the operator's to clear, and the account
-  is at 98% of its weekly limit (see *The quota finding*).
+- **Status:** **CLOSED 2026-08-29.** opencode: both stages, verified
+  controller-side. codex: stage 1 verified; **stage 2 deliberately not run**, by
+  operator decision taken on the measured 98% weekly quota below — not an
+  omission, and its marginal yield was low because codex stage 1 had already
+  replicated both host findings. Check 1 is therefore satisfied on opencode only,
+  and this record says so rather than rounding it up.
   Everything below is measured; nothing is projected.
 - **Hosts:** opencode (`fxoc`, pane `w2:p1A`), codex (`fxcx`, pane `w2:p1B`)
 - **Fixtures:** `<scratchpad>/fixtures-004-4/fx-opencode`, `fx-codex`
@@ -435,9 +437,13 @@ the pane reveals it.
 - Four codex probe panes (`w2:p1C`–`w2:p1F`) were created for the invalidated
   isolation experiment and have been closed.
 - The `using-superpowers` assignment above deserves a check in the real flow.
-- **codex stage 2 is not sent.** Everything else in this loop is complete. It needs
-  the rate-limit dialog cleared *and* a decision about spending the remaining ~2%
-  of the weekly codex quota on it.
+- **codex stage 2 was not run, by decision.** Two things it alone would have
+  settled remain open: whether codex *also* invents a skill name the way opencode
+  did (`using-superpowers`), and whether its envelope differs from opencode's.
+  Neither is load-bearing for any conclusion above. If it is ever worth closing,
+  the fixture is intact and the quota resets 2026-09-03 16:27 UTC.
+- **The `w2:p1B` pane is still parked on the rate-limit modal.** It was not
+  answered, per the rule that dialogs are the operator's.
 - **CLAUDE.md, two corrections earned here.** (a) *"No CLI in this fleet exposes
   usage or quota"* — narrow it to exclude codex, whose rollout files carry
   `rate_limits` per turn; (b) add the `done`-over-a-modal shape to the pane-reading

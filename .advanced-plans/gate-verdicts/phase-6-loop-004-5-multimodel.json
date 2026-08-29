@@ -1,0 +1,252 @@
+{
+  "phase": "phase-6",
+  "loop": "ralph-loop-004",
+  "todo": "loop-004-5",
+  "recorded": "2026-08-29",
+  "gate": "human",
+  "reviewed": {
+    "repository": "~/.herdr/worktrees/advanced-planning/loop-004-cigate",
+    "range": "fbc559b..c6f7a53",
+    "commits_in_range": 19,
+    "head": "c6f7a53",
+    "tree_clean_at_review": true,
+    "files": 24,
+    "insertions": 6477,
+    "deletions": 12
+  },
+  "rounds": [
+    {
+      "round": 1,
+      "dir": "C:/Users/mharvey2/.herdr/reviews/loop-004-cigate-20260829-080458",
+      "scope": "full range",
+      "reviewers": {
+        "cursor": {
+          "model": "cursor-grok-4.6-medium",
+          "status": "ok",
+          "bytes": 10365
+        },
+        "agy": {
+          "model": "gemini-3.1-pro-high",
+          "status": "FAILED",
+          "bytes": 0,
+          "cause": "headless mode auto-denied a tool requiring the 'command' permission and cannot prompt. Both remedies it names - an allow-rule under permissions.allow, or --dangerously-skip-permissions - are provider-permission broadening, which the controller is not authorised to do. Not retried, not routed around"
+        }
+      },
+      "envelope_truncated": {
+        "truncated": true,
+        "sent_bytes": 200000,
+        "target_bytes": 261036,
+        "silent": false,
+        "marker": "ENVELOPE.md line 5149 reads [TRUNCATED at 200000 bytes of 261036 -- ask for specific files if you need more]",
+        "coverage": "21 of 24 file headers present. ABSENT ENTIRELY: platforms/python/minischema.py, setup/opencode/install.sh, setup/opencode/uninstall.ps1, setup/opencode/uninstall.sh. setup/opencode/install.ps1 carried 140 of its 516 diff lines. All four setup/codex/ files were present in full - so the envelope showed one half of the comparison Q1 asked for",
+        "mitigation": "cursor cited setup/opencode/install.sh:368-392, :555-574, :211, :295-305 and :607 - all beyond the truncation point - so it demonstrably read from the worktree rather than the envelope alone. The gap was closed by round 2 regardless"
+      }
+    },
+    {
+      "round": 2,
+      "dir": "C:/Users/mharvey2/.herdr/reviews/loop-004-cigate-20260829-080613",
+      "scope": "scoped supplement over exactly the bytes round 1 dropped, plus setup/codex/install.sh and the shared SKILL.md as comparison baseline. 102490B envelope, NOT truncated",
+      "reviewers": {
+        "cursor": {
+          "model": "cursor-grok-4.6-medium",
+          "status": "ok",
+          "bytes": 5294
+        },
+        "agy": {
+          "status": "not run",
+          "cause": "same permission gate as round 1"
+        }
+      },
+      "yield": "found the loop's most severe defect, which round 1 missed because setup/opencode/install.sh was outside the truncated envelope"
+    },
+    {
+      "round": 3,
+      "dir": "C:/Users/mharvey2/.herdr/reviews/loop-004-cigate-20260829-082722",
+      "scope": "second model on the same scoped question set, 83019B envelope",
+      "reviewers": {
+        "opencode": {
+          "model": "elm/Qwen/Qwen3.5-397B-A17B-FP8",
+          "status": "ok",
+          "bytes": 5224
+        }
+      },
+      "why": "operator decision 'Route the second lens to opencode/Qwen' after agy was found blocked on a permission the controller may not widen"
+    }
+  ],
+  "questions": {
+    "Q1_has_either_adapter_forked_a_core_skill": {
+      "answer": "NO in the repository, YES on disk after --global",
+      "controller_verified": true,
+      "evidence": "diffed all four file pairs directly. setup/opencode/{install,uninstall}.{sh,ps1} are the setup/codex/ files under a codex -> opencode token substitution and nothing else: install.sh 84 diff lines, install.ps1 68, uninstall.sh 34, uninstall.ps1 38, every one a branding, fence-marker, owner-token or usage string. Neither installer embeds skill text - the four heredocs write AGENTS.md fence content, runtime.json, PLANNING.md and README.md, never a SKILL.md. Both copy the routing skill from platforms/shared/agent-skills/advanced-planning. BUT --global runs ap_rewrite_call_sites (sed) over the copied markdown, so the installed global copy no longer matches the shared source",
+      "drift_already_present": "install.ps1 is 507 lines for codex and 510 for opencode; the three extra lines are a comment block present only in the opencode copy. The pair is therefore no longer a pure substitution, which is drift in a 607-line wholesale duplication that nothing enforces"
+    },
+    "Q2_is_the_human_approval_gate_real": {
+      "answer": "NO on either host - it is prose the model may simply not obey",
+      "controller_verified": true,
+      "evidence": "the gate is an instruction in SKILL.md and references/manual-review.md. No installer hook, permission or runtime predicate refuses decomposition without a phase_approved record, and setup/codex and setup/opencode both install no host config at all. manual-review.md:39 states 'No absent hook may silently approve or skip', which is precisely what happens",
+      "corroborating_measurement": "loop-004-4 measured this from the other side: the codex host DID stop at the gate unprompted, so the prose works when obeyed. That is evidence of compliance, not of enforcement"
+    }
+  },
+  "findings": [
+    {
+      "id": "F1",
+      "severity": "critical",
+      "title": "--global never writes skill-ownership.json, so a global uninstall deletes the shared skill the other adapter is using",
+      "found_by": [
+        "cursor round 2",
+        "opencode/Qwen round 3"
+      ],
+      "independently_confirmed_by_controller": true,
+      "evidence": "write_ownership is defined at setup/codex/install.sh:304 and called exactly ONCE, at line 597, on the project path. The global branch opens at line 360 and ends with exit 0 at line 424 - before 597. Identical line numbers in setup/opencode/install.sh. Uninstall calls process_ownership at lines 266/269 regardless of mode (uninstall_from is invoked for global at :336 and project at :343), and with no registry the owners list is empty, so the decision falls to 'elif skill_exists: REMOVE'",
+      "consequence": "codex --global then opencode --global: uninstalling either removes ~/.agents/skills/advanced-planning while the other adapter is still installed. The ownership mechanism that exists to prevent exactly this is never engaged on the global path",
+      "why_round_1_missed_it": "setup/opencode/install.sh was one of the four files the truncated envelope dropped entirely"
+    },
+    {
+      "id": "F2",
+      "severity": "critical",
+      "title": "CI job 2 imports a module that no longer exists - introduced inside the reviewed range",
+      "found_by": [
+        "cursor round 1"
+      ],
+      "independently_confirmed_by_controller": true,
+      "evidence": ".github/workflows/ci.yml:51 reads 'from platforms.python.tests.minischema import validate, UnsupportedKeyword'. At the base fbc559b that path EXISTED and the import was correct. Commit c8057d2, which IS inside fbc559b..c6f7a53, moved it to platforms/python/minischema.py. ci.yml was touched once in range (05918a5) for an unrelated reason and the import was not updated. At tip c6f7a53 platforms/python/tests/minischema.py is absent and every other importer uses the new path",
+      "attribution_correction": "the controller first judged this pre-existing, on a git log that returned c8057d2 without checking whether c8057d2 was in range. It is. The reviewer's attribution was right and the controller's softening of it was wrong",
+      "consequence": "CI job 2 fails with ModuleNotFoundError the first time any of these branches is pushed. It has never fired because none has been pushed - so the CI gate this very loop built is itself unexercised",
+      "not_on_main": "main (c7efad6) has neither minischema path and its ci.yml has no minischema reference at all, so merging loop-003-hostneutral does NOT carry this defect. fbc559b is self-consistent"
+    },
+    {
+      "id": "F3",
+      "severity": "critical",
+      "title": "Both uninstallers delete the shared launcher unconditionally, ignoring the other adapter",
+      "found_by": [
+        "cursor round 1",
+        "cursor round 2",
+        "opencode/Qwen round 3"
+      ],
+      "independently_confirmed_by_controller": true,
+      "evidence": "setup/codex/uninstall.sh:295-305 removes bin/ap.py and runtime.json with no ownership check, immediately after the KEEP/REMOVE loop that IS ownership-aware. Same block in the opencode copy",
+      "consequence": "project dual-install: skills correctly survive via skill-ownership.json while the runtime they call is deleted, so every surviving command fails at exit 3. Ownership protects skill directories only",
+      "unanimous": true
+    },
+    {
+      "id": "F4",
+      "severity": "important",
+      "title": "A third-party skill's registration is destroyed when no approved skill has owners left",
+      "found_by": [
+        "opencode/Qwen round 3",
+        "cursor round 1 (narrower framing)"
+      ],
+      "independently_confirmed_by_controller": true,
+      "evidence": "in uninstall.sh's process_ownership, any_remaining is initialised False at line 196 and set True only at line 214, inside 'for skill in approved_skills'. Line 241 then reads 'elif not any_remaining and confirmed and os.path.exists(owner_file): os.remove(owner_file)'. A non-approved skill with live owners never sets the flag, so the whole registry file is deleted with its entry in it. The if-branch at 221 does carefully preserve non-approved entries - which makes the else-branch an inconsistency, not a deliberate choice"
+    },
+    {
+      "id": "F5",
+      "severity": "important",
+      "title": "The OpenCode README asserts the opposite of the contract it ships",
+      "found_by": [
+        "cursor round 1"
+      ],
+      "independently_confirmed_by_controller": true,
+      "evidence": "platforms/opencode/README.md:79-85 states 'OpenCode can commit' and 'Worker: Can stage, commit, and manage git state as needed'. The worker prompt BOTH adapters install - references/worker-prompt.md Hard Contract (a) - states 'NEVER commit ... it never issues git commit, git add, or git reset'. platforms/codex/README.md at the same lines is consistent with the contract",
+      "why_it_is_worse_than_a_doc_bug": "the README is factually correct about capability - opencode is the one runtime in this fleet that CAN commit from a linked worktree - and wrong about policy. A reader gets no cue that it contradicts the installed contract. The operator reads one, the worker obeys the other"
+    },
+    {
+      "id": "F6",
+      "severity": "important",
+      "title": "The POSIX collision check does not recurse; the PowerShell one does",
+      "found_by": [
+        "cursor round 1"
+      ],
+      "independently_confirmed_by_controller": true,
+      "evidence": "setup/codex/install.sh:211 iterates 'for _src_file in \"$_src\"/*' - top level only. setup/codex/install.ps1:119 uses Get-ChildItem -File -Recurse, and the copy at :54 is -Recurse. So references/ is installed but never collision-checked by the shell installer",
+      "consequence": "the SHA refusal story does not hold for the reference prompts, which are exactly where the human gate and the Hard Contract live"
+    },
+    {
+      "id": "F7",
+      "severity": "important",
+      "title": "The differential tests can pass vacuously - this phase's defect class inside the test suite",
+      "found_by": [
+        "controller, unprompted by any reviewer"
+      ],
+      "independently_confirmed_by_controller": true,
+      "evidence": "test_adapter_lifecycle.py test_removal_counts_agree parses counts out of installer stdout with a helper that returns None when the line is not found, then asserts count_sh == count_ps1. If the 'Done. N path(s) removed, M kept.' wording ever changes, both sides return None and the test passes having compared nothing. test_registry_contents_agree is worse: it discards both _run_script return codes and treats FileNotFoundError as None on both sides, so two uninstallers that failed to run at all compare equal",
+      "note": "this is the phase's central defect exactly - a check whose subject is a string it parsed, with no guard that the parse succeeded - sitting in the suite meant to catch it"
+    },
+    {
+      "id": "F8",
+      "severity": "important",
+      "title": "No test compares the two adapters to each other",
+      "found_by": [
+        "controller"
+      ],
+      "independently_confirmed_by_controller": true,
+      "evidence": "test_adapter_lifecycle.py parametrises over (adapter, language), so each adapter is exercised independently and TestLanguagesAgree compares sh against ps1 WITHIN one adapter. Nothing compares codex against opencode, and nothing installs both. The CI job named 'Audit install-layer drift' checks platforms/claude-code and core/schemas against .claude/ - a different axis entirely",
+      "consequence": "607 duplicated lines per file across four files, with drift already present (F-Q1), and no guard on the duplication"
+    },
+    {
+      "id": "F9",
+      "severity": "minor",
+      "title": "Installers print a pointer to a README that does not exist",
+      "found_by": [
+        "cursor round 1"
+      ],
+      "independently_confirmed_by_controller": true,
+      "evidence": "setup/codex/install.sh:607 prints 'See setup/codex/README.md'. setup/codex/ and setup/opencode/ each contain exactly four files, all scripts. The docs live at platforms/codex/README.md"
+    }
+  ],
+  "fleet_findings": [
+    {
+      "id": "X1",
+      "title": "agy cannot review here at all under its current permissions",
+      "evidence": "both rounds returned 0 bytes with 'jetski: no output produced - a tool required the \"command\" permission that headless mode cannot prompt for, so it was auto-denied'. --mode plan is documented read-only, yet the run still needs the command permission, so the read-only framing does not exempt it",
+      "action": "NOT worked around. Both remedies are provider-permission broadening. Surfaced to the operator, who routed the second lens to opencode/Qwen instead"
+    },
+    {
+      "id": "X2",
+      "title": "herdr pane run silently failed to deliver 3 of 4 review launches",
+      "evidence": "fanout wrote .launched naming all four panes. Round 1 cursor ran; round 1 agy, round 2 cursor and round 2 agy did not - their panes were alive but had painted nothing, no process existed, and stderr-agy.log had never even been created by the redirect. Running the generated run-*.sh scripts directly worked first time in every case",
+      "defect_class": ".launched records the intent string, not a verified fact - the same shape this phase has now hit nine times. A launcher that cannot report a failed launch is not a launcher",
+      "workaround": "fanout --no-panes runs the reviewer directly and worked"
+    },
+    {
+      "id": "X3",
+      "title": "A second model agreed on the conclusion while fabricating the citations",
+      "evidence": "Qwen located F1 independently but cited setup/opencode/install.sh:326 for the global exit and :445 for write_ownership. Line 326 is 'try:' inside a Python block and line 445 is a say statement; the true values are 424 and 597, which is what the controller measured from disk and what cursor cited",
+      "why_it_matters": "cross-model agreement raised confidence in the CONCLUSION while one model's EVIDENCE was invented. Consensus is not verification; only the disk settled it. This is the argument for the standing rule that a reviewer's summary is never taken as evidence"
+    },
+    {
+      "id": "X4",
+      "title": "The compiler correctly refused to round up a failed reviewer",
+      "evidence": "collect.sh reported 'reviewers ok: 1/2' and printed agy's stderr as the cause rather than treating 0 bytes as a clean review",
+      "note": "recorded because it is the behaviour the rest of this phase kept finding absent"
+    }
+  ],
+  "controller_defects": {
+    "instance_8_averted": "grep -rln opencode tests/ returned zero and was about to be read as 'no test references opencode'. tests/ does not exist - the path is platforms/python/tests/, where two files do reference it. Caught by running a control grep for a token that had to be present",
+    "instance_9_committed_and_corrected": "judged F2 pre-existing on a git log that named c8057d2 without checking whether c8057d2 lay inside the reviewed range. It does. Corrected in the same session, before the verdict"
+  },
+  "verdict": "NOT READY TO MERGE",
+  "reasoning": "three confirmed criticals. F1 loses a shared skill on global dual-install; F3 loses the shared runtime on project dual-install and the test suite blesses it; F2 breaks CI job 2 inside the reviewed range. Q2 is answered negatively on both hosts - the human gate is unenforced prose, which manual-review.md:39 explicitly forbids",
+  "reviewer_limitations": [
+    "no reviewer executed the installers or pytest; all findings are static",
+    "agy contributed nothing - permission-blocked, not run",
+    "round 1's envelope was truncated; rounds 2 and 3 were scoped to close it",
+    "whether ubuntu-latest ships pwsh is still unmeasured and settles free on the first CI run"
+  ],
+  "controller_actions": {
+    "every_finding_independently_reproduced_before_recording": true,
+    "findings_fixed": [],
+    "findings_escalated": [
+      "F1",
+      "F2",
+      "F3",
+      "F4",
+      "F5",
+      "F6",
+      "F7",
+      "F8",
+      "F9"
+    ],
+    "note": "no fix written. The branch is unpushed and loop-004-5 is gate: human, so the fixes are the operator's call, not the controller's"
+  }
+}

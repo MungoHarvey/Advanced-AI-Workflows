@@ -598,10 +598,10 @@ todos:
     checks:
       - "the reviewer is asked specifically whether either adapter has forked a core skill, and answers with evidence"
       - "the reviewer is asked whether the human gate is real on each host, or whether an absent automatic hook silently skips it — §7.4 forbids the silent skip"
-    evidence: "The verdict at .advanced-plans/gate-verdicts/phase-6-loop-004-<provider>.json and the controller's resolution or waiver of each finding"
+    evidence: "Three review rounds under ~/.herdr/reviews/loop-004-cigate-20260829-{080458,080613,082722}, reviewing fbc559b..c6f7a53 (19 commits, 24 files). Verdict at .advanced-plans/gate-verdicts/phase-6-loop-004-5-multimodel.json with 9 findings and 4 fleet findings, every one independently reproduced from disk by the controller before recording. Round 1 (cursor-grok-4.6-medium) hit a 200000-of-261036-byte envelope truncation that dropped setup/opencode/install.sh entirely - one half of the comparison Q1 asks for - though it was flagged in the envelope, not silent, and cursor demonstrably read past it from the worktree. Round 2 was scoped to exactly those bytes and found the loop's most severe defect, which round 1 had missed for that reason. Round 3 put Qwen on the same questions after agy was found permission-blocked. Both checks in this todo are satisfied: the fork question was asked and answered with file-level evidence, and the human-gate question was asked and answered NO on both hosts."
     gate: "human"
     outcome: "Two of the four hosts are independently verified before the third is built on the same pattern"
-    status: pending
+    status: completed
     complexity: medium
     priority: high
 

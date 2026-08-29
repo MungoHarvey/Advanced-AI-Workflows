@@ -248,5 +248,41 @@
       "F9"
     ],
     "note": "no fix written. The branch is unpushed and loop-004-5 is gate: human, so the fixes are the operator's call, not the controller's"
-  }
+  },
+  "amendments": [
+    {
+      "date": "2026-08-29",
+      "authorised_by": "operator, in session: fix the 3 criticals first",
+      "repository": "advanced-planning",
+      "branch": "loop-004-cigate",
+      "commit": "e139468",
+      "pushed": false,
+      "findings_resolved": [
+        "F1",
+        "F2",
+        "F3"
+      ],
+      "findings_still_open": [
+        "F4",
+        "F5",
+        "F6",
+        "F7",
+        "F8",
+        "F9"
+      ],
+      "verdict_unchanged": "the recorded verdict stands as written. Six findings remain open, so this amendment records progress, not a re-verdict",
+      "how_each_was_proven": {
+        "F1": "codex install.sh --global against a sandboxed USERPROFILE. At HEAD the ownership file was ABSENT afterwards; with the fix it lists all 8 skills owned by codex",
+        "F2": "the ci.yml step extracted verbatim (42 lines of heredoc) and run. At HEAD the import raises ModuleNotFoundError; with the fix it exits 0 and validates all 6 schema files",
+        "F3": "the full dual-adapter project lifecycle, run in both sh and PowerShell. At HEAD, codex uninstall left ownership ['opencode'] and the skill directory present but ap.py and runtime.json deleted -- the other adapter installed but inert. With the fix both survive, and the sole-owner path still removes them"
+      },
+      "test_that_encoded_the_defect": "test_adapter_lifecycle.py B.10 ran on the SHARED-ownership fixture and asserted bin/ap.py was removed, while B.5, B.7 and B.8 in the same class assert the other adapter's skill and registration survive. The suite specified leaving that adapter inert. B.10 now asserts the launcher survives and fails on unfixed code in all four adapter/language combinations; new F.22 asserts removal when sole owner and fails when the guard is forced permanently on. Both directions checked.",
+      "controller_defect_avoided": "the first patch silently rewrote nine LF files to CRLF. git diff hid it -- autocrlf normalises on diff -- and only test_line_endings caught it, 8 failures. Re-applied with newline='' on both read and write, and the patch now asserts on the raw CR count. A tenth instance of the phase's defect class, caught by a test rather than by inspection.",
+      "not_fixed_and_why": {
+        "global_dual_install": "still unreachable: --global seds the copied markdown, so the second adapter's collision check sees a fork of the shared skill and exits 1. Measured, not inferred -- opencode install --global returned exit 1 after codex had installed. F1's fix is necessary but not sufficient there, and the rewrite-fork finding is untouched",
+        "F4_to_F9": "out of the scope the operator authorised"
+      },
+      "suite": "755 passed, 1 failed. The failure is test_self_heal_integration.py:586, which fails identically at unmodified HEAD on a hard-coded absolute path"
+    }
+  ]
 }

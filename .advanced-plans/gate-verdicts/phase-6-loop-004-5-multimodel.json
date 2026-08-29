@@ -358,6 +358,38 @@
       ],
       "clearing_it": "needs `gh auth refresh -s workflow` run by the operator. Granting that scope is broadening provider permissions, which the controller is not authorised to do",
       "controller_defect": "instance 12: the push loop printed 'pushed <branch>' unconditionally because it was not gated on the exit status, so six failures were reported as six successes until ls-remote contradicted them"
+    },
+    {
+      "date": "2026-08-29",
+      "authorised_by": "operator, in session: F4 next, implemented by a worker",
+      "repository": "advanced-planning",
+      "branch": "loop-004-cigate",
+      "commit": "227c9a4",
+      "pushed": false,
+      "findings_resolved": [
+        "F4"
+      ],
+      "findings_still_open": [
+        "F5",
+        "F7",
+        "F8",
+        "F9",
+        "F10"
+      ],
+      "f4": "any_remaining was set only inside the approved-skills loop, and third-party entries were rebuilt only inside the branch it gated. So an adapter that was sole owner of every approved skill fell through to os.remove(owner_file) and deleted the WHOLE registry, taking a foreign adapter's registration with it. The foreign skill's files survive -- only approved skills are removed -- so it is left installed but unregistered",
+      "fix": "the write-or-delete decision is now computed over the whole registry after pruning, not over approved skills only. Keep every entry that still has owners, write if any remain, delete the file only when none do. The approved-skill loop already writes its pruned list back, so a solely-owned approved skill is left empty and excluded by the same test. Mirrored in all four scripts, both hosts",
+      "the_suite_asserted_the_defect": "D.15 -- 'skill-ownership.json is deleted, because no entry has any owner left' -- ran against a registry that DID still have an entry with an owner. Its fixture called _set_owners, which plants a foreign entry as a side effect, and D.15 passed only because the file was being deleted with that entry inside it. So the shipped test asserted the defect as correct behaviour. The fixture now forces nothing: a fresh single-adapter install already registers that adapter as sole owner of all eight approved skills -- measured by reading the registry the installer writes -- so D.15's docstring is true of its fixture for the first time. This is the phase's defect class again: the check's subject was not the thing its name claimed",
+      "second_finding_from_the_fix": {
+        "claim": "after the F4 fix the two hosts disagreed about a MALFORMED third-party entry -- a bare string where the schema wants a list of owners",
+        "measured": "plant that entry, uninstall as sole owner: sh deleted the whole registry, ps1 preserved it and normalised it to ['otherhost']. The PowerShell twin coerces non-array values before deciding what to keep; the POSIX side kept only values that were already lists",
+        "why_it_was_invisible": "every test in the suite writes well-formed entries, so nothing could see it. It did not exist before the F4 fix either -- the old gate deleted the file regardless of shape, so the hosts agreed by both being wrong",
+        "fixed": "the POSIX side now normalises to match ps1, which is both the more conservative behaviour and the one already shipping on Windows. Test I.4 pins the agreement and fails on all four adapter/language combinations at the parent commit"
+      },
+      "coverage_added": "TestThirdPartySurvivesSoleOwnerUninstall, 16 cases across two adapters and two languages. I.1 the registry survives and the foreign entry is unchanged; I.2 the adapter's own approved skills are gone, so the test cannot pass by never deleting anything; I.3 only the foreign entry remains; I.4 the malformed-entry host parity above. The approved-skill list is read from the registry the install wrote rather than restated in the test, so it cannot drift from the installers",
+      "how_it_was_proven": "a git-archive extract of the parent commit, confirmed byte-identical to the committed blob and confirmed to still contain any_remaining. All 16 new cases fail there, the failure being the defect itself (FileNotFoundError on skill-ownership.json); the 12 phase2b cases pass there, which is the control showing the fixture change alone does not manufacture the result",
+      "delegation": "implemented by an opencode/Qwen worker in this worktree at the operator's instruction. It reported its 56 skips plainly this time rather than describing the run as passing, which was the correction asked of it after F6. The controller ran both languages, tidied three things the worker left -- the hardcoded eight-skill list in three places, a dead $anyRemaining in both .ps1 files after the sh twin had dropped its equivalent, and the foreign entry arriving via a helper's side effect -- and found the malformed-entry asymmetry by probing the fixed code rather than reading it",
+      "controller_defect": "instance 14: the guarded-patch helper asserts the replacement is not already present, which cannot hold for a pure deletion -- the replacement is by construction a substring of what it replaces. It refused two correct edits. It failed safe and the guard was rewritten to check the outcome (anchor gone, identifier count zero, exact line delta) instead of the precondition",
+      "suite": "783 passed, 1 failed (the same pre-existing absolute-path failure)"
     }
   ]
 }

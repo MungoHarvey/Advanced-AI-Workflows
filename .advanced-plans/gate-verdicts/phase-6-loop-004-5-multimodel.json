@@ -543,6 +543,32 @@
         "sweep": "one other test file contains an absolute C:/Users path; inspected and it is synthetic fixture data being parsed, not an anchor into a real tree. Correct as it stands"
       },
       "suite": "797 passed, 0 failed"
+    },
+    {
+      "date": "2026-08-30",
+      "authorised_by": "operator decision, taken on the corrected figures in amendment 9 after their earlier choice was shown to rest on a measurement the controller had got wrong: 'Its own class'",
+      "repository": "advanced-planning",
+      "branch": "loop-004-f7",
+      "commits": {
+        "F11": "77ef4b3"
+      },
+      "pushed": false,
+      "findings_resolved": [
+        "F11"
+      ],
+      "findings_still_open": [],
+      "f11": {
+        "what_was_chosen_and_why": "TestClaudeCodeAdapter, a class of its own, rather than adding claude-code to _ADAPTERS. The parametrisation split was the operator's first choice but rested on figures amendment 9 corrects, and on the registry axis, which measurement disproves: the 11 failing functions split 6 registry-dependent to 5 not, while 7 registry-dependent tests pass",
+        "the_decisive_argument": "of the 22 tests that would have gone green, many would have passed VACUOUSLY. claude-code names AGENTS.md, skill-ownership.json and .agents/skills in 0 of its 4 scripts, so test_agents_md_fences_removed passes for it because the FIXTURE creates AGENTS.md and claude-code never touches it. Asserting 'zero adapter fences remain' against an adapter that writes no fences measures nothing",
+        "correction_to_the_options_as_put": "the option the operator chose was described as leaving claude-code's install path uncovered. That was wrong too, in the opposite direction: claude-code already appears in 10 test files, with real assertions in test_uninstall.py (4), test_home_resolution_agreement.py (2) and test_ap_launcher.py (3). It was never uncovered -- it was absent from the ADAPTER LIFECYCLE parametrisation specifically. The new class was scoped to what none of those cover, so it adds rather than duplicates",
+        "the_six_checks": "the adapter ships its whole surface (5 files); every repo path either installer reads from exists; the uninstaller names every $CLAUDE_DIR destination the installer writes; both languages offer the same flags, compared canonically so --dry-run and -DryRun match; the README documents every flag in both spellings; and the adapter installs into .claude/ while staying out of the shared agent layout",
+        "why_the_last_one_is_asserted_in_both_directions": "the shared-layout half alone would be vacuous -- 'names no AGENTS.md' passes for a file that does nothing. Each script must first be shown to name .claude, and each installer to name its own skills source in its own path syntax (core/skills for sh, core\\skills for PowerShell), before the absences prove anything",
+        "defect_found_by_the_new_check": "test_the_uninstaller_names_every_directory_the_installer_writes failed on its FIRST run. setup/claude-code/install.sh printed a dry-run line describing 'ln -sf $REPO_ROOT/core/agents $CLAUDE_DIR/core-agents', but no code path anywhere in the file creates $CLAUDE_DIR/core-agents -- the real self-install removes $CLAUDE_DIR/agents and symlinks each .md from BOTH core/agents and platforms/claude-code/agents into it. A dry-run exists so an operator can see what a real run would do; one naming a directory the real run never creates is wrong in the way that matters most for a dry-run. The uninstaller never mentioned core-agents because there has never been anything there to remove",
+        "how_the_fix_direction_was_settled": "install.ps1 line 332 already printed the accurate form -- 'symlink agents from core\\agents and platforms\\claude-code\\agents' -- so the PowerShell half established what the sh message was meant to say. The sh line was corrected to match the code, not the code to match the line",
+        "proven": "seven degradations, every file restored byte-identical and asserted so. Removing README.md, pointing the installer at a directory that does not exist, creating a dir the uninstaller never cleans, offering a flag in sh but not PowerShell, un-documenting a live flag, and making claude-code write into .agents/skills are all CAUGHT. The seventh renames every $CLAUDE_DIR destination away so the comparison has nothing left to compare, and the FLOOR fires rather than the check passing vacuously"
+      },
+      "noted_not_fixed": "setup/claude-code/install.sh writes a .claude/settings.json containing a permissions block into the user's project. Per the operator's own machine notes, it is the permissions block specifically that raises a second consent dialog which directory pre-trust cannot clear, so every worktree off a project installed this way needs a human before an agent can start in it. That is a deliberate design choice about what the adapter grants itself, not a defect, and it is outside F11's scope -- recorded so it is a decision someone took rather than something nobody noticed",
+      "suite": "803 passed, 0 failed"
     }
   ]
 }

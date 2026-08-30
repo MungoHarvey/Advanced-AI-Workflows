@@ -508,6 +508,41 @@
         "the_decision_it_forces": "either the fixtures learn to branch on whether an adapter uses the ownership registry, and claude-code joins _ADAPTERS -- or claude-code gets its own smaller class covering only what it genuinely shares. The first is more coverage and more coupling; the second is honest about a structurally different adapter. Both are defensible, which is why it is the operator's call"
       },
       "suite": "796 passed, 1 failed (the same pre-existing meta-test hardcoding a checkout path absent on this machine)"
+    },
+    {
+      "date": "2026-08-30",
+      "authorised_by": "no new operator decision. This corrects a measurement the controller itself put into amendment 8 and into commit 8fbdde3, and records the evidence that the operator's F11 choice rests on it",
+      "repository": "advanced-planning",
+      "branch": "loop-004-f7",
+      "commits": {
+        "meta_test": "196c997"
+      },
+      "pushed": false,
+      "findings_resolved": [],
+      "findings_still_open": [
+        "F11"
+      ],
+      "supersedes": "amendment 8, key f11_sized_not_fixed.measured -- and the same figures in the message of commit 8fbdde3, which cannot be edited",
+      "correction_to_amendment_8": {
+        "what_was_recorded": "'34 test functions in test_adapter_lifecycle.py are adapter-parametrised (50 of the file's 115 collected tests). EXACTLY HALF of those 34 -- 17 -- depend on the ownership registry claude-code never writes'",
+        "what_is_true": "28 test functions are adapter-parametrised. 13 of them are registry-dependent and 15 are not. It is not half, and the pleasing symmetry of '17 and 17' was the tell",
+        "how_it_went_wrong": "the count came from a regex over the file matching any test whose BODY mentioned 'adapter', which included tests that take no adapter parameter at all. The correct figures come from pytest's own collection -- counting the functions it actually parametrises -- which is the only authority on what is parametrised",
+        "why_it_is_recorded_rather_than_edited": "the record is append-only, and a wrong number that was acted on is part of the history. Amendment 8 stands as written; this supersedes it. The commit message cannot be corrected at all without rewriting a pushed commit, which is out of scope"
+      },
+      "f11_measured_properly": {
+        "the_registry_axis_is_the_wrong_one": "temporarily adding claude-code to _ADAPTERS and collecting gives 22 failed, 22 passed, 6 errors -- 11 distinct failing functions, of which 6 are registry-dependent and 5 are NOT. Seven registry-dependent tests PASS. So failure does not follow the registry axis in either direction. The real boundary is whether a test assumes the .agents/skills layout, which is a different and wider set",
+        "and_the_passes_are_partly_vacuous": "setup/claude-code's four scripts mention AGENTS.md in 0 of 4, skill-ownership.json in 0 of 4, and .agents/skills in 0 of 4. So a test like test_agents_md_fences_removed passes for claude-code because the FIXTURE creates AGENTS.md and claude-code never touches it. The assertion 'zero adapter fences remain' is trivially true of an adapter that writes no fences",
+        "which_is_the_defect_class_this_phase_exists_to_remove": "the phase's finding is that a check fails silently when its subject is a string it interpolated rather than a fact from the filesystem. This is the same failure with a different subject: a test passes because the thing under test DOES NOTHING. Adding ~22 green tests of that kind would make the suite look better while measuring less",
+        "what_claude_code_actually_is": "a structurally different adapter, not a third instance of the same one. It installs core/skills/* into .claude/skills/ and supports --symlink; codex and opencode install platforms/shared/agent-skills/advanced-planning into .agents/skills/ and maintain skill-ownership.json. It is also the only one of the three shipping a README",
+        "why_it_was_not_implemented": "the operator chose 'split the parametrisation' on the 34/17 figures above, which are wrong, and on the premise that the registry axis separates passing from failing tests, which measurement disproves. Implementing would bake a design onto the wrong axis and add vacuous green tests. It is going back to the operator with the real numbers"
+      },
+      "meta_test_fixed": {
+        "defect": "test_sandbox_leaves_real_working_tree_untouched anchored on C:/Users/mharvey2/Documents/Coding/advanced-planning, an absolute path to a checkout that does not exist on this machine. It was the suite's only hardcoded absolute path and its sole standing failure",
+        "the_worse_half": "it failed with 'sandbox tests must not modify real files', so a stale anchor was reported as a SANDBOX LEAK. An alarm that fires for the wrong reason trains a reader to dismiss the one case it exists to catch. Both anchors existed in this repo the whole time; they were being looked for in the wrong tree",
+        "fix": "repointed at Path(__file__).parents[3], which the module already computes for sys.path, plus a floor that says it can no longer tell a leak from a stale anchor if the root stops looking like the repository, plus a message naming both causes and how git status distinguishes them",
+        "sweep": "one other test file contains an absolute C:/Users path; inspected and it is synthetic fixture data being parsed, not an anchor into a real tree. Correct as it stands"
+      },
+      "suite": "797 passed, 0 failed"
     }
   ]
 }

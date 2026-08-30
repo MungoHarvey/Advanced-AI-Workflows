@@ -390,6 +390,52 @@
       "delegation": "implemented by an opencode/Qwen worker in this worktree at the operator's instruction. It reported its 56 skips plainly this time rather than describing the run as passing, which was the correction asked of it after F6. The controller ran both languages, tidied three things the worker left -- the hardcoded eight-skill list in three places, a dead $anyRemaining in both .ps1 files after the sh twin had dropped its equivalent, and the foreign entry arriving via a helper's side effect -- and found the malformed-entry asymmetry by probing the fixed code rather than reading it",
       "controller_defect": "instance 14: the guarded-patch helper asserts the replacement is not already present, which cannot hold for a pure deletion -- the replacement is by construction a substring of what it replaces. It refused two correct edits. It failed safe and the guard was rewritten to check the outcome (anchor gone, identifier count zero, exact line delta) instead of the precondition",
       "suite": "783 passed, 1 failed (the same pre-existing absolute-path failure)"
+    },
+    {
+      "date": "2026-08-30",
+      "authorised_by": "operator, two decisions in session: open the third-adapter gap as its own finding rather than widening F8; cover the second review lens with opencode/Qwen after agy proved unusable headless",
+      "repository": "advanced-planning",
+      "branch": "loop-004-f7",
+      "commits": {
+        "F7": "862eea7",
+        "F9": "7541807"
+      },
+      "pushed": false,
+      "findings_resolved": [
+        "F7",
+        "F9"
+      ],
+      "findings_still_open": [
+        "F5",
+        "F8",
+        "F10",
+        "F11"
+      ],
+      "f7": {
+        "defect": "E.17 parsed the removed count from uninstaller stdout with a nested helper that returned None when its 'removed,' anchor was absent, then asserted count_sh == count_ps1 -- so a wording change made both sides None and the test compared nothing. E.18 discarded BOTH _run_script return codes, so two uninstallers that never ran left two untouched projects whose registries compared equal. E.18 was green throughout the F4 registry-destroying defect",
+        "fix": "a module-level _parse_removed_count anchors on the token immediately before 'path(s)' and raises rather than returning None. That anchor reads every shipped wording including claude-code's 'Done. N path(s) removed.', which omits the ', M kept.' clause and which the old anchor could not parse at all. E.18 now asserts both return codes before comparing, so two absent registries are agreement between uninstallers known to have succeeded",
+        "proven": "not argued but reproduced, with byte-identical restores. Against a parser taking the first digit on the line, E.19 fails 'assert 9 == 7' -- a silently WRONG number, not a detectable None. With BOTH codex uninstallers made to exit 3, E.18 as it now stands fails on the return code while the discarding form it replaced PASSES. That is the vacuous pass reproduced live rather than inferred"
+      },
+      "f9": {
+        "defect": "four installers printed 'See setup/<adapter>/README.md'. Neither setup/codex nor setup/opencode has ever held a README; the documentation is at platforms/<adapter>/README.md. Project install path only -- the global path exits before that line",
+        "the_trap_that_was_avoided": "seven pointers of that exact shape exist and THREE ARE CORRECT: setup/claude-code/install.{sh,ps1} and setup/cowork/create-zip.sh, whose targets do exist. A sweep over 'See setup/*/README.md' would have rewritten all seven and broken the three that work",
+        "fix": "the four broken pointers repointed at platforms/. TestDocumentationPointersResolve (F.1) asserts each target RESOLVES rather than that it is spelled a particular way, so repointing at a different wrong place cannot satisfy it, and carries a floor of seven pointers because a regex over source text is precisely the shape that passes having matched nothing once wording drifts",
+        "proven": "as committed PASSED; with F9 reverted, failed naming all four broken pointers; with the pattern drifted, failed on the floor ('found 0 ... would otherwise pass having checked nothing'). All five files restored byte-identical"
+      },
+      "new_finding_F11": {
+        "claim": "setup/claude-code/ is a THIRD shipped installer adapter with install.sh, install.ps1, uninstall.sh, uninstall.ps1 and its own README, and the test suite references it zero times",
+        "measured": "_ADAPTERS in test_adapter_lifecycle.py has exactly two entries, codex and opencode, while the file's own header comment says adding an adapter 'must be a one-line change to the parameter list'. claude-code is 541 lines against 637 for the others, was last touched 2026-08-28 -- making it the MOST recently maintained adapter, not a legacy one -- and contains zero references to skill-ownership.json, so it is structurally different rather than a near-duplicate",
+        "why_it_is_not_F8": "F8 says no test compares the two adapters to each other. That understates it: an entire third adapter has no coverage at all. The operator's decision was to open it separately rather than widen F8, so F8 stays a drift guard between codex and opencode and the coverage question is costed on its own",
+        "found_by": "not by reading the finding list but by grepping for the real 'Done. N path(s)' wording while fixing F7, which returned a third adapter nobody had mentioned"
+      },
+      "corrections_to_the_record": [
+        "F10 is SIX scripts, not four. All three adapters carry the rewrite and all three POSIX installers use sed -i: setup/claude-code/install.sh:179, setup/codex/install.sh:165, setup/opencode/install.sh:165. Both the peer plan and the controller's own envelope assumed four",
+        "F9's citation of setup/codex/install.sh:607 was stale; the site is :637",
+        "F7 is NOT a prerequisite for F8 or F10, contrary to the controller's first sequencing. The peer reviewer said so loudly and was right: F7's subject is uninstaller stdout and post-uninstall registry per adapter, while F10 is global-rewrite line endings and F8 is adapter-vs-adapter"
+      ],
+      "delegation": "F7's edit was routed to an opencode/Qwen worker in its own worktree. It kept scope and preserved CRLF, but DEVIATED from an explicit instruction: told to reproduce the existing parse, it substituted a first-digit-on-the-line parser that returns 9 where 7 is correct. The controller caught it on the diff, not on the worker's summary, and the pinning test now fails against that version. F9 was done by the controller directly -- four line edits whose whole risk was leaving three valid pointers alone, which is the kind of instruction a worker had just been observed to override",
+      "peer_review": "the operator asked for a plan resolved with agy and cursor. cursor delivered and every claim of its that was acted on was independently verified by the controller, including three corrections to the controller's own characterisations. agy could not be reached headless: --mode plan was auto-denied a 'command' permission and --sandbox then demanded 'escalate_admin', leaving only --dangerously-skip-permissions, which blanket-approves writes and was not taken unilaterally. The operator routed the second lens to opencode/Qwen instead",
+      "suite": "platforms/python: 1 failed, 785 passed in 312.83s, zero skipped. The single failure is test_self_heal_integration.py::test_sandbox_leaves_real_working_tree_untouched, pre-existing and unrelated -- it asserts against a different checkout path under Documents/. 783 passed at 227c9a4, so the +2 is exactly E.19 and F.1"
     }
   ]
 }

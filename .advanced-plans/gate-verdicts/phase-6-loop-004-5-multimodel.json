@@ -478,6 +478,36 @@
       "also_found": "test_self_heal_integration.py::test_sandbox_leaves_real_working_tree_untouched hardcodes C:/Users/mharvey2/Documents/Coding/advanced-planning, a checkout that does not exist on this machine. It is the only test doing so and the sole pre-existing suite failure -- a meta-test asserting the sandbox is clean, which fails for a reason having nothing to do with the sandbox",
       "delegation": "both done by the controller directly. F10's mechanism had to be chosen by measurement across two platforms and two shells, and F5's scope turned on which of two rationales the operator's decision addressed -- neither is envelope-shaped work",
       "suite": "794 passed, 1 failed (pre-existing: a meta-test hardcoding C:/Users/mharvey2/Documents/Coding/advanced-planning, a checkout absent on this machine)"
+    },
+    {
+      "date": "2026-08-30",
+      "authorised_by": "no new operator decision. F8 was already an accepted finding and its fix needed no judgement call, so it was taken under the standing programme rather than parked behind a question",
+      "repository": "advanced-planning",
+      "branch": "loop-004-f7",
+      "commits": {
+        "F8": "21d0898"
+      },
+      "pushed": false,
+      "findings_resolved": [
+        "F8"
+      ],
+      "findings_still_open": [
+        "F11"
+      ],
+      "f8": {
+        "defect": "the two adapters are ~1880 near-duplicate lines each across four scripts. TestLanguagesAgree compares sh against ps1 WITHIN one adapter; nothing compared one adapter against the other, so the duplication had no guard at all",
+        "drift_was_measured_not_assumed": "normalising each file's adapter identity away, THREE of the four pairs were already byte-identical and ONE was not: setup/opencode/install.ps1 carried a two-line note that setup/codex/install.ps1 did not, visible as a line-count gap of 529 against 532. The finding predicted drift; this is which drift, found by measuring rather than by assuming",
+        "which_direction_to_close_it": "the note is TRUE of both files -- both define Merge-ApAgentsMd and Write-ApOwnership, checked before deciding -- so it was ADDED to codex rather than deleted from opencode. Deleting accurate documentation to satisfy a guard would be the wrong way round",
+        "why_two_checks": "H.1 normalises BOTH adapters to the SAME placeholder and requires byte equality. Uniform normalisation is deliberate: the uninstaller headers say 'may be registered by both Codex and OpenCode', naming the two in a fixed order, so a self/peer scheme would report correct prose as drift. That keeps comments in scope, which matters because the drift that actually existed WAS a comment. But it opens a hole -- codex could write an opencode fence and H.1 could not tell, both tokens normalising alike. H.2 closes exactly that: on a code line an adapter must only ever name itself, with comments exempt",
+        "proven": "four degradations, every file restored byte-identical. Reintroducing the ps1 gap fails H.1 naming the file and both line counts. A one-token logic change in codex alone fails H.1. Making codex write opencode's fence fails H.2 while H.1 still PASSES -- the decisive row, demonstrating H.2 closes a real hole rather than duplicating H.1. Renaming a shared script fails BOTH on their floors rather than passing having compared nothing"
+      },
+      "f11_sized_not_fixed": {
+        "why_it_is_not_being_taken_unilaterally": "unlike F8, this is a design decision rather than a defect with one correct fix, so it is measured and handed to the operator",
+        "measured": "setup/claude-code/ ships all four scripts AND the only adapter README of the three. It references skill-ownership.json in ZERO files, where codex and opencode reference it in all four -- so it does not participate in the shared-skill ownership protocol at all. 34 test functions in test_adapter_lifecycle.py are adapter-parametrised (50 of the file's 115 collected tests). EXACTLY HALF of those 34 -- 17, enumerated in the loop record -- depend on the ownership registry claude-code never writes. Two further tests index _ADAPTERS positionally (:929 and :965) and so assume there are exactly two adapters",
+        "correction_to_the_earlier_estimate": "the second review lens sized this at '~20-25 of 106 tests'. The real figures are 17 registry-dependent of 34 adapter-parametrised, in a file of 115. The estimate was the right order but the structure is different: the failures are not scattered, they are precisely the ownership-protocol half",
+        "the_decision_it_forces": "either the fixtures learn to branch on whether an adapter uses the ownership registry, and claude-code joins _ADAPTERS -- or claude-code gets its own smaller class covering only what it genuinely shares. The first is more coverage and more coupling; the second is honest about a structurally different adapter. Both are defensible, which is why it is the operator's call"
+      },
+      "suite": "796 passed, 1 failed (the same pre-existing meta-test hardcoding a checkout path absent on this machine)"
     }
   ]
 }

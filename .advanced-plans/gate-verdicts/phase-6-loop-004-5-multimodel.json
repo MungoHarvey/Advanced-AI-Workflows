@@ -436,6 +436,48 @@
       "delegation": "F7's edit was routed to an opencode/Qwen worker in its own worktree. It kept scope and preserved CRLF, but DEVIATED from an explicit instruction: told to reproduce the existing parse, it substituted a first-digit-on-the-line parser that returns 9 where 7 is correct. The controller caught it on the diff, not on the worker's summary, and the pinning test now fails against that version. F9 was done by the controller directly -- four line edits whose whole risk was leaving three valid pointers alone, which is the kind of instruction a worker had just been observed to override",
       "peer_review": "the operator asked for a plan resolved with agy and cursor. cursor delivered and every claim of its that was acted on was independently verified by the controller, including three corrections to the controller's own characterisations. agy could not be reached headless: --mode plan was auto-denied a 'command' permission and --sandbox then demanded 'escalate_admin', leaving only --dangerously-skip-permissions, which blanket-approves writes and was not taken unilaterally. The operator routed the second lens to opencode/Qwen instead",
       "suite": "platforms/python: 1 failed, 785 passed in 312.83s, zero skipped. The single failure is test_self_heal_integration.py::test_sandbox_leaves_real_working_tree_untouched, pre-existing and unrelated -- it asserts against a different checkout path under Documents/. 783 passed at 227c9a4, so the +2 is exactly E.19 and F.1"
+    },
+    {
+      "date": "2026-08-30",
+      "authorised_by": "operator, two decisions in session. F10: 'Fix + self-detecting test' -- replace the stripping call, and write a test that probes the platform's own sed behaviour and SKIPS loudly where the defect cannot occur, rather than passing silently. F5: free text, not a listed option -- 'Workers shoukd be allowed to commit but also tag their work so its clear who made the updates or commits', which REVERSES the direction the finding was written in",
+      "repository": "advanced-planning",
+      "branch": "loop-004-f7",
+      "commits": {
+        "F10+F5": "eb9e5b3"
+      },
+      "pushed": false,
+      "findings_resolved": [
+        "F10",
+        "F5"
+      ],
+      "findings_still_open": [
+        "F8",
+        "F11"
+      ],
+      "f10": {
+        "defect": "ap_rewrite_call_sites used `sed -i` in all three POSIX installers. Under MSYS (Git Bash) sed opens files in text mode and rewrites every CRLF as LF -- MEASURED even for a substitution that matches nothing, CR 2 -> 0. So a shell global install produced byte-different skill files from a PowerShell one, whose Set-ApCallSites preserves endings. The same GNU sed 4.9 on Linux (WSL) preserved CR in all three cases, so it is the platform rather than the tool and NO sed invocation is safe there",
+        "mechanism_chosen_by_measurement": "a nine-case probe ranked the candidates: perl -i -pe and gawk with BINMODE=3 preserve, but each would be a new install-time dependency gated by a decision; default awk strips like sed. Pure POSIX parameter expansion with quoted patterns (${s%%\"$n\"*}) preserves, adds no dependency, and ran identically under dash -- Ubuntu's /bin/sh, which is what CI actually executes -- and under Git Bash sh. Implemented as a function setting a global rather than a command substitution, because $( ) forks once per line and on Windows that is seconds of wall clock",
+        "beyond_the_finding": "a grep -qF guard means a file with no call site is never opened for writing, so it stays byte-identical rather than merely ending up with equal text -- 35 of the 45 .md files in the rewrite workload. A tail -c 1 probe preserves a missing final newline, which command substitution would otherwise add",
+        "proven": "five degradations reproduced live, every file restored byte-identical. As committed PASSED. Reverted to sed -i: 2 failed. Function renamed so discovery finds nothing: 3 failed on the floor ('found 0 ... would otherwise pass having checked nothing'). PRESERVES BY DOING NOTHING (mv replaced by rm, so endings survive but no substitution happens): 1 failed -- this is the decisive row, the exact way a fix could pass a naive line-endings test while being completely wrong, and only the second assertion catches it",
+        "self_detecting_half_proven_both_directions": "the operator's decision was specifically that vacuity be VISIBLE. The behavioural guard probes the platform's own sed on a planted CRLF file at runtime. On Windows the probe measured CR 2 -> 0, so the guard ran for real; under WSL it measured 2 -> 2 and the guard SKIPPED with a reason naming itself INERT and pointing at the static guard that does bite there. Forcing the probe false on Windows produced '1 skipped' with that reason printed in the run report. CI is ubuntu-only -- ci.yml, four jobs, all runs-on: ubuntu-latest, none running install.sh -- so this is exactly the environment where a naive end-to-end test would have gone green having proven nothing"
+      },
+      "f5": {
+        "the_finding_as_written": "platforms/opencode/README.md said a worker 'can stage, commit, and manage git state as needed' while the Hard Contract those same adapters install said 'NEVER commit'. The finding proposed changing the README",
+        "the_operator_reversed_it": "the CONTRACT is what changes. Workers may commit, and must tag their work so authorship is clear",
+        "what_investigation_added": "the policy was stated in SEVEN live source files, not one. And SKILL.md recorded its real origin: a codex SANDBOX CAPABILITY limit -- a linked worktree's git metadata lives in the parent repo's .git/worktrees/, outside the sandbox -- generalised into universal POLICY for every runtime. ralph-loop-worker.md recorded a SECOND rationale the operator's answer does not address: the Loops 056/061 self-commits caused real damage through a blanket `git add -A`. So the new clause permits committing while still forbidding the blanket stage, and keeps the historical citation rather than deleting it -- naming precisely what was damaging about it",
+        "fix": "one canonical clause, byte-identical in all three hand-maintained worker contracts: stage explicitly, never `git add -A`, and carry `Agent: worker/<runtime>` and `Loop: <loop_name>` trailers. Codex documented as CANNOT rather than NEVER, because it is a sandbox limit and not a policy choice. The three ORCHESTRATOR contracts deliberately keep 'NEVER commit' -- it genuinely does not commit -- and a guard asserts they still do, which is what proves the change stayed scoped rather than being over-applied",
+        "the_actual_defect_was_that_nothing_noticed": "two shipped documents stated opposite commit policy and no test compared them. Correcting the words without a guard leaves that class alive, with three contract copies and two READMEs free to drift again. TestWorkerCommitContract discovers its subjects by filesystem glob, not from a list, and carries floors",
+        "proven": "four degradations, each naming the offending file, all five files restored byte-identical. One copy reverted to 'NEVER commit': fails naming the two groups. Agent: trailer dropped: fails naming each contract and why -- 'a commit cannot be traced to the agent that made it'. Orchestrator relaxed too: fails, catching the over-application. README reverted to the wording the finding was raised about: fails -- the original contradiction, now caught"
+      },
+      "corrections_to_the_record": [
+        "the unassigned-variable analyser in test_ap_launcher.py covered 2 of the 7 installer scripts, and carried three classes of FALSE POSITIVE: an assignment after then/else/do, `read VAR`, and a backslash-escaped literal \\$ read as a variable use. All three corrected and the parametrisation widened to 4. The corrections were then shown NOT to have defanged the guard: a plain unassigned read, one after `then`, and one inside an UNQUOTED heredoc were each planted and each still failed",
+        "quoted-heredoc bodies are now stripped before the scan. `$name` inside <<'EOF' is literal text, not a variable read -- setup/codex writes a PLANNING.md containing a literal \"$advanced-planning\" that way. Unquoted heredocs DO expand and are deliberately left in scope",
+        "platforms/claude-code/install.sh is a SEVENTH installer script; verified to carry no rewrite function, so it is not an F10 site",
+        "platforms/cowork/agents/worker-prompt.md is a FOURTH worker surface and is correctly git-free -- Cowork checkpoints by snapshot with no git dependency, so it states no commit policy and is deliberately excluded from the contract guard rather than overlooked"
+      ],
+      "also_found": "test_self_heal_integration.py::test_sandbox_leaves_real_working_tree_untouched hardcodes C:/Users/mharvey2/Documents/Coding/advanced-planning, a checkout that does not exist on this machine. It is the only test doing so and the sole pre-existing suite failure -- a meta-test asserting the sandbox is clean, which fails for a reason having nothing to do with the sandbox",
+      "delegation": "both done by the controller directly. F10's mechanism had to be chosen by measurement across two platforms and two shells, and F5's scope turned on which of two rationales the operator's decision addressed -- neither is envelope-shaped work",
+      "suite": "794 passed, 1 failed (pre-existing: a meta-test hardcoding C:/Users/mharvey2/Documents/Coding/advanced-planning, a checkout absent on this machine)"
     }
   ]
 }

@@ -701,6 +701,31 @@
         "proven": "ast_check reports 0 violations in 17 files. Suite 821 passed on Windows; 806 passed / 1 skipped on ubuntu-latest in the pull-request run, and ast_check reports 'NONE -- 17 file(s) checked, 0 violations' on both. The pull request run on ubuntu-latest is green on Python Tests across 3.10, 3.11 and 3.12, JSON Schema Validation and Markdown Lint; the only remaining red on that branch is Path Convention Audit, which is loop-004-cigate's to fix and which it fixes",
         "the_merged_result": "both tips trial-merged into a throwaway worktree off main: zero conflicts, 809 passed, 0 failed, ast_check clean. The tips touch disjoint files and each half is proven on Linux by its own pull-request run, so the correction recorded in amendment 13 -- that merging the tips would not give a green main -- is itself now superseded: it will"
       }
+    },
+    {
+      "date": "2026-08-31",
+      "authorised_by": "two operator decisions taken together: 'Authorise me to merge both' (PRs #8 and #9 into main, which is the first merge authorisation this programme has had) and 'Add the targeted test' (restore the guard the F15 allow-set widening removed)",
+      "repository": "advanced-planning",
+      "commits": {
+        "the_guard": "16a502f"
+      },
+      "findings_resolved": [],
+      "findings_still_open": [],
+      "closes": "the loop-004 multi-model gate. All fifteen findings are in main",
+      "the_guard": {
+        "why_it_exists": "the F15 decision widened the allow-set, which was right for the sixteen modules no install ships -- their platforms imports resolve because they only ever run from the checkout -- and wrong for the ones that are shipped, where it removed the only thing checking them. This restores the protection for exactly those and no others, without reverting the decision",
+        "what_it_checks": "every platforms/python module an installer copies out of the checkout must import stdlib only. It reuses ast_check's own AST walk with the allow-set minus 'platforms', so there is no second copy of the rule to drift",
+        "the_subject_is_read_not_typed": "naming ap_launcher.py would have been this programme's own defect class -- a check whose subject is a string someone wrote rather than a fact read off the machine. The test parses the installers for their copy verb instead, so a module that starts being shipped is covered the day it starts. Reading it properly corrected the finding: SIX installers ship ap_launcher.py, across all three hosts, where F15 had described one",
+        "proven": "three reversible degradations, every file restored byte-identical. (1) ap_launcher.py imports platforms: CAUGHT, naming the module and all six shipping sites. (2) the shell copy verb changes so half the sites go invisible: CAUGHT by the discovery self-check, which is the row that separates a real reading from an empty one that passes. (3) the defect present AND 'platforms' back out of the allow-set: CAUGHT -- ast_check covers the shipped modules by itself in that world, and the guard says so and asks to be deleted rather than quietly duplicating coverage",
+        "suite": "823 passed on Windows"
+      },
+      "the_merge": {
+        "order_and_why": "#8 (loop-004-cigate) first, then #9 (loop-004-f7). Each tip's one red job was the other tip's to fix, so neither could go green alone. Merge commits, not squashes: the seven branches are a chain, and squashing would have left the other five branches' commits off main, so those pull requests would not have closed and the history would have diverged from what every amendment here cites",
+        "what_merging_the_first_tip_did": "#3, #4, #5, #6 and #7 closed as MERGED automatically, being ancestors, which is what the stack diagram in the pull request bodies predicted. Six of seven landed in one merge",
+        "main_before_and_after": "main at c7efad6, before any of this: Path Convention Audit FAILURE, Python Tests FAILURE. After #8 at da3d451: Path Convention Audit SUCCESS -- the first green that job has ever had -- with Python Tests still failing on exactly the F14 defect, 'Get-ApGlobalHome exited 70 ... The shell cannot be started', six cases, plus the pre-existing sandbox test. That is the diagnosis confirmed in production rather than argued from here. After #9 at 2288f43: all six jobs SUCCESS -- 810 passed / 1 skipped on 3.10, 3.11 and 3.12; ast_check 'NONE -- 17 file(s) checked, 0 violations'; Path Convention Audit 'PASSED WITH 7 SUPPRESSED'. The first green main this programme has produced",
+        "a_prediction_that_held": "#9's checks run against the pull request MERGED with main, not against its branch head, so once #8 was on main the audit fix was in #9's test tree without being on its branch. Its run went green on jobs its own branch cannot pass"
+      },
+      "what_this_closes": "the multi-model gate opened with nine findings and a NOT READY TO MERGE verdict. Fifteen findings later -- six of them found by acting on the first nine, two of them found only because opening the pull requests ran this work on Linux for the first time -- all fifteen are in main. The reviewers' verdict is left exactly as they wrote it: it was true of the tree they reviewed, and superseding it is what the amendments are for"
     }
   ]
 }

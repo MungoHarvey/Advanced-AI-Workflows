@@ -674,6 +674,33 @@
         "the_recommendation": "scope the exemption rather than widen the allow-set: permit the internal import for modules no install ships, and make the rule that ap_launcher.py must never import platforms an explicit check that can fail, rather than a property that currently holds by accident",
         "why_it_is_being_left_to_the_operator": "it changes core/constraints.json, which is the project's dependency contract. Widening an allow-set is the decision-gated shape the kickoff names, and the controller has no authorisation to take it"
       }
+    },
+    {
+      "date": "2026-08-31",
+      "authorised_by": "operator decision \"Add 'platforms' to the allow-set\", chosen from four options with the cost of this one stated in the option itself. The controller had recommended scoping the exemption instead; the operator chose the widening and that is what was implemented, without the recommended alternative being folded in alongside it",
+      "repository": "advanced-planning",
+      "branch": "loop-004-f7",
+      "commits": {
+        "F15": "764be1f"
+      },
+      "head_moved": {
+        "from": "134798c",
+        "to": "764be1f"
+      },
+      "pushed": true,
+      "findings_resolved": [
+        "F15"
+      ],
+      "findings_still_open": [],
+      "f15": {
+        "what_was_decided": "'platforms' joins core/constraints.json's allowed_imports. It is the project's own package rather than an external dependency, so the stdlib-only policy is intact",
+        "what_it_costs_and_where_that_is_written": "setup/claude-code/install.sh:449 copies ap_launcher.py to bin/ap.py, where the platforms package does not exist, so a platforms import in that one module would break the installed launcher and ast_check no longer catches it. install.sh:438 ships none of the other modules, so ap_launcher.py is the whole of the exposure. This is recorded in three places rather than left implicit -- the constraints.json note, the comment beside the entry in test_ast_check.py, and the commit message -- because the entry is precisely what removes the protection",
+        "the_alternative_not_taken": "scope the exemption to modules no install ships and make ap_launcher.py being stdlib-only an explicit test that can fail. That was the controller's recommendation and it was declined. It remains available as a follow-up and would restore the guard without reverting this decision",
+        "a_check_of_mine_that_failed_and_a_guard_that_did_not": "the controller concluded that nothing pinned the allow-set, from a grep truncated by head -20 whose visible matches were all .advanced-plans markdown. test_ast_check.py's test_canonical_entries_present pins the set by equality and failed on the change, which is exactly the design working: the allow-set cannot move without someone editing the gate and saying why. The reason now sits beside the entry as runpy's does. The lesson is the programme's own -- a search that was cut short is not a search that found nothing",
+        "also_fixed_in_passing": "CLAUDE.md's mirrored copy of the allow-set was missing runpy, which had been added to the JSON without the mirror following. The doc names constraints.json as authoritative, so the mirror was stale rather than contradictory, but it was stale before this branch and is now current",
+        "proven": "ast_check reports 0 violations in 17 files. Suite 821 passed on Windows; 806 passed / 1 skipped on ubuntu-latest in the pull-request run, and ast_check reports 'NONE -- 17 file(s) checked, 0 violations' on both. The pull request run on ubuntu-latest is green on Python Tests across 3.10, 3.11 and 3.12, JSON Schema Validation and Markdown Lint; the only remaining red on that branch is Path Convention Audit, which is loop-004-cigate's to fix and which it fixes",
+        "the_merged_result": "both tips trial-merged into a throwaway worktree off main: zero conflicts, 809 passed, 0 failed, ast_check clean. The tips touch disjoint files and each half is proven on Linux by its own pull-request run, so the correction recorded in amendment 13 -- that merging the tips would not give a green main -- is itself now superseded: it will"
+      }
     }
   ]
 }

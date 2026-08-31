@@ -601,6 +601,40 @@
       },
       "what_amendment_10_actually_meant": "amendment 10 said every finding was accounted for, and that remains true -- every finding ANYONE HAD RAISED was closed. F12 is the difference between that and 'the branch is clean', which no amendment has claimed and none should",
       "suite": "806 passed, 0 failed (was 803)"
+    },
+    {
+      "date": "2026-08-31",
+      "authorised_by": "operator decision 'Drop the project layer in CI'. The command in the option they approved does not exist -- see why_the_approved_command_could_not_be_run -- so it was not run, and what was done instead is recorded here in full rather than presented as the thing they approved",
+      "repository": "advanced-planning",
+      "branch": "loop-004-cigate",
+      "commits": {
+        "F13": "dd18cdb"
+      },
+      "head_moved": {
+        "from": "227c9a4",
+        "to": "dd18cdb"
+      },
+      "pushed": true,
+      "push_note": "the first amendment to record a push. Branch pushes for both repositories were authorised earlier today; all seven branches are on the remote and were verified there with git ls-remote. No tag, no PR, no merge -- the merge remains the operator's",
+      "findings_resolved": [
+        "F13"
+      ],
+      "findings_still_open": [],
+      "f13": {
+        "how_it_was_found": "not by a reviewer, and not by verifying a claim either. By asking why seven branch pushes produced zero CI runs. ci.yml triggers only on push/pull_request to main, which is correct and explains the silence -- but reading the jobs to confirm it turned up one that had never been able to pass",
+        "the_defect": "the Path Convention Audit job ran install_audit --layers source,project. .gitignore excludes .claude/* but TRACKS .claude/settings.json, so on a runner .claude/ exists while .claude/commands|agents|schemas do not. install_audit's 'not found -- skipped' guard tests directory presence, so one tracked file defeats it: the audit runs against empty surfaces and reports all 27 source files missing, exit 1. Measured identical on plain main and on a trial merge of all seven branches",
+        "why_the_approved_command_could_not_be_run": "the approved option read '--layers source'. _VALID_LAYER_PAIRS is {source,project | source,global | all} and the flag is validated against it, so that command exits 2 having audited nothing. The figure was mine and it was wrong; the decision it supported -- stop asking CI for the project layer -- was right and is what was implemented",
+        "why_not_the_minimal_valid_form": "'--layers source,global' alone IS valid and would have made the job green immediately, because a runner has no ~/.claude and install_audit skips a missing layer with a note and returns 0. That is a check that cannot fail -- the exact defect class F1 through F12 exist to remove -- and it would have been worse than the red job it replaced, because red at least tells the truth",
+        "what_was_done_instead": "the runner installs a real global layer first, then audits against it. HOME on a runner is disposable so the install costs nothing, and a pass now means the installer reproduces every source file byte-for-byte after EOL and launcher-path normalisation -- something nothing verified before. This is more than the one-line edit that was approved, and it is recorded as a deviation rather than folded in silently",
+        "proven_on_the_platform_that_matters": "CI is ubuntu-latest and this machine is Windows, so the first measurement was taken under Git Bash and then repeated on real Linux (WSL, python 3.12): clean install -> audit exit 0, 27 current / 0 stale / 0 missing; remove one installed file -> non-zero. The full job was then replayed on the merged tree under Linux -- path_audit PASS, install PASS, audit PASS",
+        "an_exit_code_that_lied_on_the_way_through": "an early WSL run appeared to show the audit printing 'drift detected' while exiting 0, which would have been a far worse defect than the one being fixed. It was not real: $? did not survive the PowerShell-to-WSL hop and came back empty. main() returns 1 correctly. Re-measured with if/then/else and no $? at all",
+        "the_check": "TestCIAuditsALayerItCanActuallyHave (2 checks). It parses the real workflow as literal text -- what CI executes is the command string, and no YAML dependency is added to the suite -- and rejects three things: a --layers value absent from install_audit's own _VALID_LAYER_PAIRS, imported rather than copied so it cannot drift; a pair naming a layer .gitignore keeps out of a fresh checkout; and a global audit with no install earlier in the same job. The third rule is the point, because the vacuous repair is the tempting one",
+        "the_vacuity_it_creates_and_how_it_is_closed": "a parser that matches nothing finds no invocations, reports no problems, and is indistinguishable from a correct workflow. So the class carries a parser self-test, and the live check carries a floor that fails if no install_audit invocation is found at all -- which also stops anyone 'fixing' a future failure by deleting the step",
+        "proven": "five degradations, all CAUGHT, every file restored byte-identical: the gitignored pair that had been red on every run; '--layers source', the approved command, which does not exist; the install step dropped, which is the vacuous repair; the parser blinded, where the self-test must fire; and the audit removed entirely, where the floor must",
+        "what_this_does_to_main": "main had two red jobs. loop-004-f7's 196c997 fixes the other one, test_sandbox_leaves_real_working_tree_untouched -- confirmed pre-existing by running it on pristine 227c9a4 with this change absent. On the merged tree both are green",
+        "scope": "two files. ci.yml gains an install step and switches the audit to source,global; test_install_audit.py gains the guard class. No change to install_audit.py itself -- its skip guard is arguably too weak, but that is a separate finding and not this one"
+      },
+      "suite": "808 passed, 0 failed on the trial merge of all seven (was 806; +2 new). On loop-004-cigate alone: 785 passed, 1 failed -- test_sandbox_leaves_real_working_tree_untouched, confirmed pre-existing on pristine 227c9a4 and fixed by loop-004-f7's 196c997"
     }
   ]
 }

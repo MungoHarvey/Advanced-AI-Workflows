@@ -635,6 +635,45 @@
         "scope": "two files. ci.yml gains an install step and switches the audit to source,global; test_install_audit.py gains the guard class. No change to install_audit.py itself -- its skip guard is arguably too weak, but that is a separate finding and not this one"
       },
       "suite": "808 passed, 0 failed on the trial merge of all seven (was 806; +2 new). On loop-004-cigate alone: 785 passed, 1 failed -- test_sandbox_leaves_real_working_tree_untouched, confirmed pre-existing on pristine 227c9a4 and fixed by loop-004-f7's 196c997"
+    },
+    {
+      "date": "2026-08-31",
+      "authorised_by": "operator decision 'Authorise me to open 7 PRs'. No merge authorisation exists and none is implied by this amendment; the branch push that carries the F14 fix was covered by the earlier push authorisation for both repositories",
+      "repository": "advanced-planning",
+      "branch": "loop-004-f7",
+      "commits": {
+        "F14": "134798c"
+      },
+      "head_moved": {
+        "from": "5c9aa20",
+        "to": "134798c"
+      },
+      "pushed": true,
+      "findings_resolved": [
+        "F14"
+      ],
+      "findings_still_open": [
+        "F15"
+      ],
+      "how_this_round_differs": "the twelve amendments before this one rest on evidence gathered on Windows -- reading code, running the suite here, and asking other models to look. This one rests on CI. Opening the pull requests was the first time any of this work had been executed on ubuntu-latest, and it immediately produced two findings that no amount of local verification could have produced, because the defects are invisible from this operating system",
+      "f14": {
+        "the_defect": "test_home_resolution_agreement.py set HOME to 'M:/ap_marker_home', a path that does not exist. Windows pwsh does not care. Linux pwsh does: it builds per-user state under $HOME while starting, and with HOME naming a missing directory it exits 70, 'The shell cannot be started', before Get-ApGlobalHome is ever reached. The six cases that set HOME had therefore failed on every Linux run of the workflow since dc88bba introduced the module in loop-002-envelope, while passing here the whole time",
+        "why_it_is_the_same_finding_as_f13": "F13 pointed an audit at a layer the runner could not have. F14 pointed a test at a home the runner's shell could not start in. Both produce a job whose result carries no information about the code, and both had been red on every run without anyone reading the red. The programme's own thesis -- a check whose subject is a string rather than a fact about the machine is not a check -- applies to the harness as squarely as to the code",
+        "the_repair": "the marker values become real directories. What the module asserts is unchanged: never the path, only which VARIABLE the answer came from, read off a marker token that is still the last path segment",
+        "the_second_repair": "the interpreter skips now escalate under AP_REQUIRE_ADAPTER_INTERPRETERS, which the workflow already sets and which test_adapter_lifecycle.py already honoured while this module did not. Measured with pwsh and sh off PATH: without the escalation the module reports 14 passed, 35 skipped, exit 0. A green run with 35 checks not executed is how this class hides",
+        "proven": "three rows. The original defect restored on disk fails the new guard; both interpreters removed from PATH with the escalation armed errors at collection; the same absence with the escalation off passes by skipping, which is the control that shows the escalation is the only thing separating the two. The file was restored byte-identical",
+        "proven_where_it_matters": "not on this machine. There is no pwsh under WSL here, so the Linux half was not provable locally and was not claimed to be. The proof is the pull-request workflow run on ubuntu-latest: 806 passed, 1 skipped, 0 failed (ubuntu-latest, py3.11, run 33382506714), against 6 failed / 799 passed on the run immediately before it",
+        "suite": "807 passed, 0 failed (Windows, AP_REQUIRE_ADAPTER_INTERPRETERS=1)"
+      },
+      "f15": {
+        "status": "OPEN -- a decision for the operator, not a defect with one obvious repair",
+        "how_it_surfaced": "fixing F14 uncovered it. The Python Tests job runs pytest and then 'Verify no external dependencies'; pytest had been failing first, so the later step had never once executed on any branch in this chain. Making the tests pass was what let CI reach it",
+        "the_finding": "ast_check reports platforms/python/state_validate.py:38 and :67 importing 'platforms', which is not in core/constraints.json's allowed_imports. Clean through loop-003-hostneutral; enters at loop-004-codex with state_validate.py; present on BOTH tips. So merging the two tips does not produce a green main -- which is a correction to what the pull request bodies say",
+        "why_it_is_not_just_a_missing_entry": "the allow-set is a list of stdlib module names and the check is named for external dependencies, so 'platforms' being absent reads at first like an oversight. But setup/claude-code/install.sh:449 copies platforms/python/ap_launcher.py to bin/ap.py, and install.sh:438 states that no install ships the other modules. So ap_launcher runs in a place where the platforms package does not exist, and a platforms import there is precisely the unreachable-runtime defect loop-002 was created to fix. Adding 'platforms' to the allow-set globally would remove the guard from the one file it protects",
+        "why_it_is_not_a_defect_in_state_validate_either": "state_validate is never installed, so its import is safe in practice, and its line 67 anchor is deliberate and documented: the package location is what lets it resolve core/state from any cwd, which is the same Contract 6 reasoning that forbids os.getcwd()",
+        "the_recommendation": "scope the exemption rather than widen the allow-set: permit the internal import for modules no install ships, and make the rule that ap_launcher.py must never import platforms an explicit check that can fail, rather than a property that currently holds by accident",
+        "why_it_is_being_left_to_the_operator": "it changes core/constraints.json, which is the project's dependency contract. Widening an allow-set is the decision-gated shape the kickoff names, and the controller has no authorisation to take it"
+      }
     }
   ]
 }

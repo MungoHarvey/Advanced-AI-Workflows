@@ -569,6 +569,38 @@
       },
       "noted_not_fixed": "setup/claude-code/install.sh writes a .claude/settings.json containing a permissions block into the user's project. Per the operator's own machine notes, it is the permissions block specifically that raises a second consent dialog which directory pre-trust cannot clear, so every worktree off a project installed this way needs a human before an agent can start in it. That is a deliberate design choice about what the adapter grants itself, not a defect, and it is outside F11's scope -- recorded so it is a decision someone took rather than something nobody noticed",
       "suite": "803 passed, 0 failed"
+    },
+    {
+      "date": "2026-08-31",
+      "authorised_by": "operator decision, taken on the evidence note committed as AAW 6b5c179 and on being told explicitly that this moves a head they had already approved for push: 'Fix on loop-004-f7'",
+      "repository": "advanced-planning",
+      "branch": "loop-004-f7",
+      "commits": {
+        "F12": "5c9aa20"
+      },
+      "head_moved": {
+        "from": "77ef4b3",
+        "to": "5c9aa20",
+        "why_this_is_recorded": "77ef4b3 was in the operator's approved seven-branch push table. Nothing was pushed, so there is no external consequence, but a table they approved is now stale and the amendment says so rather than leaving them to notice"
+      },
+      "pushed": false,
+      "findings_resolved": [
+        "F12"
+      ],
+      "findings_still_open": [],
+      "f12": {
+        "how_it_was_found": "not by a reviewer. By verifying, after a compaction, the carried finding that core/skills/companion-detection/SKILL.md still named Plannotator. It did -- but the interesting part was not the mention, it was that two documents already claimed it had been removed",
+        "the_false_claims": "docs/plannotator-deprecation.md lists the companion recommendation under 'Scope of the change -> Removed'. AAW's ARCHITECTURE.md:166 goes further: '/plan-and-phase Step 5b auto-detected plannotator and invoked /plannotator-annotate ... Both were removed'. Half of that was true: AAW's own surfaces are genuinely clean, and .aaw/detect.py records plannotator in a DEPRECATED dict rather than a detector. The advanced-planning half never happened",
+        "what_was_actually_live": "platforms/claude-code/commands/plan-and-phase.md:94-113 still carried 'Step 5b: PLANNOTATOR REVIEW', detecting .claude/commands/plannotator-annotate.md and invoking it. core/skills/companion-detection/SKILL.md:40-53 told a user who did NOT have it installed to git clone it. Not a stale mention -- a live promotion of a tool this project had deprecated",
+        "why_it_is_this_phase_s_own_defect_class": "loop-004-f7 ADDS platforms/codex/README.md:178 and platforms/opencode/README.md:163, both asserting 'No Plannotator: The deprecated review companion is not installed or invoked'. True of those two adapters, false of claude-code. Two adapters asserting a property the third violates is F7, F8 and F11 again. Note the direction: codex and opencode are clean because they were WRITTEN after the deprecation, not because anyone cleaned them. A naive 'zero Plannotator references remain' check would pass vacuously for both",
+        "the_check_and_why_it_is_shaped_this_way": "TestDeprecatedCompanionsAreNotRecommended (K, 3 checks). The hard part is not finding the string -- it is not failing on the deprecation notices, which must keep saying the name. So the check is about ACTIONABLE references only: an install command, a slash-command invocation, a --plugin-dir launch, or a path into the companion's own command file. 'X was deprecated' passes; 'git clone .../X' does not",
+        "the_new_vacuity_that_created_and_how_it_is_closed": "a detector that matches NOTHING satisfies 'no actionable references' perfectly, and its output is identical to a clean tree. So the class carries a detector self-test: five known-positive lines that must be caught and five known-negative lines that must not, asserted against the same function the real scan calls. A regex that stops working now fails the self-test before it can bless the tree",
+        "the_self_test_earned_itself_on_first_run": "it failed immediately, on a hole in the detector written minutes earlier: '.claude/commands/plannotator-annotate.md' went undetected because the negative lookbehind that suppresses path false-positives swallowed it too. A file could therefore have kept the whole detection half of the integration and passed. Fixed by adding a command-file pattern -- demanded by the test, not noticed by the author",
+        "proven": "five degradations, all CAUGHT, every file restored byte-identical and asserted so. The exact recommendation that was on disk that morning; Step 5b returning; only its detection half returning; the detector blinded, where the SELF-TEST must fire; and the glob no longer reaching platforms/, where the FLOOR must",
+        "scope": "documentation only, no code. Step 5b deleted (21 lines), section 2 of companion-detection removed and the section renumbered, four descriptions corrected across CLAUDE.md, the skill frontmatter, its Key Principles and the skill catalogue"
+      },
+      "what_amendment_10_actually_meant": "amendment 10 said every finding was accounted for, and that remains true -- every finding ANYONE HAD RAISED was closed. F12 is the difference between that and 'the branch is clean', which no amendment has claimed and none should",
+      "suite": "806 passed, 0 failed (was 803)"
     }
   ]
 }

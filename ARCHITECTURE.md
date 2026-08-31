@@ -163,7 +163,7 @@ A markdown block installed between fenced markers (`<!-- aaw-routing:begin -->` 
 ### What the glue does NOT do
 
 - No exploration-notes.md integration. The design doc reaches `phase-plan-creator` via `$ARGUMENTS` to `/plan-and-phase` or `/new-phase` — not via `.advanced-plans/exploration-notes.md`.
-- No plannotator glue. In v0.1, advanced-planning's `/plan-and-phase` Step 5b auto-detected plannotator and invoked `/plannotator-annotate` on the phase plan, and `setup-with-claude` installed the Claude Code plugin. Both were removed when plannotator was deprecated on 2026-08-26; `setup-with-claude` no longer installs or detects it.
+- No plannotator glue. In v0.1, advanced-planning's `/plan-and-phase` Step 5b auto-detected plannotator and invoked `/plannotator-annotate` on the phase plan, and `setup-with-claude` installed the Claude Code plugin. `setup-with-claude` stopped installing and detecting it on 2026-08-26, with the deprecation. Step 5b did not go with it — this sentence claimed both had been removed and only one had, and the claim went unchallenged until 2026-08-31, when verification found Step 5b still detecting `plannotator-annotate.md` and still invoking it, and `companion-detection` still telling a user without it installed to clone it. Both are removed now (advanced-planning `5c9aa20`), and `TestDeprecatedCompanionsAreNotRecommended` fails the build if either returns.
 - No gate-to-gstack-review glue in v0.1. Deferred to ROADMAP v0.2.
 
 ---

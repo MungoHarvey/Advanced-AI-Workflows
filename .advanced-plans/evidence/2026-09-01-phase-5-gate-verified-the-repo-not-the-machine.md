@@ -359,3 +359,171 @@ bare `brainstorming` skill name is what the hand-copy answers to. Two copies are
    falsified the limit above. Fixed in `5ce4832`.**
 3. Run `setup-with-claude` to write `.aaw/installed.json` and install the fenced block.
 4. Remove the hand-copy at `~/.claude/skills/{brainstorming,using-superpowers}`.
+
+---
+
+## Steps 3 and 4: running our own setup on ourselves found three more of the same defect
+
+The remaining two steps were run together. Step 3 wrote the routing block and the manifest;
+step 4 removed the hand-copy. Neither is interesting on its own. What is interesting is that
+executing the artefacts — rather than reading them — turned up three separate instances of
+this programme's own defect class inside a single setup run, and none of them were in the
+code the run was supposed to be exercising.
+
+### The scope decision, and what it costs
+
+The fenced block went into `<project>/CLAUDE.md` only, not `~/.claude/CLAUDE.md`. The
+alternative was rejected on the merits: the block's routing is conditional on what
+`.aaw/installed.json` records, and in a project with no manifest every component reads as
+absent. Installed machine-wide, it would steer away from gstack commands that work. The cost
+is stated rather than hidden: until `/setup-with-claude` is run in them, other projects on
+this machine brainstorm with stock superpowers — no `.advanced-plans/specs/` redirect, no
+phase-planning handoff.
+
+Three of the four artefacts a setup run produces here are git-ignored, and deliberately:
+
+```
+.gitignore:20:CLAUDE.md              CLAUDE.md            14609 bytes, one fence pair
+.gitignore:13:.claude/*              .claude/settings.json  4 permissions, 1 PostToolUse hook
+.gitignore:33:.aaw/installed.json    .aaw/installed.json    superpowers 6.3.0 scope=plugin
+```
+
+A contributor cloning this repository therefore gets no routing block. That is the
+per-project design working, not an omission — the block records what is installed on *this*
+machine, and asserting that about someone else's would be the same error as installing it
+globally, one level out.
+
+### One — the shipped hook could never fire on Windows
+
+`references/settings-snippet.json` ships a `PostToolUse` hook that is supposed to notice a
+gstack design doc being written and suggest `/gstack-to-plans`. Its guard was:
+
+```js
+const prefix = os.homedir() + '/.gstack/projects/';
+if (p.startsWith(prefix) && ...)
+```
+
+`os.homedir()` returns a **native** path. On Windows that is `C:\Users\name`, so the
+concatenation builds `C:\Users\name/.gstack/projects/` — a mixed-separator prefix that no
+real path produced by any tool matches. Measured, by running the shipped command with
+`CLAUDE_TOOL_INPUT_PATH` set three ways:
+
+| path handed to the hook | hook fires? |
+|---|---|
+| `C:\Users\...\.gstack\projects\aaw\2026-09-01-design-1.md` (native, what actually happens) | **no** |
+| `C:/Users/.../.gstack/projects/aaw/2026-09-01-design-1.md` | **no** |
+| `C:\Users\name/.gstack/projects/aaw/2026-09-01-design-1.md` (the mixed form the code builds) | yes |
+
+The only input it accepted was the one shape nothing produces. And REG-7 could not have
+caught it: that check reads the snippet as JSON and confirms the hook is *present*. A hook
+that is present and silent satisfies it perfectly.
+
+Fixed by normalising both sides through `path.resolve`, unifying separators, and lowercasing
+on win32 — the hook now fires on all three forms above and on a case-differing path, which
+Windows treats as the same file and the old string comparison did not.
+
+The snippet's merge instructions changed too, and that half matters as much as the code. A
+hook already in the array whose command mentions `[aaw-hook]` but differs from the snippet is
+a **superseded** copy from an earlier run, not a second hook: it must be replaced, not
+appended beside. Appending is how a machine ends up running a fixed hook and the bug it
+replaced at the same time — and the broken one is silent, so nobody would notice.
+
+### Two — the test written to prove the fix passed for the wrong reason
+
+`tests/packaging/hook_path.py` runs the shipped command through a shell nine times and checks
+what it prints. The first version invoked it as `subprocess.run(["bash", ...])`, and on this
+machine that does not mean what it says.
+
+`shutil.which("bash")` finds Git Bash. `CreateProcess`, given the bare name, resolves it to
+`C:\Windows\System32\bash.exe` — the WSL launcher — regardless of PATH, and **which one you
+get depends on which Python started the process**. Under the Store `python3` that the test
+wrapper picks, `bash` was Git Bash and the cases fired. Under conda `python` it was WSL,
+which propagates no environment across the boundary at all, so `CLAUDE_TOOL_INPUT_PATH`
+arrived empty and *every* case went silent.
+
+That is the same failure one level up. A silent hook reads as "did not fire", so the three
+negative cases would have passed while proving nothing; a test carrying only negative cases
+is green and empty. The shell is therefore no longer looked up by name: `pick_shell()` probes
+each candidate with a sentinel that must survive the round trip, requires the `node` inside
+it to report the same platform as the test process, and **FATALs (exit 2) if nothing on the
+machine qualifies**. Verified that the guard rejects WSL rather than tolerating it.
+
+### Three — the schema had never met the value the detector emits
+
+`detect.py` has emitted `scope: "plugin"` since the plugin work landed. The audit writes back
+whatever `detect` returns. `installed.schema.json` still allowed only `global | project |
+none`. So the first plugin-scoped manifest ever written on a real machine — the one this very
+setup run produced — was rejected by its own contract:
+
+```
+INVALID  .aaw/installed.json
+  components.superpowers.scope: 'plugin' is not one of ['global', 'project', 'none']
+```
+
+Nothing in the suite could have caught it, and the reason is structural rather than careless:
+the detection cases stop at `detect()` and never write a file; the schema cases validate the
+shipped example, which contains no plugin entry. The value travelled across exactly one seam,
+and that seam was the one place nothing looked. Case 7 now runs the audit CLI over a plugin
+fixture and validates the file it writes, so the enum and the detector are checked against
+each other rather than each against a fixture of its own. Fail-capability proven by reverting
+the enum under `git stash`: **19/20**.
+
+### Step 4, and the record that was wrong about where the tag lives
+
+Removing the hand-copy is the only irreversible act in the sequence, so recoverability was
+re-proved from scratch rather than taken from the carried-forward note — which turned out to
+name the wrong repository. The recorded source, tag `pre-aaw-port-2026-08-26` at commit
+`fde9f97`, **does not exist in this repository or its origin**. Sweeping 39 directories found
+it in `~/Coding/superpowers/`, where the tag is also on that repo's origin, so recovery does
+not depend on this machine.
+
+Ten of the twelve files are byte-identical to the tagged blobs. The other two —
+`scripts/frame-template.html` and `scripts/server.cjs` — are identical after line-ending
+normalisation: the live copies carried 214 and 354 CR bytes, the tagged blobs zero.
+
+Establishing that produced one more check that could not fail, mine this time: a throwaway
+`git show ... | grep -c \r` reported 214 CR-carrying lines in a blob with no CR bytes at all,
+because the pattern reached `grep` empty and matched every line. Counting the bytes directly
+with `tr -dc '\r' | wc -c` settled it. A check whose subject is a string it interpolated is
+the defect this whole programme keeps finding, and it does not stop being that when the
+person writing it knows the rule.
+
+The twelve files, removed individually after checking for symlinks:
+
+```
+~/.claude/skills/brainstorming/SKILL.md
+~/.claude/skills/brainstorming/spec-document-reviewer-prompt.md
+~/.claude/skills/brainstorming/visual-companion.md
+~/.claude/skills/brainstorming/scripts/{frame-template.html, helper.js, server.cjs,
+                                        start-server.sh, stop-server.sh}
+~/.claude/skills/using-superpowers/SKILL.md
+~/.claude/skills/using-superpowers/references/{codex-tools.md, copilot-tools.md,
+                                              gemini-tools.md}
+```
+
+244 global skills remain; gstack, handoff and setup-with-claude were spot-checked present
+afterwards.
+
+### Where the sequence stands
+
+1. ~~Teach detection to recognise a plugin-scoped superpowers.~~ **Done, `12de222`.**
+2. ~~Enable `superpowers@claude-plugins-official`.~~ **Done by the operator, and it
+   falsified the limit above. Fixed in `5ce4832`.**
+3. ~~Run `setup-with-claude` to write `.aaw/installed.json` and install the fenced block.~~
+   **Done. Three defects found in the doing, fixed in `2fef0c0` and `b93fcf3`.**
+4. ~~Remove the hand-copy at `~/.claude/skills/{brainstorming,using-superpowers}`.~~
+   **Done, after independently re-proving recoverability from `~/Coding/superpowers`.**
+
+Final state, measured rather than asserted:
+
+```
+python tools/aaw-audit.py                          HEALTHY
+python tests/packaging/validate-manifest.py ...    valid    .aaw/installed.json
+tests/packaging/run-all.sh                         packaging: PASS - 6/6 checks
+  test-plugin-detection.sh                         PASS - 20/20 cases
+  test-hook-path.sh                                PASS - 9/9 cases
+  test-idempotency.sh                              PASS - 56/56 checks
+```
+
+`superpowers` now resolves to the plugin's 6.3.0 and the manifest records it at
+`scope: "plugin"` — one copy on the machine, and the one the harness actually loads.

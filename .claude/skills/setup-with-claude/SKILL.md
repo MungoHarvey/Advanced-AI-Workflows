@@ -256,6 +256,10 @@ If yes: merge following the merge instructions in the snippet:
 - For `hooks.PostToolUse`: if no `Write` matcher exists, append the full matcher entry.
   If a `Write` matcher already exists, add the hook to its `hooks` array rather than
   creating a duplicate matcher.
+- A hook already in that array whose command mentions `[aaw-hook]` but differs from the
+  snippet is a **superseded** copy from an earlier run, not a second hook. Replace it.
+  Appending leaves the old one firing beside the new one, and a hook that was fixed
+  because it was silent stays silent - so nothing tells you there are two.
 
 If no: note it and continue. Advanced-planning will prompt for permissions separately.
 

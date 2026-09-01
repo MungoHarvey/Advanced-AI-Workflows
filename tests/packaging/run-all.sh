@@ -17,6 +17,7 @@ CHECKS=(
   "test-manifest-schema.sh"
   "test-audit.sh"
   "test-plugin-detection.sh"
+  "test-hook-path.sh"
   "test-idempotency.sh"
 )
 

@@ -263,7 +263,47 @@ def main():
                 json.dumps(entry, indent=2))
 
         # ------------------------------------------------------------------
-        # 7. the audit surfaces case 2 as a finding, end to end through the CLI
+        # 7. a plugin-scoped manifest satisfies the manifest schema
+        # ------------------------------------------------------------------
+        # detect() returning scope "plugin" is only half the job. The audit writes
+        # that value into .aaw/installed.json, and the schema is what decides
+        # whether the file is legal. Those two had never met: the cases above stop
+        # at detect(), and the schema tests validate the shipped example, which has
+        # no plugin entry in it. The first plugin-scoped manifest written on a real
+        # machine was rejected by its own contract. This is that seam.
+        manifest_home, _ = make_home(tmp, "manifest-enabled", enabled=True)
+        manifest_project = os.path.join(tmp, "manifest-project")
+        os.makedirs(manifest_project, exist_ok=True)
+        proc = subprocess.run(
+            [sys.executable, AUDIT_PATH, "--project", manifest_project,
+             "--home", manifest_home, "--write-manifest",
+             "--now", "2026-09-01T00:00:00Z", "--format", "json"],
+            capture_output=True, text=True)
+        written = os.path.join(manifest_project, ".aaw", "installed.json")
+        if not os.path.isfile(written):
+            bad("audit --write-manifest produces a file on a plugin fixture",
+                (proc.stderr or proc.stdout)[:400])
+        else:
+            with open(written, encoding="utf-8") as fh:
+                doc = json.load(fh)
+            got = doc.get("components", {}).get("superpowers", {}).get("scope")
+            if got == "plugin":
+                ok("the written manifest records superpowers at scope=plugin")
+            else:
+                bad("the written manifest records superpowers at scope=plugin",
+                    "scope was %r - the fixture is not exercising the seam" % got)
+
+            check = subprocess.run(
+                [sys.executable, os.path.join(HERE, "validate-manifest.py"), written],
+                capture_output=True, text=True)
+            if check.returncode == 0:
+                ok("and it validates against installed.schema.json")
+            else:
+                bad("and it validates against installed.schema.json",
+                    (check.stdout + check.stderr).strip()[:500])
+
+        # ------------------------------------------------------------------
+        # 8. the audit surfaces case 2 as a finding, end to end through the CLI
         # ------------------------------------------------------------------
         proc = subprocess.run(
             [sys.executable, AUDIT_PATH, "--project", project, "--home", off_home,
@@ -285,7 +325,7 @@ def main():
                     "findings: %s" % ids)
 
         # ------------------------------------------------------------------
-        # 8. the project's own settings file counts - this is what /plugin writes
+        # 9. the project's own settings file counts - this is what /plugin writes
         # ------------------------------------------------------------------
         # Running /plugin from inside a project writes the enablement HERE and
         # leaves the user file untouched. Reading only the user file reports a
@@ -309,7 +349,7 @@ def main():
                 json.dumps(entry, indent=2))
 
         # ------------------------------------------------------------------
-        # 9. the chain has an order: the more specific file wins, both ways
+        # 10. the chain has an order: the more specific file wins, both ways
         # ------------------------------------------------------------------
         proj9 = os.path.join(tmp, "project-local-on")
         os.makedirs(proj9, exist_ok=True)
@@ -333,7 +373,7 @@ def main():
             bad("project false overrides user true", json.dumps(entry, indent=2))
 
         # ------------------------------------------------------------------
-        # 10. two installs: this project's version wins, not the first listed
+        # 11. two installs: this project's version wins, not the first listed
         # ------------------------------------------------------------------
         # The live registry holds one entry per install and a plugin can be
         # installed at a different version for a different project. The other
@@ -362,7 +402,7 @@ def main():
                 json.dumps(entry, indent=2))
 
         # ------------------------------------------------------------------
-        # 11. another project's install does not count as this project's
+        # 12. another project's install does not count as this project's
         # ------------------------------------------------------------------
         proj12 = os.path.join(tmp, "project-borrower")
         os.makedirs(proj12, exist_ok=True)
@@ -381,7 +421,7 @@ def main():
                 json.dumps(entry, indent=2))
 
         # ------------------------------------------------------------------
-        # 12-14. the mutation cases: prove each new behaviour is load-bearing
+        # 13-15. the mutation cases: prove each new behaviour is load-bearing
         # ------------------------------------------------------------------
         # A case that passes is only worth what it would have caught. Each of the
         # three behaviours below is removed from a copy of detect.py, and the
@@ -406,7 +446,7 @@ def main():
             write(path, mutated)
             return load_module(path, "aaw_detect_mutant_" + os.path.basename(path))
 
-        # 12. the enabled gate
+        # 13. the enabled gate
         gate = mutant_of("if key not in enabled:",
                          "if False:  # MUTANT: gate removed", "enabled gate")
         mutant_entry = superpowers(gate, project, off_home)
@@ -418,7 +458,7 @@ def main():
                 "reason and the cases above it prove less than they appear to.\n"
                 + json.dumps(mutant_entry, indent=2))
 
-        # 13. the settings chain beyond the user file
+        # 14. the settings chain beyond the user file
         chain = mutant_of(
             '    ("project", "project", (".claude", "settings.json")),\n'
             '    ("project-local", "project", (".claude", "settings.local.json")),\n',
@@ -432,7 +472,7 @@ def main():
                 "project settings file - which is the one /plugin actually writes.\n"
                 + json.dumps(mutant_entry, indent=2))
 
-        # 14. per-project selection of a registry entry
+        # 15. per-project selection of a registry entry
         order = mutant_of(
             "    return sorted(here, key=_version_key) + sorted(anywhere, key=_version_key)",
             "    return list(entries)  # MUTANT: registry order, no ownership",

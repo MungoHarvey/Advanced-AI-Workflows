@@ -89,6 +89,16 @@ Where a component can be either project-local or global, check the project first
 record which one answered. "Installed globally" and "installed in this project" are
 different facts, and the user needs the right one.
 
+**superpowers has a third home: a harness plugin.** Its files are unpacked into the
+plugin cache, and the manifest records that as `scope: "plugin"`. Two things follow.
+A cached plugin counts only while it is **enabled** - the files sit there either way, so
+probing for them alone would report a switched-off plugin as installed, which is a check
+that cannot fail. And enablement is a chain, not a file: `/plugin` writes into whichever
+settings scope the user was in, so a plugin enabled from inside a project is recorded in
+that project's settings and not the user's. A path copy under `<project>` or `<profile>`
+outranks the plugin, because a bare skill name loads the path copy. `.aaw/detect.py`
+implements all of this; it is the tested version.
+
 `<profile>` is `%USERPROFILE%` on Windows. **Not** `HOME`, and never `~`. On a domain
 machine `HOME` can point at a redirected network drive while the real profile stays on
 `C:`, so a component installed under the real profile reads as absent. Resolve the

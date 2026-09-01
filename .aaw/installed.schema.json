@@ -67,9 +67,9 @@
           "type": "boolean"
         },
         "scope": {
-          "description": "Where the component lives. 'global' is the user profile, 'project' is this project's tree, 'none' is used when the component is not installed and therefore has no location.",
+          "description": "Where the component lives. 'global' is the user profile, 'project' is this project's tree, 'plugin' is a harness plugin's unpacked cache - which counts only while that plugin is enabled, so the same files read as absent once it is switched off - and 'none' is used when the component is not installed and therefore has no location. 'plugin' was added on 2026-09-01, after the first real plugin-scoped manifest was rejected by this file: the detector had been emitting the value since the plugin work landed, and nothing validated a manifest containing one.",
           "type": "string",
-          "enum": ["global", "project", "none"]
+          "enum": ["global", "project", "plugin", "none"]
         },
         "install_path": {
           "description": "Absolute path to the installed component's root directory.",

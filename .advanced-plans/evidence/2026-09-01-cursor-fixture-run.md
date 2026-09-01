@@ -244,3 +244,74 @@ would have caught both. There is no such test.
   `DEFAULT_SCANNED_ROOTS`; the `ap_launcher` exit-3 overloading (reproduced again by this
   loop's harness, and still the only FINDING it emits).
 - `loop-005-4` should not cite this loop's discovery answer as settled.
+
+---
+
+## Resolved — and the fix found two more defects than the one it was sent for
+
+Dispatched to an opencode/Qwen worker in the `loop-005-cursor` worktree, then verified
+by the controller by installing each adapter with each host and reading the resulting
+`AGENTS.md` — not by reading the diff or the worker's summary.
+
+**The `.sh` fix is correct** (`cc7d284`). `setup/cursor/install.sh` now escapes the
+five trigger lines, and an install writes `` `$advanced-planning phase <goal>` ``,
+matching codex and opencode.
+
+**The same commit regressed the `.ps1` side of all three adapters.** The fence there
+lives in an *interpolating* here-string (`@"…"@`), where the backtick is PowerShell's
+escape character. Reducing the doubled backticks to single ones — done to remove the
+padding space — turned every code-span delimiter into an escape and deleted it:
+
+```
+before  - ` $advanced-planning phase <goal> ` - …    padded, but a real code span
+after   - $advanced-planning phase <goal> - …        no code span at all
+```
+
+codex and opencode had been correct and were made wrong; byte-identity, the thing the
+commit reported achieving, was not achieved.
+
+**Its test could not have seen that.** The test parsed the two installer scripts and
+compared strings it reconstructed in Python — two hand-written parsers checked against
+each other, never against a file an installer wrote. It reported 12 passed against the
+tree it had just broken. This is the programme's central defect class exactly: *a check
+fails silently wherever its subject is a string it interpolated or parsed.* The only
+test in it that could fail was a bespoke regex pinning the one known `.sh` bug.
+
+**Correcting this document.** The table above says `install.ps1` "escapes correctly".
+That was measured on the trigger line only, and it is too broad. A backtick before a
+dot is an unrecognised escape, so `` `.advanced-plans/bin/ap.py` `` and
+`` `.agents/skills/` `` in the **Runtime** and **Skills** lines had their backticks
+dropped as well — in every `.ps1`, since the fence was first written, and independently
+of anything the worker did. Comparing only the line under suspicion is what hid it.
+
+**The correction** (`4ad43b7`): the fence body moves to a *non-interpolating*
+here-string (`@'…'@`) with the two marker variables concatenated around it, so nothing
+in the body is interpreted. Measured after the change — all three adapters byte-identical
+across hosts:
+
+| Adapter | Installed fence, both hosts |
+|---|---|
+| codex | 767 B, sha256 `fd01cc12ac8e…` |
+| opencode | 779 B, sha256 `c569a4571c56…` |
+| cursor | 771 B, sha256 `8b33dc7a3956…` |
+
+The test was rewritten so its subject is the installed file: run both real installers
+into temporary projects, extract the block between the markers, compare bytes. It
+resolves the POSIX shell by probing `uname -s`, because `bash` on PATH under Windows is
+often WSL's and cannot see the repo at the path pytest knows it by. Nothing skips — an
+absent interpreter fails with the reason named.
+
+**Proven able to fail, twice**, by reintroducing each defect and capturing the output:
+restoring `cc7d284`'s `.ps1` fails on lines 7–11, 13 and 15; restoring `e32c318`'s `.sh`
+fails naming `` `-planning phase <goal>` ``. Both restored, then reverted. Full suite on
+the committed tree: **894 passed, 1 skipped**.
+
+Carried item *"fix `setup/cursor/install.sh:411-415` and add a test"* is closed. Both
+commits sit in the unpushed worktree `loop-005-cursor`.
+
+**Worth keeping from this.** A worker's fix landed the visible defect and quietly broke
+two adapters that were fine, and its own test voted to approve it. What caught it was
+re-running the original measurement — install, then read the file — rather than reading
+the diff. The rule that already governs herdr workers held here without amendment:
+*never take the worker's own summary as evidence.* What is new is that this now applies
+to the worker's **tests** as well, not just its prose.

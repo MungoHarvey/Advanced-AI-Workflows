@@ -222,3 +222,84 @@ local backup is needed; removal would be reversible without this machine.
    can do this; the classifier correctly refuses agent edits to that file.
 3. Run `setup-with-claude` to write `.aaw/installed.json` and install the fenced block.
 4. Remove the hand-copy at `~/.claude/skills/{brainstorming,using-superpowers}`.
+
+---
+
+## Step 1 done: detection now reads the switch, not the cache path
+
+Commit `12de222` on `docs/herdr-v0.2-import`. Local only.
+
+`.aaw/detect.py` gained a **plugin scope**, general across components rather than special-
+cased for superpowers. A location may now be `{"scope": "plugin", "plugin": <key>,
+"sentinel": (<parts>,)}`, and it counts only when the plugin is **enabled**. Rule 5 states
+why: a plugin's files sit in the cache whether it is switched on or off, so a path probe
+reports a disabled plugin as installed on every machine where it was ever installed. That is
+the programme's own defect class, and it would have been introduced by the obvious fix.
+
+Two readers were added, both read-only: `enabled_plugins(home)` over
+`~/.claude/settings.json`, where only an explicit `true` counts, and
+`plugin_install_paths(home)` over `~/.claude/plugins/installed_plugins.json`. The install
+path is read from the harness's own registry rather than reconstructed from the cache
+layout, because that path carries a version segment (`.../superpowers/6.1.1/`) that changes
+on every upgrade; a guessed path would go stale silently.
+
+Path locations still outrank plugin ones, so a hand-copy is reported as the thing in force —
+which is what the harness actually loads. A component whose plugin files are present but
+switched off reads MISSING, correctly, and now carries the reason, which `aaw-audit.py`
+surfaces as `[plugin-present-not-enabled]`.
+
+### The test can fail, and was made to
+
+`tests/packaging/plugin_detection.py`, wired into `run-all.sh` as
+`test-plugin-detection.sh`. Eight fixture cases against fake homes, plus the audit CLI end
+to end. Fixtures mirror the real registry's shape, including the `"scope": "project"` and
+`projectPath` the live superpowers entry carries, so a case cannot pass on a shape reality
+does not use.
+
+The last case is the one that matters. It reads `detect.py`, asserts the enabled gate
+appears exactly once, removes it, loads the mutant, and re-runs the disabled-plugin case
+against it. **If the mutant still reported MISSING, the gate would not be what produced the
+earlier answer and every case above it would be decorative** — the file says so in those
+terms. The mutant does flip to installed.
+
+Proven both directions before the commit:
+
+| Probe | Result |
+|---|---|
+| `test-plugin-detection.sh` | PASS 10/10, exit 0 |
+| a deliberately broken expectation in a throwaway copy | **FAIL 9/10, exit 1** — the runner reports, it does not pass quietly |
+| `run-all.sh` | PASS 5/5 (was 4/4) |
+| `python tools/aaw-audit.py` on this checkout | **byte-for-byte the output recorded above** — the hand-copy is still found first |
+
+### What the real machine says now
+
+Run against the live profile, not a fixture:
+
+```
+enabled plugins read from settings: 13
+superpowers enabled?                False
+superpowers install paths:          ...\.claude\plugins\cache\claude-plugins-official\superpowers\6.1.1
+  sentinel exists:                  True
+resolve ->                          (None, 'superpowers@claude-plugins-official')
+```
+
+Present as a path, absent as a capability — exactly the state rule 5 was written for. The
+moment the plugin is enabled, that resolve returns the 6.1.1 path and detection reports
+superpowers `installed`, `scope: plugin`, with no hand-copy needed.
+
+### Where the sequence stands
+
+1. ~~Teach detection to recognise a plugin-scoped superpowers.~~ **Done, `12de222`.**
+2. **Enable `superpowers@claude-plugins-official`.** Blocked on the operator: the classifier
+   correctly refuses agent edits to `~/.claude/settings.json`.
+3. Run `setup-with-claude` to write `.aaw/installed.json` and install the fenced block.
+4. Remove the hand-copy at `~/.claude/skills/{brainstorming,using-superpowers}`.
+
+### Limit recorded rather than papered over
+
+Only `<home>/.claude/settings.json` is read. A plugin can also be enabled in a project's own
+settings, and the live superpowers registry entry is `"scope": "project"` against
+`Coding/microglia-cadino`. Detection ignores both, so a plugin enabled only for some other
+project reads as not enabled here. That is the conservative direction and it is the one the
+routing block needs — but it is a limit, not a proof of correctness, and it is stated in the
+test's own docstring so the next reader finds it there too.

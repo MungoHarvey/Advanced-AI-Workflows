@@ -287,19 +287,75 @@ Present as a path, absent as a capability — exactly the state rule 5 was writt
 moment the plugin is enabled, that resolve returns the 6.1.1 path and detection reports
 superpowers `installed`, `scope: plugin`, with no hand-copy needed.
 
+### Step 2 done, and it falsified the limit within the hour
+
+The operator ran `/plugin` and the harness reported *"Installed superpowers. Plugin is now
+active."* Detection, run against the same machine minutes later, said `enabled here? False`.
+One of the two was wrong, and the machine is the one that gets to decide. Three facts came
+out of chasing it, and the third is the one that matters.
+
+**One — `/plugin` writes the project's settings file, not the user's.** A new
+`<project>/.claude/settings.json`, 78 bytes, created 12:14 today, git-ignored, containing
+exactly `{"enabledPlugins": {"superpowers@claude-plugins-official": true}}`. The user file
+was not touched. Settings are a chain — user, user-local, project, project-local, least
+specific first — and reading only the first link reports an already-loaded plugin as absent.
+
+**Two — it installed a second copy.** `~/.claude/plugins/installed_plugins.json` now holds
+two entries under that key: the pre-existing `6.1.1` owned by `Coding/microglia-cadino`
+(installed 2026-05-05, last updated 2026-07-14) and a new `6.3.0` owned by
+`Coding/Advanced-AI-Workflows` (installed today 11:14 UTC, `gitCommitSha b36e082`). The
+registry lists the older, foreign one **first**.
+
+**Three — the committed resolver would have taken the first one.** It iterated the entries
+in list order and stopped at the first whose sentinel existed. So on this machine it would
+have reported another project's five-month-old 6.1.1 as this project's install, and reported
+it confidently, with an absolute path a reader could check and find really there. Nothing
+about that failure would have looked like a failure.
+
+So the previous section of this file, and the docstring paragraph it was quoting, were not a
+conservative limit. They were a defect with a note attached. **A limit you have written down
+is still a defect** — writing it down changes who is surprised, not whether the answer is
+wrong.
+
+The fix, `5ce4832`: `enabled_plugins` reads the whole chain and merges least-specific-first,
+with a missing or unreadable file contributing nothing rather than vetoing the rest;
+`entries_for_project` selects by ownership — this project's entry, else a machine-wide one,
+never another project's — and by version within a tier. The version now comes from the
+registry, because a plugin need not ship a `VERSION` file and the harness already recorded
+what it unpacked.
+
+And the paragraph became four cases rather than a longer paragraph: 8 (the project file
+counts, with a fixture guard that fails the run if the user file names the key, so the case
+cannot pass without reading the project file), 9 (project-local `true` beats user `false`),
+10 (project `false` beats user `true`), 11 (two installs, the foreign one listed first, this
+project's 6.3.0 wins on both version and path), 12 (an install owned by a third project does
+not apply here). Two more mutants join the enabled-gate one: strip the project scopes from
+`SETTINGS_CHAIN` and case 8 flips; replace `entries_for_project` with `list(entries)` and
+case 10 picks 6.1.1. Both were run and both kill their case — checked, not assumed.
+
+```
+tests/packaging/test-plugin-detection.sh   PASS - 18/18 cases   exit 0
+tests/packaging/run-all.sh                 PASS - 5/5 checks    exit 0
+```
+
+Live, after the fix:
+
+```
+enabled here? True
+entries for this project, in the order they will be tried:
+    6.3.0  C:\Users\mharvey2\Coding\Advanced-AI-Workflows
+resolve -> (...\superpowers\6.3.0, ...\6.3.0\skills\brainstorming\SKILL.md, '6.3.0')
+```
+
+The audit still reports superpowers as `scope: global` at the hand-copy, and that is correct
+rather than a leftover: a path location outranks a plugin location while both exist, and the
+bare `brainstorming` skill name is what the hand-copy answers to. Two copies are live —
+250 lines in the plugin, 207 in the hand-copy — and step 4 is what resolves that.
+
 ### Where the sequence stands
 
 1. ~~Teach detection to recognise a plugin-scoped superpowers.~~ **Done, `12de222`.**
-2. **Enable `superpowers@claude-plugins-official`.** Blocked on the operator: the classifier
-   correctly refuses agent edits to `~/.claude/settings.json`.
+2. ~~Enable `superpowers@claude-plugins-official`.~~ **Done by the operator, and it
+   falsified the limit above. Fixed in `5ce4832`.**
 3. Run `setup-with-claude` to write `.aaw/installed.json` and install the fenced block.
 4. Remove the hand-copy at `~/.claude/skills/{brainstorming,using-superpowers}`.
-
-### Limit recorded rather than papered over
-
-Only `<home>/.claude/settings.json` is read. A plugin can also be enabled in a project's own
-settings, and the live superpowers registry entry is `"scope": "project"` against
-`Coding/microglia-cadino`. Detection ignores both, so a plugin enabled only for some other
-project reads as not enabled here. That is the conservative direction and it is the one the
-routing block needs — but it is a limit, not a proof of correctness, and it is stated in the
-test's own docstring so the next reader finds it there too.

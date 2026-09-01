@@ -44,7 +44,18 @@ open_items:
     long-used checkout, not just in a fresh worktree. Both report idle/interactive_ready
     while sitting on the dialog. Recorded as B11 in herdr-ops/FINDINGS.md. Consequence for
     the programme: rotate-the-reviewer has a real fleet of two, codex and opencode, until a
-    human clears those dialogs once."
+    human clears those dialogs once.
+    CORRECTED 2026-08-28, and the fleet is three: cursor needs no human at all, it needs
+    flags. Starting it with `-- --trust --auto-review` clears the workspace-trust modal
+    (--trust is the supported writer of ~/.cursor/projects/<slug>/.workspace-trusted) and
+    covers approvalMode=allowlist, which otherwise permits only Shell(ls) and stalls on the
+    first real command. Proven in an untrusted worktree: modal cleared, agent idle,
+    Auto-review on. The gemini half of this item is moot rather than fixed - the CLI was
+    uninstalled on 2026-08-27 and its role is filled by agy (antigravity), which is
+    permission-gated for anything that runs a shell command and so is a reviewer that
+    reads files, not a general one. What remains true is the sentence's premise: both
+    reported idle/interactive_ready while sitting on a dialog, so a state name is still
+    not completion evidence."
   - "An instruction file is advisory: verified 2026-08-26 that opencode DOES auto-load a
     project AGENTS.md before the first user message (a context probe quoted the routing
     block back verbatim having run no tool at all), and that a worker with the block in
@@ -77,6 +88,23 @@ open_items:
   - "CORRECTED 2026-09-01: the status line above states NO PUSH HAS EVER BEEN APPROVED for advanced-planning. That is no longer true. On 2026-08-31/09-01 the user authorised, in sequence, a branch push, two pull requests, two merges to main, an annotated tag and a GitHub Release. advanced-planning is now public at v0.19.0 (main 171d193); PR 19 landed three installer fixes and PR 20 the version stamp, six CI checks green on each. The status line also still describes the repository as being at 02b4b86 / v0.16.0, three releases behind. Both statements are historical, not current."
   - "The Phases table was stale until 2026-09-01 and contradicted this file's own frontmatter: it showed phase 5 as current-not-started while previous_phase and phases/phase-5/complete.md both record a PASSED attempt-1 gate, and phase 6 as planned while current_phase: 6 and 18/30 todos say otherwise. Corrected in place. The lesson is the programme's own: a record that cannot disagree with itself is not being read."
   - "MEASURED 2026-09-01, and it changes what remains of phase 6: the work branch fix/shared-runtime-reachability is FULLY MERGED into main. rev-list --left-right --count main...fix/shared-runtime-reachability returns 73 0, and the merge-base IS the branch head b3f1b8f - zero commits sit only on the phase branch. So loops 001-004 are shipped, not local-only, and every statement above to the contrary is historical. Probing main for each deliverable: loop-002 schemas and validator, loop-004 platforms/codex, platforms/opencode and test_adapter_lifecycle.py are all PRESENT. GENUINELY OUTSTANDING: platforms/cursor/ and setup/cursor/ are ABSENT (loop-005 is real work); no skill emits a task envelope, there is no ACC-08 test and no gate-validation module (006-1, 006-2, 006-3 are real work). And loop-006-5 is SUPERSEDED BY EVENTS - it stages v0.17.0 locally, but v0.17.0, v0.18.0 and v0.19.0 have all shipped. What that todo becomes is the user's call, not the controller's. This was found by checking the base before dispatching a worker rather than after: a worker sent against the phase header as written would have branched three releases behind."
+  - "PUSHED 2026-09-01: docs/herdr-v0.2-import is on origin at 45ded11, fast-forward from
+    211612d, 19 commits, approved by the user after a preflight that checked fetch-fresh
+    ahead/behind, secret content and the full packaging suite against the exact tree. A
+    pull request and a merge to main remain SEPARATE authorisations and neither has been
+    given, so the item above about main still shipping an incomplete install set stands.
+    origin/main is unchanged at 3422a8c."
+  - "The superpowers managed-source sequence is CLOSED as of 2026-09-01. The plugin is
+    enabled, the fenced block is in this project's CLAUDE.md only (git-ignored, and
+    deliberately not installed machine-wide, because in a project with no manifest the
+    block reads every component as absent and would steer away from gstack commands that
+    work), the manifest records superpowers at scope plugin 6.3.0, and the twelve-file
+    hand-copy under ~/.claude/skills/ is removed after recoverability was re-proved
+    against the tag in ~/Coding/superpowers - NOT this repository, which the earlier
+    record wrongly named. Running our own setup found three defects of the programme's
+    own class: see evidence/2026-09-01-phase-5-gate-verified-the-repo-not-the-machine.md.
+    OUTSTANDING for other projects on this machine: they brainstorm with stock superpowers
+    until /setup-with-claude is run in each of them."
 
 ## Phases
 

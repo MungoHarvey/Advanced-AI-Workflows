@@ -16,6 +16,7 @@ CHECKS=(
   "test-fresh-clone.sh"
   "test-manifest-schema.sh"
   "test-audit.sh"
+  "test-plugin-detection.sh"
   "test-idempotency.sh"
 )
 

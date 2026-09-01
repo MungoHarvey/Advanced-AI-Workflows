@@ -34,6 +34,13 @@ The rules
    never from `~`. On this machine those disagree.
 4. Every path reported is absolute and native. A caller that wants to display a
    shortened path may shorten it; the recorded value stays absolute.
+5. A component delivered as a harness **plugin** is installed only when that
+   plugin is *enabled*. A plugin's files sit in the cache whether it is switched
+   on or off, so a sentinel under the cache proves nothing by itself - probing it
+   alone would report a disabled plugin as installed, which is a check that
+   cannot fail. The deciding fact is `enabledPlugins` in the harness settings,
+   and only an explicit `true` counts there: `false` and absent both mean the
+   harness will not load it.
 
 Nothing here writes anything. Detection that mutates the thing it is detecting is
 how you get a probe that always passes.
@@ -41,6 +48,7 @@ how you get a probe that always passes.
 
 from __future__ import annotations
 
+import json
 import os
 import sys
 
@@ -82,12 +90,86 @@ def _j(*parts):
     return os.path.normpath(os.path.join(*parts))
 
 
+#: Where the harness records which plugins it will load, and where it records
+#: where each installed plugin's files were unpacked. Both are read, never written.
+SETTINGS_RELPATH = (".claude", "settings.json")
+PLUGIN_REGISTRY_RELPATH = (".claude", "plugins", "installed_plugins.json")
+
+
+def _read_json(path):
+    """Parse a JSON file, or return None if it is missing or unreadable.
+
+    Malformed is treated the same as absent on purpose. A caller that cannot read
+    the settings cannot prove anything is enabled, and the honest answer to
+    "is this enabled?" when the evidence is unreadable is no.
+    """
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            return json.load(fh)
+    except (OSError, ValueError):
+        return None
+
+
+def enabled_plugins(home):
+    """The set of plugin keys the harness will actually load.
+
+    Only an explicit ``true`` counts. ``false`` and a key that is simply absent
+    both mean the harness will not load the plugin, and its cached files are
+    inert. Unreadable settings yields the empty set - failing closed, because the
+    alternative is reporting a switched-off plugin as installed.
+    """
+    data = _read_json(_j(home, *SETTINGS_RELPATH))
+    if not isinstance(data, dict):
+        return set()
+    enabled = data.get("enabledPlugins")
+    if not isinstance(enabled, dict):
+        return set()
+    return {key for key, value in enabled.items() if value is True}
+
+
+def plugin_install_paths(home):
+    """Map each installed plugin key to the paths the harness unpacked it to.
+
+    Read from the harness's own registry rather than reconstructed from a cache
+    layout, because the path carries a version segment that changes on every
+    upgrade. A guessed path would go stale silently; a recorded one cannot.
+    """
+    data = _read_json(_j(home, *PLUGIN_REGISTRY_RELPATH))
+    if not isinstance(data, dict):
+        return {}
+    plugins = data.get("plugins")
+    if not isinstance(plugins, dict):
+        return {}
+    out = {}
+    for key, entries in plugins.items():
+        if not isinstance(entries, list):
+            continue
+        paths = [entry.get("installPath") for entry in entries
+                 if isinstance(entry, dict) and entry.get("installPath")]
+        if paths:
+            out[key] = paths
+    return out
+
+
 def component_specs(project_root, home):
     """The sentinel each component is detected by, in the order they are checked.
 
     `locations` is ordered: the first sentinel that exists wins, and its scope is
     the scope recorded. A component that can be installed either globally or
     project-locally lists both.
+
+    A location is one of two forms:
+
+    * ``(scope, install_path, sentinel)`` - a path on disk. Installed iff the
+      sentinel file exists.
+    * ``{"scope": "plugin", "plugin": <key>, "sentinel": (<parts>, ...)}`` - a
+      harness plugin. Installed iff the plugin is **enabled** *and* the sentinel
+      exists beneath the path the harness recorded for it. Presence alone is not
+      enough; see rule 5 in the module docstring.
+
+    Path locations are listed before plugin ones so that a copy the user placed
+    in a skills directory is reported as the thing in force, which is what the
+    harness will load.
     """
     return [
         {
@@ -119,9 +201,16 @@ def component_specs(project_root, home):
                  _j(project_root, ".claude", "skills", "brainstorming", "SKILL.md")),
                 ("global", _j(home, ".claude", "skills", "brainstorming"),
                  _j(home, ".claude", "skills", "brainstorming", "SKILL.md")),
+                {
+                    "scope": "plugin",
+                    "plugin": "superpowers@claude-plugins-official",
+                    "sentinel": ("skills", "brainstorming", "SKILL.md"),
+                },
             ],
             "version_file": None,
-            "notes": "",
+            "notes": "Also ships as a harness plugin. A plugin copy counts only "
+                     "when the plugin is enabled - the cached files are present "
+                     "either way, so their existence decides nothing.",
         },
         {
             "name": "gstack-to-plans",
@@ -174,26 +263,68 @@ def read_version(root, version_file):
     return value if value else "unknown"
 
 
+def _resolve_plugin_location(location, enabled, installs):
+    """Resolve a plugin location to (install_path, sentinel), or explain why not.
+
+    Returns ``(resolved, disabled_key)``. ``resolved`` is the pair when the plugin
+    is enabled and its sentinel is on disk. ``disabled_key`` is the plugin key
+    when the files are there but the plugin is switched off - a state worth
+    reporting rather than silently calling absent, because it is one settings
+    toggle away from being the installation.
+    """
+    key = location["plugin"]
+    sentinel_parts = location["sentinel"]
+    found = None
+    for base in installs.get(key, []):
+        sentinel = _j(base, *sentinel_parts)
+        if os.path.isfile(sentinel):
+            found = (base, sentinel)
+            break
+    if found is None:
+        return None, None
+    if key not in enabled:
+        return None, key
+    return found, None
+
+
 def detect(project_root, home=None, env=None):
     """Return the manifest body describing this project. Reads only."""
     project_root = os.path.abspath(project_root)
     home = os.path.abspath(home if home is not None else user_profile(env))
 
+    enabled = enabled_plugins(home)
+    installs = plugin_install_paths(home)
+
     components = {}
     for spec in component_specs(project_root, home):
         entry = None
-        for scope, install_path, sentinel in spec["locations"]:
-            if os.path.isfile(sentinel):
-                entry = {
-                    "installed": True,
-                    "scope": scope,
-                    "install_path": install_path,
-                    "sentinel": sentinel,
-                    "version": read_version(install_path, spec["version_file"]),
-                }
-                break
+        disabled_plugin = None
+        for location in spec["locations"]:
+            if isinstance(location, dict):
+                resolved, disabled_key = _resolve_plugin_location(
+                    location, enabled, installs)
+                if disabled_key and disabled_plugin is None:
+                    disabled_plugin = disabled_key
+                if resolved is None:
+                    continue
+                install_path, sentinel = resolved
+                scope = location["scope"]
+            else:
+                scope, install_path, sentinel = location
+                if not os.path.isfile(sentinel):
+                    continue
+            entry = {
+                "installed": True,
+                "scope": scope,
+                "install_path": install_path,
+                "sentinel": sentinel,
+                "version": read_version(install_path, spec["version_file"]),
+            }
+            break
         if entry is None:
             entry = {"installed": False, "scope": "none"}
+        if disabled_plugin:
+            entry["plugin_present_not_enabled"] = disabled_plugin
         if spec["notes"]:
             entry["notes"] = spec["notes"]
         components[spec["name"]] = entry
@@ -255,4 +386,21 @@ def stale_data(result):
         owner = result["components"].get(item["belongs_to"])
         if item["present"] and owner is not None and not owner["installed"]:
             out.append(item)
+    return out
+
+
+def disabled_plugins(result):
+    """Components whose plugin copy is on disk but switched off: [(name, key)].
+
+    The counterpart of `stale_data` for rule 5. A component in this state reads
+    MISSING, and that is correct - the harness will not load it - but the reason
+    is a settings toggle rather than an absent install, and saying so is the
+    difference between a useful report and a puzzling one.
+    """
+    out = []
+    for name in sorted(result["components"]):
+        entry = result["components"][name]
+        key = entry.get("plugin_present_not_enabled")
+        if key and not entry["installed"]:
+            out.append((name, key))
     return out

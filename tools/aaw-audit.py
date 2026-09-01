@@ -128,6 +128,16 @@ def audit(project, home, required):
                       % (item["path"], item["belongs_to"]),
         })
 
+    for name, key in getattr(detect, "disabled_plugins", lambda _r: [])(result):
+        findings.append({
+            "id": "plugin-present-not-enabled",
+            "component": name,
+            "detail": "the %s plugin is installed on disk but is not enabled in "
+                      "settings, so the harness will not load it and %s reads as "
+                      "missing. Enabling the plugin installs it; nothing needs "
+                      "copying." % (key, name),
+        })
+
     findings.extend(audit_manifest(project, result))
     findings.sort(key=lambda f: (f["id"], f["component"], f["detail"]))
     return findings, result

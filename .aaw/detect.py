@@ -41,6 +41,15 @@ The rules
    cannot fail. The deciding fact is `enabledPlugins` in the harness settings,
    and only an explicit `true` counts there: `false` and absent both mean the
    harness will not load it.
+6. There is no single settings file and no single install. `enabledPlugins` is a
+   chain - user, then project, each with a `.local` companion - and `/plugin`
+   writes whichever scope the user was in, so reading only the user file reports
+   an already-loaded plugin as absent. The registry likewise holds one entry per
+   install, and a plugin can be installed at a different version for a different
+   project; the entry that applies here is the one naming this project, else a
+   machine-wide one, and never some other project's. Both halves of this rule
+   were written after the version without them gave the wrong answer about the
+   machine it was running on.
 
 Nothing here writes anything. Detection that mutates the thing it is detecting is
 how you get a probe that always passes.
@@ -90,9 +99,23 @@ def _j(*parts):
     return os.path.normpath(os.path.join(*parts))
 
 
-#: Where the harness records which plugins it will load, and where it records
-#: where each installed plugin's files were unpacked. Both are read, never written.
-SETTINGS_RELPATH = (".claude", "settings.json")
+#: Where the harness records which plugins it will load. There is not one file:
+#: settings are a chain, and `/plugin` writes the enablement into whichever scope
+#: the user was in. Enabling a plugin from inside a project writes the PROJECT
+#: file and leaves the user file untouched, so reading only the user file reports
+#: a plugin the harness has already loaded as not enabled. Measured on this
+#: machine 2026-09-01, within an hour of the version that read only the user file.
+#:
+#: Listed least specific first; a later file overrides an earlier one for the same
+#: key. All are read, none is written.
+SETTINGS_CHAIN = (
+    ("user", "home", (".claude", "settings.json")),
+    ("user-local", "home", (".claude", "settings.local.json")),
+    ("project", "project", (".claude", "settings.json")),
+    ("project-local", "project", (".claude", "settings.local.json")),
+)
+
+#: Where the harness records where each installed plugin's files were unpacked.
 PLUGIN_REGISTRY_RELPATH = (".claude", "plugins", "installed_plugins.json")
 
 
@@ -110,29 +133,44 @@ def _read_json(path):
         return None
 
 
-def enabled_plugins(home):
-    """The set of plugin keys the harness will actually load.
+def enabled_plugins(home, project_root=None):
+    """The set of plugin keys the harness will actually load, for this project.
 
-    Only an explicit ``true`` counts. ``false`` and a key that is simply absent
-    both mean the harness will not load the plugin, and its cached files are
-    inert. Unreadable settings yields the empty set - failing closed, because the
-    alternative is reporting a switched-off plugin as installed.
+    Reads the whole settings chain, least specific first, so a later scope
+    overrides an earlier one for the same key. Only an explicit ``true`` counts:
+    ``false`` and a key that is simply absent both mean the harness will not load
+    the plugin, and its cached files are inert.
+
+    A file that is missing or unreadable contributes nothing and does not veto the
+    others. That is the honest reading - an unparseable file is not evidence of
+    anything, in either direction - and it still fails closed when nothing in the
+    chain says ``true``.
     """
-    data = _read_json(_j(home, *SETTINGS_RELPATH))
-    if not isinstance(data, dict):
-        return set()
-    enabled = data.get("enabledPlugins")
-    if not isinstance(enabled, dict):
-        return set()
-    return {key for key, value in enabled.items() if value is True}
+    merged = {}
+    for _scope, base, relpath in SETTINGS_CHAIN:
+        root = home if base == "home" else project_root
+        if not root:
+            continue
+        data = _read_json(_j(root, *relpath))
+        if not isinstance(data, dict):
+            continue
+        enabled = data.get("enabledPlugins")
+        if not isinstance(enabled, dict):
+            continue
+        merged.update(enabled)
+    return {key for key, value in merged.items() if value is True}
 
 
-def plugin_install_paths(home):
-    """Map each installed plugin key to the paths the harness unpacked it to.
+def plugin_installs(home):
+    """Map each plugin key to the registry entries recorded for it.
 
     Read from the harness's own registry rather than reconstructed from a cache
     layout, because the path carries a version segment that changes on every
     upgrade. A guessed path would go stale silently; a recorded one cannot.
+
+    Entries are returned whole, not reduced to paths, because the same plugin can
+    be installed more than once - a different version per project - and choosing
+    between them needs `projectPath` and `version`, not just the path.
     """
     data = _read_json(_j(home, *PLUGIN_REGISTRY_RELPATH))
     if not isinstance(data, dict):
@@ -144,11 +182,43 @@ def plugin_install_paths(home):
     for key, entries in plugins.items():
         if not isinstance(entries, list):
             continue
-        paths = [entry.get("installPath") for entry in entries
-                 if isinstance(entry, dict) and entry.get("installPath")]
-        if paths:
-            out[key] = paths
+        kept = [e for e in entries if isinstance(e, dict) and e.get("installPath")]
+        if kept:
+            out[key] = kept
     return out
+
+
+def _version_key(entry):
+    """Sortable version, highest first. Unparseable sorts last, never first."""
+    parts = str(entry.get("version") or "").split(".")
+    try:
+        return (0, tuple(-int(p) for p in parts))
+    except ValueError:
+        return (1, ())
+
+
+def entries_for_project(entries, project_root):
+    """The registry entries that apply to this project, most specific first.
+
+    A registry entry can name the project it was installed for. An entry naming
+    *this* project is the one that applies; an entry naming no project is a
+    machine-wide install and applies everywhere. An entry naming a **different**
+    project does not apply here, and treating it as if it did is how detection
+    ends up reporting some other project's older version - which is exactly what
+    the first version of this code would have done on this machine, silently,
+    because it took whichever entry the registry happened to list first.
+
+    Within a tier, the highest version wins.
+    """
+    here, anywhere = [], []
+    for entry in entries:
+        owner = entry.get("projectPath")
+        if not owner:
+            anywhere.append(entry)
+        elif os.path.normcase(os.path.normpath(owner)) == \
+                os.path.normcase(os.path.normpath(project_root)):
+            here.append(entry)
+    return sorted(here, key=_version_key) + sorted(anywhere, key=_version_key)
 
 
 def component_specs(project_root, home):
@@ -263,22 +333,27 @@ def read_version(root, version_file):
     return value if value else "unknown"
 
 
-def _resolve_plugin_location(location, enabled, installs):
-    """Resolve a plugin location to (install_path, sentinel), or explain why not.
+def _resolve_plugin_location(location, enabled, installs, project_root):
+    """Resolve a plugin location to (install_path, sentinel, version), or say why not.
 
-    Returns ``(resolved, disabled_key)``. ``resolved`` is the pair when the plugin
-    is enabled and its sentinel is on disk. ``disabled_key`` is the plugin key
-    when the files are there but the plugin is switched off - a state worth
+    Returns ``(resolved, disabled_key)``. ``resolved`` is the triple when the
+    plugin is enabled and its sentinel is on disk. ``disabled_key`` is the plugin
+    key when the files are there but the plugin is switched off - a state worth
     reporting rather than silently calling absent, because it is one settings
     toggle away from being the installation.
+
+    The version comes from the registry rather than a VERSION file, because a
+    plugin does not necessarily ship one and the harness already recorded which
+    version it unpacked.
     """
     key = location["plugin"]
     sentinel_parts = location["sentinel"]
     found = None
-    for base in installs.get(key, []):
+    for entry in entries_for_project(installs.get(key, []), project_root):
+        base = entry["installPath"]
         sentinel = _j(base, *sentinel_parts)
         if os.path.isfile(sentinel):
-            found = (base, sentinel)
+            found = (base, sentinel, entry.get("version") or "unknown")
             break
     if found is None:
         return None, None
@@ -292,8 +367,8 @@ def detect(project_root, home=None, env=None):
     project_root = os.path.abspath(project_root)
     home = os.path.abspath(home if home is not None else user_profile(env))
 
-    enabled = enabled_plugins(home)
-    installs = plugin_install_paths(home)
+    enabled = enabled_plugins(home, project_root)
+    installs = plugin_installs(home)
 
     components = {}
     for spec in component_specs(project_root, home):
@@ -302,23 +377,24 @@ def detect(project_root, home=None, env=None):
         for location in spec["locations"]:
             if isinstance(location, dict):
                 resolved, disabled_key = _resolve_plugin_location(
-                    location, enabled, installs)
+                    location, enabled, installs, project_root)
                 if disabled_key and disabled_plugin is None:
                     disabled_plugin = disabled_key
                 if resolved is None:
                     continue
-                install_path, sentinel = resolved
+                install_path, sentinel, version = resolved
                 scope = location["scope"]
             else:
                 scope, install_path, sentinel = location
                 if not os.path.isfile(sentinel):
                     continue
+                version = read_version(install_path, spec["version_file"])
             entry = {
                 "installed": True,
                 "scope": scope,
                 "install_path": install_path,
                 "sentinel": sentinel,
-                "version": read_version(install_path, spec["version_file"]),
+                "version": version,
             }
             break
         if entry is None:

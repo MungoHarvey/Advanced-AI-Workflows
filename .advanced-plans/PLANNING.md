@@ -74,6 +74,8 @@ open_items:
   - "An agent self-reported model id is not evidence — a codex reviewer named a model that contradicted its own pane footer, then retracted it. ACC-18 checks must use the started --kind and the observable pane, not the agent word."
   - "Phase-4 Key Deliverables names two evidence files that were produced under different names (<date>-gstack-sync.md and <date>-packaging-repair.md against the actual ...-phase-4-loop-001-gstack-sync.md and ...-phase-4-loop-003-installation-state.md). Both gate attempts flagged it at info level. The plan was left as gated and the reconciliation is recorded in phases/phase-4/complete.md instead of editing an artefact the reviewers had already seen."
   - "references/install-gstack.md:16 gives only a ~-based install command with no Windows PowerShell variant, unlike its sibling reference files. Found at the phase-4 gate, pre-existing, non-blocking - it is a user-run command, so it does not breach the no-global-~ criterion."
+  - "CORRECTED 2026-09-01: the status line above states NO PUSH HAS EVER BEEN APPROVED for advanced-planning. That is no longer true. On 2026-08-31/09-01 the user authorised, in sequence, a branch push, two pull requests, two merges to main, an annotated tag and a GitHub Release. advanced-planning is now public at v0.19.0 (main 171d193); PR 19 landed three installer fixes and PR 20 the version stamp, six CI checks green on each. The status line also still describes the repository as being at 02b4b86 / v0.16.0, three releases behind. Both statements are historical, not current."
+  - "The Phases table was stale until 2026-09-01 and contradicted this file's own frontmatter: it showed phase 5 as current-not-started while previous_phase and phases/phase-5/complete.md both record a PASSED attempt-1 gate, and phase 6 as planned while current_phase: 6 and 18/30 todos say otherwise. Corrected in place. The lesson is the programme's own: a record that cannot disagree with itself is not being read."
 
 ## Phases
 
@@ -83,8 +85,8 @@ open_items:
 | 2 | v0.1 Smoke-Findings Fix-Pack | complete (2026-06-08) | [phases/phase-2/plan.md](phases/phase-2/plan.md) |
 | 3 | Safety Baseline and Herdr Pilot | passed with one open item (2026-08-26) | [phases/phase-3/complete.md](phases/phase-3/complete.md) |
 | 4 | gstack Sync and AAW Packaging Repair | complete — gate PASSED attempt 2 (2026-08-26), one criterion waived | [phases/phase-4/complete.md](phases/phase-4/complete.md) |
-| 5 | Superpowers Behavioural Port | current (2 loops decomposed, not started) | [phases/phase-5/plan.md](phases/phase-5/plan.md) |
-| 6 | Advanced Planning Multi-Runtime Adapters | planned (loops deferred) | [phases/phase-6/plan.md](phases/phase-6/plan.md) |
+| 5 | Superpowers Behavioural Port | complete - gate PASSED attempt 1 (2026-08-26); mirror prepared, NOT published | [phases/phase-5/complete.md](phases/phase-5/complete.md) |
+| 6 | Advanced Planning Multi-Runtime Adapters | current - 6 loops, 18/30 todos, not yet gated | [phases/phase-6/plan.md](phases/phase-6/plan.md) |
 | 7 | AAW Multi-Host Routing and Installer | planned (loops deferred) | [phases/phase-7/plan.md](phases/phase-7/plan.md) |
 | 8 | AAW Run Registry and Dispatcher | planned (loops deferred) | [phases/phase-8/plan.md](phases/phase-8/plan.md) |
 | 9 | Cross-Host E2E and Release | planned (loops deferred) | [phases/phase-9/plan.md](phases/phase-9/plan.md) |

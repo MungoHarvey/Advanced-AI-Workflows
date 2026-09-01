@@ -142,6 +142,14 @@ finding and it is recorded here rather than argued away.
   `fde9f97` and still carries all four intents. Publishing needs
   `git push origin mirror/upstream-2026-08-26:main --force-with-lease`, which is outside the
   controller's authority and is the user's to run.
+  **CLOSED 2026-09-01.** The owner cleared the gate and ran the force-push; `origin/main` is
+  now `b36e082`, the same commit as `upstream/main` - `git diff upstream/main...origin/main`
+  empty and `rev-list --left-right --count` reporting `0 0`. The fork carries no patch on any
+  branch. The backup tag `pre-aaw-port-2026-08-26` was pushed to the remote FIRST, and each of
+  the four dropped commits was individually confirmed an ancestor of it, so the pre-port head
+  survives independently of this machine. Preflight and the undo command are recorded in
+  `.advanced-plans/evidence/2026-09-01-superpowers-mirror-publish-preflight.md`. Post-publish:
+  packaging 4/4, idempotency 56/56.
 - **The branch picture recorded here was wrong, and was corrected on 2026-08-27.**
   `fix/install-audit-diverged-state` does not exist, locally or on the remote — its
   work (`3ae6121`, `6e94cf5`) is inside `feat/aaw-packaging-repair`. That branch's

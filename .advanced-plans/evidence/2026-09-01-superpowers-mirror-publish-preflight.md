@@ -1,9 +1,9 @@
-# Superpowers mirror publish — preflight
+# Superpowers mirror publish
 
 **Date:** 2026-09-01
 **Repository:** `MungoHarvey/superpowers` (checkout `C:/Users/mharvey2/Coding/superpowers`)
 **Closes:** the Phase 5 carried item *"The mirror is prepared, not published."*
-**Status:** preflight COMPLETE. The publish itself is the operator's to run.
+**Status:** COMPLETE. Preflight, publish and post-publish verification all done 2026-09-01.
 
 ---
 
@@ -101,3 +101,39 @@ git -C C:/Users/mharvey2/Coding/superpowers push origin pre-aaw-port-2026-08-26^
 - The force-push itself.
 - Any change to `mirror/upstream-2026-08-26`, `main`, or the working tree.
 - The compatibility manifest, which does not yet exist (Stage 1).
+
+---
+
+## Published 2026-09-01
+
+The owner ran the force-push. Result:
+
+```
++ fde9f97...b36e082 mirror/upstream-2026-08-26 -> main (forced update)
+```
+
+### Post-publish verification
+
+| Check | Result |
+|---|---|
+| `origin/main` | `b36e082` — the same commit as `upstream/main` |
+| `git diff upstream/main...origin/main` | **empty** |
+| `git rev-list --left-right --count upstream/main...origin/main` | **`0  0`** |
+| Backup tag on remote | intact — `071000c` → `fde9f97` |
+| AAW packaging suite | **PASS 4/4** |
+| Idempotency suite | **PASS 56/56** |
+
+`MungoHarvey/superpowers` is now a clean mirror of `obra/superpowers`. It carries no patch on
+any branch, and the behaviour the patch used to provide is delivered by the AAW fenced block,
+which this push does not touch.
+
+### What was NOT verified by this
+
+`tests/adherence/check_results.py` was run (11/15 matched, 4 known divergences, `rc=0`), but it
+grades **recorded** reports against `expected.json` — it does not re-invoke the runtimes. It
+therefore says nothing about the publish, and is reported here only so that is explicit. The four
+divergences are the pre-`c83c90e` `only-superpowers` cell documented in `expected.json`, unrelated
+to this change.
+
+A live re-run of the adherence matrix against the published mirror would close that gap. It costs
+fifteen agent invocations across five runtimes and has not been done.

@@ -85,7 +85,7 @@ open_items:
 | 2 | v0.1 Smoke-Findings Fix-Pack | complete (2026-06-08) | [phases/phase-2/plan.md](phases/phase-2/plan.md) |
 | 3 | Safety Baseline and Herdr Pilot | passed with one open item (2026-08-26) | [phases/phase-3/complete.md](phases/phase-3/complete.md) |
 | 4 | gstack Sync and AAW Packaging Repair | complete — gate PASSED attempt 2 (2026-08-26), one criterion waived | [phases/phase-4/complete.md](phases/phase-4/complete.md) |
-| 5 | Superpowers Behavioural Port | complete - gate PASSED attempt 1 (2026-08-26); mirror prepared, NOT published | [phases/phase-5/complete.md](phases/phase-5/complete.md) |
+| 5 | Superpowers Behavioural Port | complete - gate PASSED attempt 1 (2026-08-26); mirror PUBLISHED 2026-09-01, fork is a clean upstream mirror | [phases/phase-5/complete.md](phases/phase-5/complete.md) |
 | 6 | Advanced Planning Multi-Runtime Adapters | current - 6 loops, 18/30 todos, not yet gated | [phases/phase-6/plan.md](phases/phase-6/plan.md) |
 | 7 | AAW Multi-Host Routing and Installer | planned (loops deferred) | [phases/phase-7/plan.md](phases/phase-7/plan.md) |
 | 8 | AAW Run Registry and Dispatcher | planned (loops deferred) | [phases/phase-8/plan.md](phases/phase-8/plan.md) |

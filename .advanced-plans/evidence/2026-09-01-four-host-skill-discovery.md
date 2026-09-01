@@ -179,3 +179,52 @@ product defect.
 Each probe output records host, invocation, cwd, HOME treatment, start/finish timestamps
 and exit code, per the `tests/adherence/MANIFEST.json` precedent, so a withheld permission
 is never mistaken for a routing failure.
+
+---
+
+## Addendum, 2026-09-01: F19 resolved and proven from installed output
+
+F19 was fixed the same day it was found, as an unplanned todo taken before `loop-005-5`
+on the user's decision — `005-5` writes the five-adapter contract tables, and would
+otherwise have documented a router that three of five hosts cannot load.
+
+**advanced-planning `32b436c`** (opencode/Qwen3.5, herdr worktree `loop-005-cursor`,
+worker retired and pane closed at completion):
+
+- frontmatter added to `platforms/shared/agent-skills/advanced-planning/SKILL.md`. The
+  five verbs in the description — `phase`, `loop`, `gate`, `resume`, `compact` — were
+  checked against the file's own *When to Use* table rather than accepted from the
+  worker. They match.
+- `platforms/python/tests/test_skill_frontmatter.py`, 56 cases, globbing every
+  `SKILL.md` under `core/skills/` and `platforms/` so a new skill is covered without
+  editing the test. It carries a **vacuity guard** that fails below 10 discovered files —
+  a frontmatter test that discovers nothing would otherwise pass over an empty set, which
+  is the failure this phase has now found twelve times. The one deliberate exception,
+  `platforms/cowork/SKILL.md` carrying `name: advanced-planning` inside a directory called
+  `cowork`, is a named constant that **asserts** the expected name rather than skipping
+  the file.
+
+**The proof is controller-side, and from installed output rather than from the source.**
+
+| Step | Result |
+|---|---|
+| new test, as committed | 56 passed |
+| frontmatter stripped (mutation run here, not by the worker) | **5 failed, 51 passed** — every failure naming `platforms/shared/agent-skills/advanced-planning/SKILL.md` |
+| restored | 56 passed, working tree byte-identical |
+| fixture rebuilt from the fixed worktree, codex re-probed | load errors naming that file: **1 before → 0 after** |
+| codex's skill list | now includes `advanced-planning`, 8 skills, still quoting the `.agents/skills` token |
+| full suite | 950 passed / 1 skipped, up from 894/1 by exactly the 56 added |
+
+The mutation is the evidence, not the pass: it failed in a discriminating way — five
+related properties, one named file, everything else still green — rather than turning the
+suite uniformly red.
+
+Being unplanned, this consumes no planned todo, following the `loop-004` coverage-first
+precedent; `todos_total` is unchanged. The commit sits **unpushed** in the worktree with
+three others, per the standing decision; advanced-planning has still never had a push
+approved.
+
+**F20, F21, F22 and F23 remain open.** F20 in particular is not obviously ours to fix —
+opencode merging both project surfaces and preferring `.claude/skills` is host behaviour,
+and the adapter's response may belong in the contract tables `loop-005-5` is about to
+write rather than in code.

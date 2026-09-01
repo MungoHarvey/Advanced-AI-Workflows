@@ -27,6 +27,33 @@ state and is equally out of bounds — a phase-6 worker never writes
 Every `git add` in this phase is
 `git add -A -- . ':!find-files.js' ':!setup-antigravity.js'`.
 
+**CORRECTION 2026-09-01 - this header describes a repository that no longer exists in
+that state.** Everything above about the base and about remote writes was true when
+phase 6 opened and is now false. Measured today, controller-side:
+
+- `fix/shared-runtime-reachability` is **fully merged into `main`**.
+  `git rev-list --left-right --count main...fix/shared-runtime-reachability` returns
+  `73  0` and the merge-base IS the branch head (`b3f1b8f`) - zero commits sit only on
+  the phase branch. Loops 001-004 are shipped, not local.
+- `main` is `171d193`, `VERSION` is **0.19.0**, and `v0.17.0`, `v0.18.0` and `v0.19.0`
+  are all tagged (CHANGELOG entries dated 2026-08-31, 2026-08-31 and 2026-09-01). The
+  base for any remaining loop is `171d193`/v0.19.0, **not** `02b4b86`/v0.16.0.
+- The remaining todos carry a *relative* `base_sha` chained to the previous todo, so
+  they need no per-todo edit - but a worker dispatched against the header as written
+  would have branched three releases behind. That is why this correction precedes the
+  next dispatch rather than following it.
+
+**`loop-006-5` is superseded by events.** It stages `v0.17.0` locally and leaves
+publishing to the user. v0.17.0 shipped on 2026-08-31, and two further releases have
+shipped since. The todo cannot be executed as written; what it should become is the
+user's call and is not decided here.
+
+**What is genuinely outstanding**, verified by probing `main` for each deliverable:
+`platforms/cursor/` and `setup/cursor/` are ABSENT, so loop-005 is real work; no skill
+emits a task envelope, there is no ACC-08 test, and there is no gate-validation module,
+so 006-1, 006-2 and 006-3 are real work. Loop-002's schemas and validator, loop-004's
+two adapters and `test_adapter_lifecycle.py` are all PRESENT on `main`.
+
 **No remote writes.** No push, no tag push, no PR and no release in any loop of this phase without
 a separate authorisation. Loop 006 stages `v0.17.0` locally; publishing it is the user's to run.
 

@@ -848,7 +848,7 @@ todos:
     evidence: "The diff, an emitted envelope, and its validation"
     gate: "none"
     outcome: "The controller/worker boundary is in the instructions the worker actually reads, not only in the design document"
-    status: pending
+    status: completed
     complexity: high
     priority: high
   - id: "loop-006-2"

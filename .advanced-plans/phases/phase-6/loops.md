@@ -886,7 +886,7 @@ todos:
     evidence: "The three cases with their outcomes, and the ACC-12 case"
     gate: "none"
     outcome: "Both halves of the advancement gate are load-bearing, demonstrated by removing each in turn"
-    status: pending
+    status: completed
     complexity: high
     priority: high
   - id: "loop-006-4"

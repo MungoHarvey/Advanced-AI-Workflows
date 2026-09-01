@@ -867,7 +867,7 @@ todos:
     evidence: "The test, its output, and the state-unchanged assertion"
     gate: "none"
     outcome: "The boundary is enforced by something that runs, and it is proven to fail when crossed"
-    status: pending
+    status: completed
     complexity: high
     priority: high
   - id: "loop-006-3"

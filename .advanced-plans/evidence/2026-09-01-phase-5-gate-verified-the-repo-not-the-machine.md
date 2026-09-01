@@ -146,3 +146,79 @@ Option 1 ("install the block, then clean") is correspondingly stronger, and it n
 second half worth naming: once the fenced block delivers the routing, the skills themselves
 should come from a **managed** source — the enabled plugin, or a pinned checkout recorded in
 the compatibility manifest of section 13.2 — rather than a hand-copy.
+
+---
+
+## Executing "managed source + fenced block": what the work found
+
+### The manifest is not produced by `detect.py`
+
+`.aaw/detect.py` is a library — no `main`, no `__main__`, no argparse, no output. It is driven
+by `tools/aaw-audit.py` (`load_detect()` -> `detect.detect(project, home=home)`). The manifest
+is written by the `setup-with-claude` skill **at install time**, which the dependency plan
+already records at `specs/2026-09-01-dependencies-not-forks-plan.md:50`. So the fenced block
+cannot simply be pasted into a `CLAUDE.md`: the designed path is to run the installer skill,
+which writes `.aaw/installed.json` and installs the block together.
+
+Live audit of the controller checkout, `python tools/aaw-audit.py`, exit 1:
+
+```
+advanced-planning  installed   global   ...\.claude\skills\phase-plan-creator
+gstack             installed   global   ...\.claude\skills\gstack
+gstack-to-plans    installed   project  ...\.claude\skills\gstack-to-plans
+plannotator        deprecated  none     -
+superpowers        installed   global   ...\.claude\skills\brainstorming
+
+FINDINGS (1)
+  [manifest-absent] .aaw\installed.json does not exist. Detection fell back to
+  sentinel probing, which is correct but records nothing for the next reader.
+```
+
+### The blocker: removing the hand-copy turns the routing off
+
+`detect.py:116-122` recognises superpowers at exactly two paths:
+
+```
+("project", <project>/.claude/skills/brainstorming, .../SKILL.md)
+("global",  <home>/.claude/skills/brainstorming,    .../SKILL.md)
+```
+
+**The sentinel for superpowers is the hand-copy itself.** A plugin install lives at
+`~/.claude/plugins/cache/claude-plugins-official/superpowers/<version>/skills/brainstorming/`
+and is not probed at all.
+
+So the chosen sequence does not survive its own last step. Remove the hand-copy and
+`detect.py` reports superpowers **MISSING**; the manifest then says not-installed; and the
+fenced block — which is explicit that a missing or negative manifest means *treat every
+component as not installed* (`claude-md-routing.md:32`) — declines the routing. That is exactly
+the lapse the block-first ordering was chosen to prevent, arriving one step later than expected.
+
+**Detection must learn the plugin location before the hand-copy can go.**
+
+There is a design question inside that, and it is this programme's own defect class again: an
+installed-but-**disabled** plugin still has a directory on disk. `superpowers@claude-plugins-official`
+is in `installed_plugins.json` and absent from `enabledPlugins` right now — present as a path,
+absent as a capability. A sentinel that probes only the path would report a disabled plugin as
+installed, which is a check that cannot fail. Correct detection has to read `enabledPlugins`.
+
+### Reversibility, proven before proposing any removal
+
+Every file in both live skill directories was compared against `fde9f97`:
+
+| Directory | live files | in `fde9f97` | digest result |
+|---|---|---|---|
+| `brainstorming` | 8 | 8 | 6 identical; `scripts/frame-template.html` and `scripts/server.cjs` differ **by line endings only** (CRLF locally, LF in git) |
+| `using-superpowers` | 4 | 4 | all identical |
+
+Normalising line endings, both directories are byte-for-byte recoverable from `fde9f97`, and
+that commit is preserved by the annotated tag `pre-aaw-port-2026-08-26` **on the remote**. No
+local backup is needed; removal would be reversible without this machine.
+
+### Remaining sequence
+
+1. Teach detection to recognise a plugin-scoped superpowers — reading `enabledPlugins`, not
+   just probing the cache path. **Blocks everything after it.**
+2. Enable `superpowers@claude-plugins-official` in `~/.claude/settings.json`. Only the operator
+   can do this; the classifier correctly refuses agent edits to that file.
+3. Run `setup-with-claude` to write `.aaw/installed.json` and install the fenced block.
+4. Remove the hand-copy at `~/.claude/skills/{brainstorming,using-superpowers}`.

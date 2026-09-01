@@ -98,3 +98,51 @@ that was supposed to replace it has never been applied anywhere.
   `components["<name>"]["installed"] == true` currently reads a missing file. Whether that is
   by design (produced at install time) or a gap should be settled before Phase 7 builds
   manifest-driven detection on top of it.
+
+---
+
+## Resolved: there is no contest. The plugin is switched off.
+
+Measured after the question above was raised.
+
+`superpowers@claude-plugins-official` version 6.1.1 is present in
+`~/.claude/plugins/installed_plugins.json` and **absent from `enabledPlugins` in
+`~/.claude/settings.json`** — installed, not enabled. The clean plugin copy is inert.
+
+So nothing shadows anything. **The patched user-level skills are the sole live copy of
+superpowers on this machine**, and the patch is not a latent risk — it is what runs.
+
+### And they are unmanaged, and stale
+
+The live copies are a real directory, not a symlink to the checkout and not a plugin
+install. Nothing updates them. Last written **2026-06-16** — two and a half months ago.
+
+| | live (`fde9f97`) | current upstream (`b36e082`) | differing lines |
+|---|---|---|---|
+| `brainstorming/SKILL.md` | 207 lines | 250 lines | **197** |
+| `using-superpowers/SKILL.md` | 137 lines | 63 lines | **110** |
+
+The live skills predate **241** upstream commits, **43** of which touch these two files.
+`using-superpowers` was cut from 137 lines to 63 upstream — a rewrite, not a drift.
+
+### Why this matters beyond Phase 5
+
+This is the concrete instance of the problem that opened the programme:
+
+> *"editing forks and the packaged dependencies requires constant updating to the specific
+> tools inside those but that can be clunky and could require heavy adjustment each update"*
+
+A hand-copied, hand-patched skill directory with no provenance marker, no version pin, and no
+update path is exactly the failure mode the dependency-not-forks direction exists to end. It
+went stale silently for two and a half months, and no check in the programme noticed — because
+every check looks at repositories.
+
+### What this does to the options
+
+Option 3 ("record only") is weaker than it looked: the cost is not a hypothetical future
+reinstall, it is 43 commits of upstream work already missed and accruing.
+
+Option 1 ("install the block, then clean") is correspondingly stronger, and it now has a
+second half worth naming: once the fenced block delivers the routing, the skills themselves
+should come from a **managed** source — the enabled plugin, or a pinned checkout recorded in
+the compatibility manifest of section 13.2 — rather than a hand-copy.

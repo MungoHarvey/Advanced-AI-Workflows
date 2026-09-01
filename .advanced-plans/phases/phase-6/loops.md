@@ -911,22 +911,25 @@ todos:
     complexity: medium
     priority: high
   - id: "loop-006-5"
-    content: "Stage the v0.17.0 release locally: VERSION, CHANGELOG, and the release checklist. Do not publish"
+    content: "Stage the v0.20.0 release locally: VERSION, CHANGELOG, and the release checklist. Do not publish"
     repository: "advanced-planning"
     base_sha: "loop-006-4"
     allowed_paths: ["VERSION", "CHANGELOG.md", "docs/release-checklist.md"]
     forbidden_paths: ["<standard programme forbidden set>", "advanced-planning/.advanced-plans/", "setup-antigravity.js"]
     provider: "controller"
     worktree_owner: "aaw (controller checkout drives; the commit is made in advanced-planning)"
+    rewritten: "2026-09-01, on the user's decision. The original said VERSION 0.16.0 -> 0.17.0 and hand-listed the CHANGELOG contents. Measured at rewrite time: origin/main is at 0.19.0, with 0.17.0 and 0.18.0 both shipped on 2026-08-31 and 0.19.0 on 2026-09-01, so every check in the original was unsatisfiable. The intent - a release staged locally and publishable on one command, nothing pushed - is unchanged. Check 2 is the substantive repair: the old one named the contents the author expected, which is a check whose subject is a string the plan typed; the new one derives them from the unreleased commit range, so work landing between this rewrite and the todo running cannot be silently omitted."
     checks:
-      - "VERSION 0.16.0 -> 0.17.0"
-      - "CHANGELOG names all three new adapters, both schemas, the host-neutrality rule and the shared-runtime fix, with the loop each came from"
+      - "VERSION 0.19.0 -> 0.20.0. A minor bump, not a patch: the range contains a new adapter"
+      - "the CHANGELOG's [Unreleased] section currently reads '_Nothing yet._' while eight commits sit unreleased - it is emptied into a 0.20.0 section"
+      - "the 0.20.0 entries are DERIVED from `git log --oneline origin/main..HEAD`, not from a list written in this todo. Every commit in that range is either named in the CHANGELOG or recorded, in the loop result, as deliberately not user-visible with the reason. A count is taken both sides and they must agree"
+      - "each entry names the loop it came from, as the CHANGELOG's existing sections do"
       - "docs/release-checklist.md is FOLLOWED, and each item is recorded as done or explicitly not applicable"
-      - "NO tag is pushed, NO release is created, NO PR is opened. The programme's external-write rule stands and covers this repository too"
+      - "NO tag is pushed, NO release is created, NO PR is opened. The programme's external-write rule stands and covers this repository too. At rewrite time advanced-planning holds 8 unpushed commits and has never had a push approved; staging a release does not change that"
       - "the controller appends a release_staged event to history.jsonl with event, phase and version, per the programme's release-staging convention"
-    evidence: "The diff, the completed checklist, and the history event"
+    evidence: "The diff, the commit-range count on both sides, the completed checklist, and the history event"
     gate: "human"
-    outcome: "v0.17.0 is ready to publish on one command, and publishing it remains the user's decision"
+    outcome: "v0.20.0 is ready to publish on one command, its CHANGELOG accounts for every unreleased commit rather than the ones the plan happened to remember, and publishing it remains the user's decision"
     status: pending
     complexity: medium
     priority: medium

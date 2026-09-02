@@ -351,3 +351,18 @@ its own test.
 settings, the gate now blocks it and names the path, and an operator widens the list
 deliberately. The previous default resolved itself silently, which is the worse direction
 for a permission file. One line reverses it.
+
+### Landed
+
+`e49506d` on `loop-007-acc08`, four files: `scope_policy.py`,
+`tests/test_default_worker_scope.py` (new), `tests/test_evidence_gate.py`,
+`platforms/claude-code/commands/next-loop.md`. Working tree clean afterwards.
+
+**measured.** Full suite `1044 passed, 1 skipped in 531.74s`, against `1018 passed, 1
+skipped` before this loop's work — the difference is the 24 tests in the new file and the 2
+added to `TestIntegrationWiring`. The suite was re-run after the `.claude/settings.json`
+narrowing, not before it, because the narrowing touched a module a hundred other tests
+import.
+
+Nothing pushed. `loop-007-acc08` now holds `3f98cbd`, `6cca55c` and `e49506d`, none of them
+on a remote.

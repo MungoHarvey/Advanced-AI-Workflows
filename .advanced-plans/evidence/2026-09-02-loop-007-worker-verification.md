@@ -366,3 +366,69 @@ import.
 
 Nothing pushed. `loop-007-acc08` now holds `3f98cbd`, `6cca55c` and `e49506d`, none of them
 on a remote.
+
+## The gate had no tree to read, and that was measured before it was fixed
+
+`/run-gate` reviews a working tree. Loop 007's remediation was not in one. `main` sat at
+`171d193` (v0.20.0 staged) and contained none of it; the six commits were spread across
+three branches off that same base, and no branch contained any other:
+
+| Branch | Tip | Unique to it |
+|---|---|---|
+| `loop-005-cursor` | `06434b7` | 007-5 |
+| `loop-007-audit` | `d09c440` | 007-4, plus `9603fca` |
+| `loop-007-acc08` | `e49506d` | 007-3, 007-2, `3f98cbd` (007-1) |
+
+`git merge-tree --write-tree` reported both merges clean before either was made, which is
+the point of running it first: the alternative is discovering a conflict with a half-built
+branch on disk. Both merges then went through with no conflict, and the local branch
+`loop-007-integration` now carries all six commits plus two merge commits (`1b54294`,
+`b684dfc`). It was never pushed and `main` was never touched -- merging to a default branch
+is outside this session's authorisation, and an integration branch for a reviewer to read
+is not a release.
+
+Each piece was checked on the merged tree rather than assumed to have survived:
+
+| Todo | Check on the integrated tree | Result |
+|---|---|---|
+| 007-1 | non-test callers of `validate_path_scope` | `evidence_gate.py:242` and `:437` |
+| 007-2 | the rewritten negative assertion | targets the production caller, mutation-proved |
+| 007-3 | step 7a: no envelope, has a scope, names three failures | all four checks hold |
+| 007-4 | per-root red-green tests | four, one per new root |
+| 007-5 | `run-gate.md` instructs `deferred` | fixed in source |
+
+## The command the gate would have run is the one 007-5 fixed
+
+`~/.claude/commands/run-gate.md` -- the INSTALLED copy, which is what `/run-gate` executes
+-- still instructs the Codex reviewer to emit `criteria_outcomes.status: 'not_applicable'`.
+The schema enum is `["met", "deferred", "failed"]` with `additionalProperties: false`, so a
+reviewer that obeys produces a verdict which fails `extract_and_validate` and is logged as
+a skipped reviewer rather than as a defect in the instruction. That is exactly the defect
+loop-007-5 was opened for, and it is fixed in `platforms/claude-code/commands/run-gate.md`
+on the integration branch. The installed copy is stale because nothing has been released or
+re-installed since.
+
+So attempt 2 is driven from the SOURCE text, not the installed command. Had it not been,
+the gate would have reproduced its own known defect while nominally testing the fix for it,
+and the Codex verdict would have gone missing for the second attempt running. Diff of the
+two, verbatim:
+
+```
+-  status to 'not_applicable' with evidence 'main-thread-verified (isolation rule forbids
++  status to 'deferred' with evidence 'main-thread-verified (isolation rule forbids
+```
+
+Recorded, not fixed: refreshing `~/.claude/commands/` is a user-profile write outside both
+repositories and outside this task's scope.
+
+## What the loop file said, and what was true
+
+All seven loop-007 todos still read `status: pending`, which would have stopped `/run-gate`
+at its step 2 precondition. Five were done and on branches. The file now records each with a
+`landed:` line naming the commit, because a status word on its own is the reviewer taking
+the controller's word for it.
+
+007-6 and 007-7 stay `pending`. They are `gate: human`, they are not done, and `cancelled`
+would have bought a green precondition with a false statement. They carry criteria 1 and 2,
+so attempt 2 is expected to fail on those two; the gate is told so explicitly rather than
+being allowed to discover it as a surprise.

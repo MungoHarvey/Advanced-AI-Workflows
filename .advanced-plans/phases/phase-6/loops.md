@@ -980,9 +980,9 @@ on_max_iterations: escalate
 opened: "2026-09-02, by the phase-6 gate returning fail on attempt 1. Three reviewers reached fail independently and agreed on only two of six criteria; the disagreements are what produced the finding list below, and each todo names the criterion it discharges. No loop was reverted: nothing built in loops 001-006 was found wrong. What was found is machinery that was built, unit-tested, and never called, plus assertions that cannot fail. Reverting the loops that built it would remove the work and leave the gap."
 
 handoff_summary:
-  done: ""
+  done: "007-1 through 007-5 landed across three branches off 171d193 and were merged, conflict-free, onto the local branch loop-007-integration for the gate to have one tree to read. No branch was pushed and main is untouched."
   failed: ""
-  needed: ""
+  needed: "007-6 (host discovery) and 007-7 (the fixture programme on every host) are gate: human and remain open. They carry criteria 1 and 2, so a second fail on those two is the expected result of attempt 2 rather than a surprise. Attempt 2 asks the reviewers to judge the phase with those two declared open."
 
 todos:
   - id: "loop-007-1"
@@ -1003,7 +1003,8 @@ todos:
     evidence: "The grep before and after, the diff, and both halves of the control pair with their output"
     gate: "none"
     outcome: "The boundary the phase claims to enforce is enforced by something production actually runs"
-    status: pending
+    landed: "3f98cbd on loop-007-acc08. evidence_gate.py now calls validate_path_scope at two production sites (lines 242, 437); every caller before this was a test."
+    status: completed
     complexity: high
     priority: high
   - id: "loop-007-2"
@@ -1023,7 +1024,8 @@ todos:
     evidence: "The old test, the new test, and the red-green mutation pair"
     gate: "none"
     outcome: "The test that proves ACC-08 holds is itself proven able to fail"
-    status: pending
+    landed: "6cca55c on loop-007-acc08. The old assertion byte-compared a file the pure function never opened. Replaced against the production caller and mutation-proved red-green."
+    status: completed
     complexity: medium
     priority: high
   - id: "loop-007-3"
@@ -1044,7 +1046,8 @@ todos:
     evidence: "The call sites before and after, and one blocked-advancement case per adapter"
     gate: "none"
     outcome: "A failing gate verdict stops a loop advancing on every host, or the hosts where it does not are named in writing"
-    status: pending
+    landed: "e49506d on loop-007-acc08. Step 7a read an envelope nothing writes, so its first real run would have raised FileNotFoundError; it now derives scope from default_worker_scope and was EXECUTED in three scenarios before commit. Adapter coverage was scoped down: claude-code gates advancement, the other three are README-only and cannot, which is recorded rather than claimed fixed."
+    status: completed
     complexity: high
     priority: high
   - id: "loop-007-4"
@@ -1065,7 +1068,8 @@ todos:
     evidence: "The root list before and after, and four red-green control pairs"
     gate: "none"
     outcome: "The audit's pass covers the directories the criterion actually names"
-    status: pending
+    landed: "9603fca + d09c440 on loop-007-audit. Four roots added; test_path_audit.py holds a per-root red-green test for each of core/schemas, core/state, platforms/cursor, setup/cursor."
+    status: completed
     complexity: medium
     priority: high
   - id: "loop-007-5"
@@ -1085,7 +1089,8 @@ todos:
     evidence: "Both diffs and the pinning test"
     gate: "none"
     outcome: "The adapter states one contract, and a reviewer that follows run-gate.md produces a verdict the gate can read"
-    status: pending
+    landed: "06434b7 on loop-005-cursor. run-gate.md now instructs 'deferred', the only value in the schema enum that means 'I could not check this', with a test pinning the instruction text against the enum. NOTE the INSTALLED copy at ~/.claude/commands/run-gate.md is stale and still instructs not_applicable."
+    status: completed
     complexity: medium
     priority: high
   - id: "loop-007-6"

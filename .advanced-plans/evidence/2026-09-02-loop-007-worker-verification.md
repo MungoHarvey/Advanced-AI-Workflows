@@ -315,3 +315,39 @@ prompts, the schema itself, and two `evidence_gate.py` docstrings describing a p
 None of them open a file. The one executable reader is gone. That is the same divergence
 recorded above, seen from the other side: the contract is documented in five places across
 every host and executed in none.
+
+### Two things the first pass left open, closed the same day
+
+**The call-site pin could not fail on the defect it was written for.**
+`TestIntegrationWiring` asserted three strings appear in step 7a. All three appeared in the
+broken version too — it imported the gate, called it, and checked the result, and would
+still have died on `FileNotFoundError` before reaching any of that. So the pin proved a gate
+is *mentioned*, not that it can run. Two tests were added: one asserts the block does not
+name `external-task-envelope` and does obtain a scope, the other that it names all three
+failure modes an operator has to tell apart. **Mutation-proved individually** — renaming
+`default_worker_scope` reddens the first, removing the word `VACUOUS` reddens the second,
+and `next-loop.md` restored byte-identical (sha256 checked) after each.
+
+**The derived allow-list let a worker rewrite its own permissions.**
+**measured.** `default_worker_scope('.')` on the real repository returns 22 allowed entries,
+one of which is `.claude`. `git ls-files .claude` returns exactly one file:
+`.claude/settings.json` — this repository's own permission grants. A worker able to edit it
+can widen what the next worker may do, which is the single change a path-scope gate exists
+to prevent, and it is the same move the operating rules forbid me under "broaden provider
+permissions".
+
+`.claude/settings.json` is now in `_ALWAYS_FORBIDDEN`. The shipped template,
+`platforms/claude-code/settings.json`, is a different file and stays allowed — a worker
+improving what gets installed into a consuming project is doing ordinary work, and a gate
+that blocked it would be refusing real work to look strict. Both directions are pinned and
+both mutation-proved in isolation: dropping the entry reddens only the refusal test, and
+pointing it at the template reddens only the permissiveness test.
+
+The tmp fixture now creates `.claude/` as well. Without it the path was `not_allowed`
+whatever the forbidden list said, and the new entry would have been carrying no weight in
+its own test.
+
+**This is a judgement call, and a narrowing.** If a loop legitimately needs to edit the live
+settings, the gate now blocks it and names the path, and an operator widens the list
+deliberately. The previous default resolved itself silently, which is the worse direction
+for a permission file. One line reverses it.

@@ -536,3 +536,91 @@ measured earlier in this window: `platforms/codex`, `platforms/opencode` and
 opencode use) contains no reference to `evidence_gate`, `validate_advancement`, or
 `validate_loop_complete_advancement`. The gap that loop-007-3's own todo required to be
 written down is recorded only here, in a controller note, and not in any shipped document.
+
+## Closing criterion 5: the token, and proof that the tests for it are tests
+
+The operator's decision was to fix `.agents/` inside loop 007 rather than open a loop for
+it. What follows is what landed and how each claim was established.
+
+### The change
+
+`platforms/python/path_audit.py`, host-directory rule. The regex read
+`(claude|cursor|opencode|codex|gemini)` and now reads
+`(agents|claude|codex|cursor|gemini|opencode)`; the pattern label was relabelled to match,
+and three named `EXCEPTIONS` entries were added for the files under
+`platforms/shared/agent-skills/advanced-planning/` that legitimately name the cross-host
+discovery root -- `SKILL.md`, `references/orchestrator-prompt.md`,
+`references/worker-prompt.md`. Named exceptions print on every run and an excepted file
+still fails every rule it was not excepted for, so this is a declaration and not a
+suppression. Their retirement plans are `N/A`: those files are host-routing documents and
+naming the root is their job.
+
+The rule's scope is unchanged. `core_only=True` means `core/` and `platforms/shared`
+(`path_audit.py:376-377`), so `platforms/claude-code/` may still say `.claude/`, which is
+the entire point of an adapter.
+
+### The audit, on the real repository
+
+| Run | Exit | Result |
+|---|---|---|
+| before the change | 0 | PASSED WITH 20 SUPPRESSED |
+| after the change | 0 | PASSED WITH 24 SUPPRESSED |
+
+Four is exactly the number of declared `.agents/` occurrences across the three
+`platforms/shared/` files. The audit stays green because the new violations are declared,
+not because the rule was weakened.
+
+### The tests, and whether they are tests
+
+Two were added to `TestNewRootsAreCovered`:
+
+- `test_a_planted_agents_path_goes_red` plants `.agents/skills/...` in a `core/` file and
+  runs `audit(repo_root=root)` with **no `scanned_roots` override** -- the default CI path,
+  which is what the four loop-007-4 tests already used and what made their silence
+  meaningful.
+- `test_every_documented_host_directory_is_in_the_regex` **derives** the forbidden token
+  list from the Host directories row of `docs/path-conventions.md` and requires the
+  host-directory regex to match every token in it. A test that enumerated the six tokens
+  itself would be a second copy of the list that was already forgotten once, forgettable in
+  the same way. Deriving it means a host directory added to the documentation fails here
+  until the code catches up. It parses the row's forbidden column only, asserts exactly one
+  such row exists, and asserts at least five tokens parsed, so a row whose format changed
+  fails loudly rather than sweeping over nothing.
+
+Both were mutation-proved by removing the token from the regex and running them, with the
+subject restored byte-exact afterwards (sha256 `56e322396468bc01`, unchanged):
+
+| Test | token present | token removed |
+|---|---|---|
+| `test_a_planted_agents_path_goes_red` | pass | **fail** -- "a core/ file naming .agents/ was not flagged" |
+| `test_every_documented_host_directory_is_in_the_regex` | pass | **fail** -- "forbids `['.agents/']` ... regex does not match them" |
+| `test_the_clean_tree_is_green` (positive control) | pass | pass |
+
+The control is what separates "these tests can see the defect" from "the audit is broken
+and failing everything". The drift test naming `['.agents/']` in its own failure message is
+the point of deriving it: nothing told it which token to look for.
+
+### Where it came from
+
+Not loop-007-4. The origin is **loop-003-2**, and its own first check reads:
+
+> "host directories flagged under core/: `.claude/`, `.cursor/`, `.opencode/`, `.codex/`,
+> `.agents/`, `.gemini/`"
+
+Six named; five implemented. The todo's `evidence` field asked for "the diff and the rule
+list", and the rule list was never read against the check that specified it. The
+documentation was correct in both places throughout, so no source of truth had to be
+consulted -- only the two artefacts the todo already named.
+
+It then survived loop-007-4, which added four roots and four red-green tests, because
+every one of those tests planted a token the regex already matched. **Widening a check's
+roots does not widen its tokens**, and a test suite can grow while the hole stays exactly
+the same size.
+
+### The reviewer split, kept on the record
+
+Two of three reviewers marked criterion 5 met; both had checked the roots. The one that
+marked it failed had checked the tokens. A majority vote would have passed a criterion a
+controlled mutation shows was not met. Consensus raised confidence in the wrong
+conclusion, which is the second time in this programme it has done so -- and the reason
+the resolution here was a mutation rather than an adjudication.

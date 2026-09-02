@@ -1305,7 +1305,7 @@ todos:
   - id: "loop-008-4"
     content: "Make the silent-dispatch class impossible to reintroduce: a test derived from the shipped commands, not from a list"
     repository: "advanced-planning"
-    base_sha: "loop-008-3"
+    base_sha: "loop-008-2"
     allowed_paths: ["platforms/python/tests/"]
     forbidden_paths: ["<standard programme forbidden set>", "advanced-planning/.advanced-plans/", "setup-antigravity.js"]
     provider: "opencode"
@@ -1316,6 +1316,7 @@ todos:
       - "the test asserts that every module a shipped file names has a __main__, so a module wired into a command but inert fails here"
       - "a vacuity guard on the number of invocations found. Zero parsed invocations must FAIL as VACUOUS rather than sweep - a regex that matches nothing otherwise reports a clean pass over nothing"
       - "mutation-proved by pointing a shipped file at a module with no __main__ and watching it go red, restored byte-exact"
+      - "this lands BEFORE 008-3 rather than after, by operator decision on 2026-09-02, and the base_sha was moved from loop-008-3 to loop-008-2 to say so. That ordering is deliberate and not a shortcut: the test DERIVES its module list from the shipped files, so at the moment 008-3 adds the gate invocation the test starts covering it with no further edit. Landing the guard after the thing it guards would need someone to remember to come back, which is the failure mode this todo exists to remove. It also means the derived list will NOT contain evidence_gate when this todo runs - that is expected, and the vacuity guard is what keeps the test honest in the meantime"
     evidence: "The test, the parsed invocation list with its count, and the mutation log"
     gate: "none"
     outcome: "The next module wired into a shipped command cannot be silently inert"

@@ -659,3 +659,73 @@ the human-gated todos and were expected. The third, criterion 4, is not gated on
 external: `evidence_gate.validate_advancement` still has zero production callers, and the
 shared router the other three hosts use names no gate at all. It is the one open criterion
 that a loop could close.
+
+## Loop 008 opened, and the measurement that scoped it
+
+The operator's ruling left criterion 4 as the only open criterion not gated on manual
+host work, and opened loop 008 for it. Before a single todo was written I measured the
+gap, because the two reviewers who failed the criterion both described it as *"the gate
+is not wired into three adapters"*, and a loop written on that phrasing would have fixed
+the wrong thing.
+
+Two facts contradict the phrasing.
+
+The shared router **does** validate. `platforms/shared/agent-skills/advanced-planning/SKILL.md`
+runs `ap.py state_validate` at three points in the loop verb (`loop-ready` at steps 3 and 5,
+`loop-complete` at step 7) and once more in the gate verb. What it never runs is the *gate*
+half of the criterion, whose wording is schema **and** gate validation. So the criterion
+fails on one half, not both, and only the gate half is loop 008's business.
+
+The second fact is worse than "unwired". `ap_launcher.py:428-430` dispatches with
+`runpy.run_module(module, run_name="__main__", alter_sys=True)` and applies no allow-list,
+so it will run whatever module name a router writes. `evidence_gate.py` has no `__main__`.
+Dispatched exactly that way, with the same argument shape:
+
+| module | result |
+|---|---|
+| `platforms.python.state_validate` | `SystemExit(2)` - prints usage |
+| `platforms.python.evidence_gate` | **returned normally** - no `SystemExit` |
+
+A normal return is exit 0 at the launcher. So the gate is not absent from the three
+non-Claude hosts; it is **callable there and silently green**. A router wired to call it
+today would read "gate passed" from a module that never looked at anything, and every
+check downstream of that read would inherit the lie. That is the programme's own defect
+class - a check whose subject is something it supplied itself - sitting inside the
+mechanism built to catch it.
+
+Two smaller measurements set the loop's edges. `validate_loop_complete_advancement` has
+exactly one production caller, `platforms/claude-code/commands/next-loop.md` at lines 366
+and 400. `validate_advancement`, also exported in `__all__`, has **zero** anywhere outside
+tests. Todo 008-5 exists to decide which of those two things it is.
+
+### The six todos, and why they are in that order
+
+008-1 is read-only and goes to codex, because the first job is to reproduce or refute the
+measurement above rather than inherit it. 008-2 gives the module a CLI whose three failure
+modes an operator can act on differently, and 008-3 wires it into the router at the point
+that already validates `loop-complete.json` - executing the shipped block in three
+scenarios, the pass first as the positive control, because loop-007-3 established that a
+gate every reviewer had *read* raised `FileNotFoundError` on its first real invocation.
+008-4 closes the class rather than the instance: a test that derives module names by
+parsing the shipped commands and asserts each has a `__main__`, with a vacuity guard, so
+that the next inert module fails on the day it is wired. 008-5 resolves the dead-code
+question. 008-6 proves the criterion on opencode against an installed copy, forced to fail
+as well as pass, with the invocation manifest read off the host's own datastore.
+
+### Verification of the edit itself
+
+The loop block was inserted at the seam before `## Loop order and why`, which was checked
+unique before the write. `loops.md` went 1208 to 1382 lines with zero CR bytes, and three
+index edits landed alongside it: the loop-order row, the criterion-4 discharge row, and a
+new paragraph recording attempt 2 and the operator's two rulings.
+
+The parser was then run against the edited file rather than assumed to still work, with
+`state_dir` redirected into the scratchpad so no programme state was written - the md5 of
+`.advanced-plans/state/loop-ready.json` was identical before and after. It returns
+`ralph-loop-007` with two pending todos, which is correct: 007-6 and 007-7 are the
+human-gated ones and still open. On a scratch copy with those retired it stops at 007
+anyway, because 007-5 is `in_progress` and an `in_progress` todo is unschedulable - the
+already-recorded finding at `state_manager.py:272`, reproduced here rather than
+rediscovered. With that cleared too, the scanner reaches loop 008 and reports six populated
+todos under the right phase and task name. So the block parses, and the one thing standing
+between it and execution is a defect that predates it.

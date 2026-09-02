@@ -1172,6 +1172,163 @@ todos:
 
 ---
 
+```yaml
+---
+name: "ralph-loop-008"
+task_name: "Criterion 4 - make the evidence gate reachable, and unable to pass silently"
+max_iterations: 3
+on_max_iterations: escalate
+
+opened: "2026-09-02, by operator decision after gate attempt 2. Criteria 3 and 5 were closed inside loop 007; 1 and 2 are the human-gated todos 007-6 and 007-7. That leaves criterion 4 as the only open criterion not gated on manual host work. The gap is NOT what the phrase 'the gate is not wired into three adapters' suggests, and the loop is scoped on the measurement rather than the phrase - see 008-1."
+
+handoff_summary:
+  done: ""
+  failed: ""
+  needed: "Measured by the controller on 2026-09-02, before this loop was written, so the todos below are scoped on facts rather than on the gate reviewers' phrasing. (a) evidence_gate.py has NO __main__ and no CLI; eight modules under platforms/python/ have one and it is not among them. (b) ap_launcher dispatches with runpy.run_module(module, run_name='__main__') and NO allow-list, so any module name the router writes will be run. (c) Consequently the gate is not merely absent from the three non-Claude hosts, it is CALLABLE AND SILENTLY GREEN there: dispatched with the same argument shape that makes state_validate print usage and raise SystemExit(2), evidence_gate returns normally, which the launcher reports as exit 0. A router that called it today would read 'gate passed' from a module that never looked at anything. (d) The shared router is not unvalidated - it runs state_validate at three points in the loop verb and once in the gate verb. What it never runs is the GATE half, which is the whole of criterion 4's wording: schema AND gate validation. (e) platforms/claude-code/commands/next-loop.md lines 366 and 400 are the only production callers of validate_loop_complete_advancement, and validate_advancement has ZERO production callers anywhere."
+
+todos:
+  - id: "loop-008-1"
+    content: "State the criterion-4 gap as it actually is, and prove the silent pass rather than inferring it"
+    repository: "advanced-planning (read-only)"
+    base_sha: "loop-007-integration"
+    allowed_paths: ["none - read-only"]
+    forbidden_paths: ["<standard programme forbidden set>", "advanced-planning/.advanced-plans/", "setup-antigravity.js"]
+    provider: "codex"
+    worktree_owner: "herdr"
+    discharges: "criterion 4 - collected evidence advances a loop only after schema AND gate validation. Failed by codex and phase-goals-agent in attempt 2, and independently measured by the controller."
+    checks:
+      - "run it, do not read it: dispatch platforms.python.evidence_gate through runpy exactly as ap_launcher.py does, and record what happens against platforms.python.state_validate as the control. The controller measured SystemExit(2) for the control and a normal return for the gate; reproduce or refute that, and say which"
+      - "confirm from source that evidence_gate.py has no __main__ and that ap_launcher applies no module allow-list. Both are the mechanism; a fix that adds a CLI without closing the silent-dispatch path leaves the hole open for the next module"
+      - "count production callers of BOTH gate functions with tests excluded, and give the file and line of each. The controller found one for validate_loop_complete_advancement and zero for validate_advancement"
+      - "state what the shared router DOES validate. It runs state_validate at three points in the loop verb and once in the gate verb, so 'the router does no validation' is false, and a loop written on that phrasing would fix the wrong thing"
+    evidence: "A table with one row per claim, each marked measured or read, and the exact commands. Any disagreement with the controller's measurement above is the finding, not an error to reconcile quietly"
+    gate: "none"
+    outcome: "The gap is stated as callable-and-silently-green rather than unwired, so 008-2 and 008-3 fix the mechanism instead of the symptom"
+    status: pending
+    complexity: low
+    priority: high
+  - id: "loop-008-2"
+    content: "Give evidence_gate a CLI whose three failure modes an operator can tell apart"
+    repository: "advanced-planning"
+    base_sha: "loop-008-1"
+    allowed_paths: ["platforms/python/evidence_gate.py", "platforms/python/tests/"]
+    forbidden_paths: ["<standard programme forbidden set>", "advanced-planning/.advanced-plans/", "setup-antigravity.js"]
+    provider: "opencode"
+    worktree_owner: "herdr"
+    discharges: "criterion 4"
+    checks:
+      - "invoked with no arguments it exits NON-ZERO with a usage line naming the module, the way state_validate does. An entry point that exits 0 on no arguments is the defect this todo exists to remove"
+      - "the three failure modes 007-3 established for the claude-code caller stay distinguishable here: a path-scope violation, a VACUOUS measurement, and a schema failure. The operator acts differently on each - revert the worker, distrust the baseline, distrust the report - so one undifferentiated non-zero exit is not sufficient"
+      - "a VACUOUS measurement must NOT exit 0. loop-007-2 established that a path-scope gate over zero paths must fail rather than pass; the CLI inherits that and a test pins it"
+      - "the violating paths are PRINTED, not merely counted. A gate that says '3 violations' sends an operator back to the diff to work out which"
+      - "red-green: each new assertion is proved able to fail by mutation, with the source restored byte-exact afterwards and a positive control showing the instrument is not simply broken"
+    evidence: "The diff, the mutation log, and the CLI output for all four cases including the clean pass"
+    gate: "none"
+    outcome: "The gate can be invoked from a shell by any host, and cannot report a pass it did not establish"
+    status: pending
+    complexity: medium
+    priority: high
+  - id: "loop-008-3"
+    content: "Wire the gate into the shared router so the three non-Claude hosts run it, and EXECUTE the block rather than reading it"
+    repository: "advanced-planning"
+    base_sha: "loop-008-2"
+    allowed_paths: ["platforms/shared/agent-skills/advanced-planning/", "platforms/python/tests/"]
+    forbidden_paths: ["<standard programme forbidden set>", "advanced-planning/.advanced-plans/", "setup-antigravity.js"]
+    provider: "opencode"
+    worktree_owner: "herdr"
+    discharges: "criterion 4"
+    checks:
+      - "the gate call goes where the router already validates loop-complete.json - step 7 of the loop verb - so the two halves of the criterion sit together and schema-then-gate is the visible order"
+      - "EXECUTE the shipped block. Extract the command from the markdown that ships and run it in a throwaway project; do not retype it. loop-007-3 found a gate that had passed every reviewer because they had read it rather than run it, and its first real invocation would have raised FileNotFoundError"
+      - "three scenarios, and the first is the positive control: an in-scope change PASSES, a write to a forbidden path FAILS naming the path, and an empty measurement FAILS as VACUOUS. Without the pass, a router that refused everything would score two out of three"
+      - "every artefact the block reads must be one this adapter actually writes. 007-3's defect was a bare open() on a file nothing in the adapter produces, and the schema forbade it ever appearing"
+    evidence: "The diff, the extracted command, and the three runs with their exit codes and messages"
+    gate: "none"
+    outcome: "Criterion 4 holds on the three hosts that route through the shared skill, not only on Claude Code"
+    status: pending
+    complexity: medium
+    priority: high
+  - id: "loop-008-4"
+    content: "Make the silent-dispatch class impossible to reintroduce: a test derived from the shipped commands, not from a list"
+    repository: "advanced-planning"
+    base_sha: "loop-008-3"
+    allowed_paths: ["platforms/python/tests/"]
+    forbidden_paths: ["<standard programme forbidden set>", "advanced-planning/.advanced-plans/", "setup-antigravity.js"]
+    provider: "opencode"
+    worktree_owner: "herdr"
+    discharges: "criterion 4, and the defect class underneath it"
+    checks:
+      - "the module names are DERIVED by parsing the shipped command and skill files for ap.py invocations, never enumerated in the test. An enumerated list is a second copy of a list that can be forgotten, which is exactly how .agents/ was lost from the path audit for five days"
+      - "the test asserts that every module a shipped file names has a __main__, so a module wired into a command but inert fails here"
+      - "a vacuity guard on the number of invocations found. Zero parsed invocations must FAIL as VACUOUS rather than sweep - a regex that matches nothing otherwise reports a clean pass over nothing"
+      - "mutation-proved by pointing a shipped file at a module with no __main__ and watching it go red, restored byte-exact"
+    evidence: "The test, the parsed invocation list with its count, and the mutation log"
+    gate: "none"
+    outcome: "The next module wired into a shipped command cannot be silently inert"
+    status: pending
+    complexity: medium
+    priority: high
+  - id: "loop-008-5"
+    content: "Decide what validate_advancement is: the API the CLI should expose, or dead code"
+    repository: "advanced-planning"
+    base_sha: "loop-008-4"
+    allowed_paths: ["platforms/python/evidence_gate.py", "platforms/python/tests/", "docs/"]
+    forbidden_paths: ["<standard programme forbidden set>", "advanced-planning/.advanced-plans/", "setup-antigravity.js"]
+    provider: "codex"
+    worktree_owner: "herdr"
+    discharges: "criterion 4 - a public function in __all__ with zero production callers is either the interface or a liability, and the criterion cannot be assessed while it is undecided"
+    checks:
+      - "it takes evidence, envelope and verdict paths, a wider contract than the loop-complete wrapper the one live caller uses. Say whether the router needs that width; if it does, the CLI exposes it and 008-2's entry point is built on it rather than beside it"
+      - "if it does not, DELETE it with its tests rather than leaving it in __all__. Machinery that is implemented, tested and never called is the finding this phase was opened to remove, and keeping it because it might be wanted is how it survived this long"
+      - "either way the decision goes into the module docstring, so the next reader does not have to re-derive it"
+    evidence: "The decision, its reasoning, and the diff"
+    gate: "none"
+    outcome: "No implemented-but-uncalled gate function remains in the module"
+    status: pending
+    complexity: low
+    priority: medium
+  - id: "loop-008-6"
+    content: "Prove criterion 4 on a real non-Claude host, against the installed copy"
+    repository: "advanced-planning (read-only for the host; the fixture lives outside both checkouts)"
+    base_sha: "loop-008-5"
+    allowed_paths: ["none - the fixture lives in the session scratchpad"]
+    forbidden_paths: ["<standard programme forbidden set>", "advanced-planning/.advanced-plans/", "setup-antigravity.js"]
+    provider: "opencode"
+    worktree_owner: "herdr"
+    discharges: "criterion 4, on a host rather than in a test"
+    checks:
+      - "opencode, because it is the only unattended runtime in the fleet and needs no trust dialog. One host is enough for this todo; the four-host question is 007-6 and is not reopened here"
+      - "the host runs the INSTALLED copy, from a fixture install, not the source checkout. loop-004-4 established that the installer binds a project to its installing checkout, so a run against the repo proves nothing about a consuming project"
+      - "the host must be made to FAIL the gate as well as pass it. A run that only passes cannot distinguish a working gate from an absent one"
+      - "read the host's own datastore for the invocation manifest - model, session id, token counts - rather than accepting its summary. Its report of what it did is not evidence that it did it"
+    evidence: "The fixture path, both runs with exit codes, and the invocation manifest read off disk"
+    gate: "none"
+    outcome: "Criterion 4 has a measured verdict on a host, which is what the criterion asks for"
+    status: pending
+    complexity: high
+    priority: high
+
+  ## Non-negotiables
+  - The gap is callable-and-silently-green, not unwired. A fix that adds a CLI and leaves
+    runpy dispatching arbitrary module names has closed the symptom and left the mechanism.
+  - Execute the shipped block. Reading it is what let 007-3's defect through three reviewers.
+  - Derive, do not enumerate. Every list in this loop that could drift is parsed from the
+    artefact it describes, for the reason .agents/ went missing.
+  - A VACUOUS result is a failure, never a pass. Established by loop-007-2 and inherited here.
+  - Criteria 1 and 2 are NOT in scope. They are 007-6 and 007-7, gate: human, and still open.
+
+  ## Success criteria
+  - [ ] dispatching the gate module through the launcher can no longer exit 0 having checked nothing
+  - [ ] the shared router runs the gate as well as the schema validation, proven by executing the shipped block in three scenarios
+  - [ ] the three failure modes are distinguishable by exit code and message, with the violating paths printed
+  - [ ] a module named in a shipped command but lacking a __main__ fails a test derived from those commands
+  - [ ] validate_advancement is exposed or deleted, and the decision is recorded in the module
+  - [ ] criterion 4 has a measured pass AND a measured fail on one non-Claude host, on an installed copy
+---
+```
+
+---
+
 ## Loop order and why
 
 | Loop | Delivers | Why here |
@@ -1183,6 +1340,7 @@ todos:
 | 005 | Cursor adapter + the four-host discovery proof | Cursor is the most constrained host, so it goes last of the three; the four-host table needs all of them |
 | 006 | ACC-08, evidence-gated advancement, v0.17.0 staged | Edits `core/` prompts, so it runs after the audit is armed and the schemas exist |
 | 007 | gate remediation - the wiring, the controls, the host-discovery verdicts | Opened by the attempt-1 gate returning fail; every todo names the criterion it discharges |
+| 008 | criterion 4 - the evidence gate made reachable, and unable to pass silently | Opened by the attempt-2 gate. The gate is not merely unwired on the three non-Claude hosts: dispatched through the launcher it returns normally where `state_validate` raises `SystemExit(2)`, so it is callable and silently green |
 
 ## Exit criteria for the phase gate
 
@@ -1193,7 +1351,7 @@ Taken verbatim from `plan.md`, with the loop that discharges each:
 | Every target host discovers the same named core planning skills | loop-005-4, **loop-007-6** |
 | A fixture programme creates one phase, one loop and one external task on every host | loop-004-4, loop-005-3, **loop-007-7** |
 | Only the control checkout updates programme state — ACC-08 | loop-006-1, loop-006-2, **loop-007-1, loop-007-2** |
-| Collected evidence advances a loop only after schema and gate validation | loop-006-3, **loop-007-3** |
+| Collected evidence advances a loop only after schema and gate validation | loop-006-3, loop-007-3, **loop-008-1 .. loop-008-6** |
 | The CI path audit fails on any host-specific path in `core/` | loop-003-2, loop-003-4, **loop-007-4** |
 | No adapter duplicates a core skill's content | loop-004-2, loop-004-3, loop-005-2, loop-005-4 |
 
@@ -1201,6 +1359,22 @@ Taken verbatim from `plan.md`, with the loop that discharges each:
 bolded loop-007 todos are what was added in response; the unbolded ones are the work already
 done, which the gate did not find wrong. Only criterion 6, no adapter duplicating a core
 skill, passed unanimously and needed nothing.
+
+**Attempt 2 returned fail on 2026-09-02**, on three. The operator resolved two of them the
+same day. Criterion 3 was ruled **met** on the declared carve-out: `loop-complete.json` is
+writable by the worker by design, the divergence is recorded in the loop-007 evidence and
+carried as a Phase 7 finding, and a criterion cannot be failed for a deviation the phase
+declared. Criterion 5 was **fixed inside loop 007** rather than deferred - `.agents/` was
+absent from the host-neutrality regex, and adding it moved the audit from 20 suppressed
+matches to 24, with two new tests each proven able to fail by mutation. That left criterion
+4, which is why loop 008 exists, and criteria 1 and 2, which are the human-gated todos
+007-6 and 007-7 and are not in loop 008's scope.
+
+The state after those rulings is **three met, three failed**: 3, 5 and 6 met; 1, 2 and 4
+open. Criterion 5's failure is the one worth naming, because two of the three reviewers
+marked it met. They checked that the audit's **roots** had been widened and did not check
+its **tokens**, and widening a check's roots does not widen what it looks for. A majority
+vote would have passed a criterion a one-line mutation shows was not met.
 
 Not a plan criterion but a phase-6 finding in its own right: the shared Python runtime is
 unreachable from any installed project (loop-001). It is not in the plan's deliverable table

@@ -1186,6 +1186,12 @@ handoff_summary:
   failed: ""
   needed: "Measured by the controller on 2026-09-02, before this loop was written, so the todos below are scoped on facts rather than on the gate reviewers' phrasing. (a) evidence_gate.py has NO __main__ and no CLI; eight modules under platforms/python/ have one and it is not among them. (b) ap_launcher dispatches with runpy.run_module(module, run_name='__main__') and NO allow-list, so any module name the router writes will be run. (c) Consequently the gate is not merely absent from the three non-Claude hosts, it is CALLABLE AND SILENTLY GREEN there: dispatched with the same argument shape that makes state_validate print usage and raise SystemExit(2), evidence_gate returns normally, which the launcher reports as exit 0. A router that called it today would read 'gate passed' from a module that never looked at anything. (d) The shared router is not unvalidated - it runs state_validate at TEN points across three verbs: three in `loop next` (SKILL.md 120, 138, 146), three in `gate current` (166, 190, 196) and four in `resume` (216, 217, 223, 230). The controller first counted four and 008-1 corrected it. What the router never runs is the GATE half, which is the other half of criterion 4's wording: schema AND gate validation. (e) platforms/claude-code/commands/next-loop.md lines 366 and 400 are the only production callers of validate_loop_complete_advancement. The controller then claimed validate_advancement has ZERO callers anywhere; 008-1 corrected that. It has exactly one, at evidence_gate.py:150, inside can_advance_loop - and can_advance_loop itself has none. So there are TWO dead exports in __all__, not one, and can_advance_loop is the dead one."
 
+# Execution order is DOCUMENT order, and the ids are deliberately out of sequence.
+# loop-008-5 was moved ahead of loop-008-2 on 2026-09-02, by operator decision: it decides
+# what the gate's public API is, and 008-2 builds a CLI on that API, so deciding after
+# building is the wrong way round. The ids were NOT renumbered, because "loop-008-2" is
+# already cited in commit b3a436d and in the loop-008-1 evidence file, and a renumber would
+# leave two meanings of the same identifier - the drift this phase keeps finding.
 todos:
   - id: "loop-008-1"
     content: "State the criterion-4 gap as it actually is, and prove the silent pass rather than inferring it"
@@ -1208,10 +1214,31 @@ todos:
     status: completed
     complexity: low
     priority: high
+  - id: "loop-008-5"
+    content: "Decide what validate_advancement and can_advance_loop are: the API the CLI should expose, or dead code"
+    repository: "advanced-planning (read-only for the decision; the edit lands in 008-2's worktree)"
+    base_sha: "loop-008-1"
+    allowed_paths: ["none for the decision - the edit is carried out under 008-2"]
+    forbidden_paths: ["<standard programme forbidden set>", "advanced-planning/.advanced-plans/", "setup-antigravity.js"]
+    provider: "codex"
+    worktree_owner: "herdr"
+    discharges: "criterion 4 - two public functions in __all__ with no reachable caller are either the interface or a liability, and the criterion cannot be assessed while that is undecided. 008-1 established the shape: validate_advancement has exactly one caller, can_advance_loop, and can_advance_loop has none, so the whole pair is unreachable from production"
+    checks:
+      - "validate_advancement takes evidence, envelope and verdict paths, a wider contract than the loop-complete wrapper the one live caller uses. Say whether the router needs that width; if it does, the CLI exposes it and 008-2's entry point is built on it rather than beside it"
+      - "can_advance_loop is decided separately and is the weaker case: it is a boolean thinning of validate_advancement, it discards the reasons an operator needs, and its own docstring at evidence_gate.py:148 tells callers to use validate_advancement instead. A wrapper whose documentation advises against itself and which nothing calls is dead code"
+      - "if it does not, DELETE it with its tests rather than leaving it in __all__. Machinery that is implemented, tested and never called is the finding this phase was opened to remove, and keeping it because it might be wanted is how it survived this long"
+      - "either way the decision goes into the module docstring, so the next reader does not have to re-derive it"
+      - "this todo DECIDES; it does not edit. codex cannot git-commit from a linked worktree - the worktree's git metadata lives in the parent repo's .git/worktrees, outside its sandbox - so the deletion or the docstring is written by the opencode worker carrying 008-2, against this decision. Handing the decision to the implementer is also the right split: the model that decides is not the model that then has to justify what it wrote"
+    evidence: "The decision, its reasoning, and the exact change 008-2 is to make"
+    gate: "none"
+    outcome: "Neither implemented-but-uncalled gate function remains undecided in the module"
+    status: pending
+    complexity: low
+    priority: medium
   - id: "loop-008-2"
     content: "Give evidence_gate a CLI whose three failure modes an operator can tell apart"
     repository: "advanced-planning"
-    base_sha: "loop-008-1"
+    base_sha: "loop-008-5"
     allowed_paths: ["platforms/python/evidence_gate.py", "platforms/python/tests/"]
     forbidden_paths: ["<standard programme forbidden set>", "advanced-planning/.advanced-plans/", "setup-antigravity.js"]
     provider: "opencode"
@@ -1271,30 +1298,10 @@ todos:
     status: pending
     complexity: medium
     priority: high
-  - id: "loop-008-5"
-    content: "Decide what validate_advancement and can_advance_loop are: the API the CLI should expose, or dead code"
-    repository: "advanced-planning"
-    base_sha: "loop-008-4"
-    allowed_paths: ["platforms/python/evidence_gate.py", "platforms/python/tests/", "docs/"]
-    forbidden_paths: ["<standard programme forbidden set>", "advanced-planning/.advanced-plans/", "setup-antigravity.js"]
-    provider: "codex"
-    worktree_owner: "herdr"
-    discharges: "criterion 4 - two public functions in __all__ with no reachable caller are either the interface or a liability, and the criterion cannot be assessed while that is undecided. 008-1 established the shape: validate_advancement has exactly one caller, can_advance_loop, and can_advance_loop has none, so the whole pair is unreachable from production"
-    checks:
-      - "validate_advancement takes evidence, envelope and verdict paths, a wider contract than the loop-complete wrapper the one live caller uses. Say whether the router needs that width; if it does, the CLI exposes it and 008-2's entry point is built on it rather than beside it"
-      - "can_advance_loop is decided separately and is the weaker case: it is a boolean thinning of validate_advancement, it discards the reasons an operator needs, and its own docstring at evidence_gate.py:148 tells callers to use validate_advancement instead. A wrapper whose documentation advises against itself and which nothing calls is dead code"
-      - "if it does not, DELETE it with its tests rather than leaving it in __all__. Machinery that is implemented, tested and never called is the finding this phase was opened to remove, and keeping it because it might be wanted is how it survived this long"
-      - "either way the decision goes into the module docstring, so the next reader does not have to re-derive it"
-    evidence: "The decision, its reasoning, and the diff"
-    gate: "none"
-    outcome: "Neither implemented-but-uncalled gate function remains undecided in the module"
-    status: pending
-    complexity: low
-    priority: medium
   - id: "loop-008-6"
     content: "Prove criterion 4 on a real non-Claude host, against the installed copy"
     repository: "advanced-planning (read-only for the host; the fixture lives outside both checkouts)"
-    base_sha: "loop-008-5"
+    base_sha: "loop-008-4"
     allowed_paths: ["none - the fixture lives in the session scratchpad"]
     forbidden_paths: ["<standard programme forbidden set>", "advanced-planning/.advanced-plans/", "setup-antigravity.js"]
     provider: "opencode"

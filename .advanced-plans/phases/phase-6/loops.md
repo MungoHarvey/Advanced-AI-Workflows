@@ -931,7 +931,7 @@ todos:
     evidence: "The diff, the commit-range count on both sides, the completed checklist, and the history event"
     gate: "human"
     outcome: "v0.20.0 is ready to publish on one command, its CHANGELOG accounts for every unreleased commit rather than the ones the plan happened to remember, and publishing it remains the user's decision"
-    status: pending
+    status: completed
     complexity: medium
     priority: medium
 

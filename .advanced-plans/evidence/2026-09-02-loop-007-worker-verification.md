@@ -624,3 +624,38 @@ marked it failed had checked the tokens. A majority vote would have passed a cri
 controlled mutation shows was not met. Consensus raised confidence in the wrong
 conclusion, which is the second time in this programme it has done so -- and the reason
 the resolution here was a mutation rather than an adjudication.
+
+## The operator's resolution of attempt 2
+
+Two decisions were taken on 2026-09-02 after the three verdicts were in, and both are
+recorded here because neither is derivable from the verdicts themselves.
+
+**Criterion 3 -- MET, the carve-out stands.** codex marked it failed; the two subagent
+reviewers marked it met. The operator ruled it met on the grounds that a carve-out which
+is declared, documented and tested satisfies the criterion. The divergence codex objected
+to -- `.advanced-plans/state/loop-complete.json` being writable by the worker while
+`core/agents/worker.md` says the worker writes no programme state -- is real and is
+already tracked as the Phase 7 finding. Its in-code markers are the `_STATE_CARVE_OUTS`
+entry and `test_loop_complete_is_writable_and_this_is_the_divergence`, and when the
+adapter migrates they are to be **deleted, not amended**. A carve-out that survives its own
+cause is how a divergence becomes permanent.
+
+**Criterion 5 -- fix it inside loop 007.** Rather than open a loop-008 for a defect that
+is one token wide. Done, and documented in the section above.
+
+### Where the six criteria stand after that
+
+| # | Criterion | State | What it turns on |
+|---|---|---|---|
+| 1 | every host discovers the same core skills | failed | 007-6, gate: human, open |
+| 2 | fixture programme on every host | failed | 007-7, gate: human, open |
+| 3 | ACC-08, only the controller writes programme state | **met** | operator ruling above |
+| 4 | evidence advances only after schema and gate validation | failed | adapter wiring; no loop opened |
+| 5 | CI path audit fails on host-specific paths in core/ | **met** | fixed and mutation-proved |
+| 6 | no adapter duplicates a core skill | met | all three reviewers |
+
+Three met, three failed, so the phase 6 gate remains a fail. Two of the three failures are
+the human-gated todos and were expected. The third, criterion 4, is not gated on anything
+external: `evidence_gate.validate_advancement` still has zero production callers, and the
+shared router the other three hosts use names no gate at all. It is the one open criterion
+that a loop could close.

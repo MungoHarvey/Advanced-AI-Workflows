@@ -1184,7 +1184,7 @@ opened: "2026-09-02, by operator decision after gate attempt 2. Criteria 3 and 5
 handoff_summary:
   done: ""
   failed: ""
-  needed: "Measured by the controller on 2026-09-02, before this loop was written, so the todos below are scoped on facts rather than on the gate reviewers' phrasing. (a) evidence_gate.py has NO __main__ and no CLI; eight modules under platforms/python/ have one and it is not among them. (b) ap_launcher dispatches with runpy.run_module(module, run_name='__main__') and NO allow-list, so any module name the router writes will be run. (c) Consequently the gate is not merely absent from the three non-Claude hosts, it is CALLABLE AND SILENTLY GREEN there: dispatched with the same argument shape that makes state_validate print usage and raise SystemExit(2), evidence_gate returns normally, which the launcher reports as exit 0. A router that called it today would read 'gate passed' from a module that never looked at anything. (d) The shared router is not unvalidated - it runs state_validate at three points in the loop verb and once in the gate verb. What it never runs is the GATE half, which is the whole of criterion 4's wording: schema AND gate validation. (e) platforms/claude-code/commands/next-loop.md lines 366 and 400 are the only production callers of validate_loop_complete_advancement, and validate_advancement has ZERO production callers anywhere."
+  needed: "Measured by the controller on 2026-09-02, before this loop was written, so the todos below are scoped on facts rather than on the gate reviewers' phrasing. (a) evidence_gate.py has NO __main__ and no CLI; eight modules under platforms/python/ have one and it is not among them. (b) ap_launcher dispatches with runpy.run_module(module, run_name='__main__') and NO allow-list, so any module name the router writes will be run. (c) Consequently the gate is not merely absent from the three non-Claude hosts, it is CALLABLE AND SILENTLY GREEN there: dispatched with the same argument shape that makes state_validate print usage and raise SystemExit(2), evidence_gate returns normally, which the launcher reports as exit 0. A router that called it today would read 'gate passed' from a module that never looked at anything. (d) The shared router is not unvalidated - it runs state_validate at TEN points across three verbs: three in `loop next` (SKILL.md 120, 138, 146), three in `gate current` (166, 190, 196) and four in `resume` (216, 217, 223, 230). The controller first counted four and 008-1 corrected it. What the router never runs is the GATE half, which is the other half of criterion 4's wording: schema AND gate validation. (e) platforms/claude-code/commands/next-loop.md lines 366 and 400 are the only production callers of validate_loop_complete_advancement. The controller then claimed validate_advancement has ZERO callers anywhere; 008-1 corrected that. It has exactly one, at evidence_gate.py:150, inside can_advance_loop - and can_advance_loop itself has none. So there are TWO dead exports in __all__, not one, and can_advance_loop is the dead one."
 
 todos:
   - id: "loop-008-1"
@@ -1199,12 +1199,13 @@ todos:
     checks:
       - "run it, do not read it: dispatch platforms.python.evidence_gate through runpy exactly as ap_launcher.py does, and record what happens against platforms.python.state_validate as the control. The controller measured SystemExit(2) for the control and a normal return for the gate; reproduce or refute that, and say which"
       - "confirm from source that evidence_gate.py has no __main__ and that ap_launcher applies no module allow-list. Both are the mechanism; a fix that adds a CLI without closing the silent-dispatch path leaves the hole open for the next module"
-      - "count production callers of BOTH gate functions with tests excluded, and give the file and line of each. The controller found one for validate_loop_complete_advancement and zero for validate_advancement"
-      - "state what the shared router DOES validate. It runs state_validate at three points in the loop verb and once in the gate verb, so 'the router does no validation' is false, and a loop written on that phrasing would fix the wrong thing"
+      - "count production callers of BOTH gate functions with tests excluded, and give the file and line of each. The controller found one for validate_loop_complete_advancement and zero for validate_advancement. CORRECTED by this todo: validate_advancement has one, at evidence_gate.py:150 inside can_advance_loop, and can_advance_loop has none - so the dead export is can_advance_loop and 008-5 must decide about both"
+      - "state what the shared router DOES validate. It runs state_validate at ten points across loop next, gate current and resume, so 'the router does no validation' is false, and a loop written on that phrasing would fix the wrong thing. The controller counted four; the true figure is this todo's, not the controller's"
     evidence: "A table with one row per claim, each marked measured or read, and the exact commands. Any disagreement with the controller's measurement above is the finding, not an error to reconcile quietly"
     gate: "none"
     outcome: "The gap is stated as callable-and-silently-green rather than unwired, so 008-2 and 008-3 fix the mechanism instead of the symptom"
-    status: pending
+    result: "Run 2026-09-02 as a read-only `codex exec -s read-only -m gpt-5.6-sol` probe on loop-007-integration at 9fd6796; the worktree was verified clean and HEAD unchanged afterwards, so the read-only claim was checked rather than accepted. It CONFIRMED the dispatch measurement independently - state_validate SystemExit(2), evidence_gate returns normally - and confirmed no CLI, no launcher allow-list, and no gate reference anywhere in the shared skill or its four reference prompts. It CORRECTED the controller twice, and both corrections are in this loop: the caller count for validate_advancement, and the router's validation count. It added one finding neither the controller nor the gate reviewers had: the external-dispatch path at SKILL.md 193-196 validates collected evidence SCHEMA-ONLY, and that is the very path this programme uses for its own Herdr workers - so there are two sites needing the gate, not one. Its cited line numbers point at each step's heading rather than the command inside the fence; every one was opened and lands on the right step."
+    status: completed
     complexity: low
     priority: high
   - id: "loop-008-2"
@@ -1221,8 +1222,9 @@ todos:
       - "the three failure modes 007-3 established for the claude-code caller stay distinguishable here: a path-scope violation, a VACUOUS measurement, and a schema failure. The operator acts differently on each - revert the worker, distrust the baseline, distrust the report - so one undifferentiated non-zero exit is not sufficient"
       - "a VACUOUS measurement must NOT exit 0. loop-007-2 established that a path-scope gate over zero paths must fail rather than pass; the CLI inherits that and a test pins it"
       - "the violating paths are PRINTED, not merely counted. A gate that says '3 violations' sends an operator back to the diff to work out which"
+      - "close the dispatch path in the same change: `ap_launcher` accepts any importable module under platforms.python and runs it with run_name='__main__', which is what made a CLI-less module report success. Give it an explicit allow-list, or make an absent __main__ a non-zero error rather than a silent normal return. A CLI added without this leaves the hole open for the next module, which is 008-1's point and the reason this check is here rather than in a test"
       - "red-green: each new assertion is proved able to fail by mutation, with the source restored byte-exact afterwards and a positive control showing the instrument is not simply broken"
-    evidence: "The diff, the mutation log, and the CLI output for all four cases including the clean pass"
+    evidence: "The diff, the mutation log, the CLI output for all four cases including the clean pass, and a dispatch of a CLI-less module through the launcher showing it is now non-zero"
     gate: "none"
     outcome: "The gate can be invoked from a shell by any host, and cannot report a pass it did not establish"
     status: pending
@@ -1238,7 +1240,8 @@ todos:
     worktree_owner: "herdr"
     discharges: "criterion 4"
     checks:
-      - "the gate call goes where the router already validates loop-complete.json - step 7 of the loop verb - so the two halves of the criterion sit together and schema-then-gate is the visible order"
+      - "TWO sites, both found by 008-1. First, loop step 7 (SKILL.md 143-153), where the router already schema-validates loop-complete.json. Second, the external-dispatch block at SKILL.md 193-196, which validates collected evidence SCHEMA-ONLY - and that is the path this programme uses for its own Herdr workers, so leaving it is leaving the criterion failed where it is actually exercised"
+      - "ORDER is load-bearing at both sites. In this router the WORKER writes loop-complete.json, so the gate cannot precede the write the way it would if the controller wrote it. It must run after the schema check and BEFORE the history_log advancement event at SKILL.md:152 - a gate that runs after the loop is logged as complete is decorative. State the order explicitly in the block rather than relying on where the lines happen to sit"
       - "EXECUTE the shipped block. Extract the command from the markdown that ships and run it in a throwaway project; do not retype it. loop-007-3 found a gate that had passed every reviewer because they had read it rather than run it, and its first real invocation would have raised FileNotFoundError"
       - "three scenarios, and the first is the positive control: an in-scope change PASSES, a write to a forbidden path FAILS naming the path, and an empty measurement FAILS as VACUOUS. Without the pass, a router that refused everything would score two out of three"
       - "every artefact the block reads must be one this adapter actually writes. 007-3's defect was a bare open() on a file nothing in the adapter produces, and the schema forbade it ever appearing"
@@ -1269,21 +1272,22 @@ todos:
     complexity: medium
     priority: high
   - id: "loop-008-5"
-    content: "Decide what validate_advancement is: the API the CLI should expose, or dead code"
+    content: "Decide what validate_advancement and can_advance_loop are: the API the CLI should expose, or dead code"
     repository: "advanced-planning"
     base_sha: "loop-008-4"
     allowed_paths: ["platforms/python/evidence_gate.py", "platforms/python/tests/", "docs/"]
     forbidden_paths: ["<standard programme forbidden set>", "advanced-planning/.advanced-plans/", "setup-antigravity.js"]
     provider: "codex"
     worktree_owner: "herdr"
-    discharges: "criterion 4 - a public function in __all__ with zero production callers is either the interface or a liability, and the criterion cannot be assessed while it is undecided"
+    discharges: "criterion 4 - two public functions in __all__ with no reachable caller are either the interface or a liability, and the criterion cannot be assessed while that is undecided. 008-1 established the shape: validate_advancement has exactly one caller, can_advance_loop, and can_advance_loop has none, so the whole pair is unreachable from production"
     checks:
-      - "it takes evidence, envelope and verdict paths, a wider contract than the loop-complete wrapper the one live caller uses. Say whether the router needs that width; if it does, the CLI exposes it and 008-2's entry point is built on it rather than beside it"
+      - "validate_advancement takes evidence, envelope and verdict paths, a wider contract than the loop-complete wrapper the one live caller uses. Say whether the router needs that width; if it does, the CLI exposes it and 008-2's entry point is built on it rather than beside it"
+      - "can_advance_loop is decided separately and is the weaker case: it is a boolean thinning of validate_advancement, it discards the reasons an operator needs, and its own docstring at evidence_gate.py:148 tells callers to use validate_advancement instead. A wrapper whose documentation advises against itself and which nothing calls is dead code"
       - "if it does not, DELETE it with its tests rather than leaving it in __all__. Machinery that is implemented, tested and never called is the finding this phase was opened to remove, and keeping it because it might be wanted is how it survived this long"
       - "either way the decision goes into the module docstring, so the next reader does not have to re-derive it"
     evidence: "The decision, its reasoning, and the diff"
     gate: "none"
-    outcome: "No implemented-but-uncalled gate function remains in the module"
+    outcome: "Neither implemented-but-uncalled gate function remains undecided in the module"
     status: pending
     complexity: low
     priority: medium
@@ -1319,10 +1323,10 @@ todos:
 
   ## Success criteria
   - [ ] dispatching the gate module through the launcher can no longer exit 0 having checked nothing
-  - [ ] the shared router runs the gate as well as the schema validation, proven by executing the shipped block in three scenarios
+  - [ ] the shared router runs the gate as well as the schema validation, at BOTH sites, before the advancement is logged, proven by executing the shipped block in three scenarios
   - [ ] the three failure modes are distinguishable by exit code and message, with the violating paths printed
   - [ ] a module named in a shipped command but lacking a __main__ fails a test derived from those commands
-  - [ ] validate_advancement is exposed or deleted, and the decision is recorded in the module
+  - [ ] validate_advancement and can_advance_loop are each exposed or deleted, and the decisions are recorded in the module
   - [ ] criterion 4 has a measured pass AND a measured fail on one non-Claude host, on an installed copy
 ---
 ```

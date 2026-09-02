@@ -980,9 +980,9 @@ on_max_iterations: escalate
 opened: "2026-09-02, by the phase-6 gate returning fail on attempt 1. Three reviewers reached fail independently and agreed on only two of six criteria; the disagreements are what produced the finding list below, and each todo names the criterion it discharges. No loop was reverted: nothing built in loops 001-006 was found wrong. What was found is machinery that was built, unit-tested, and never called, plus assertions that cannot fail. Reverting the loops that built it would remove the work and leave the gap."
 
 handoff_summary:
-  done: "007-1 through 007-5 landed across three branches off 171d193 and were merged, conflict-free, onto the local branch loop-007-integration for the gate to have one tree to read. No branch was pushed and main is untouched."
+  done: "007-1 through 007-4 landed in full, and 007-5 in half, across three branches off 171d193; all six commits were merged conflict-free onto the local branch loop-007-integration so the gate had one tree to read. No branch was pushed and main is untouched at 171d193."
   failed: ""
-  needed: "007-6 (host discovery) and 007-7 (the fixture programme on every host) are gate: human and remain open. They carry criteria 1 and 2, so a second fail on those two is the expected result of attempt 2 rather than a surprise. Attempt 2 asks the reviewers to judge the phase with those two declared open."
+  needed: "007-6 (host discovery) and 007-7 (the fixture programme on every host) are gate: human and remain open. They carry criteria 1 and 2, so a second fail on those two is the expected result of attempt 2 rather than a surprise. Attempt 2 asked the reviewers to judge the phase with those two declared open, and returned fail from all three. It also produced two findings loop 007 did not anticipate: path_audit's host-directory regex omits .agents/, so criterion 5 is not met despite 007-4's four new roots and four new tests (widening a check's roots does not widen its tokens); and 007-5's first check was never done, corrected above. Criterion 4 remains failed on two of three reviewers plus controller measurement."
 
 todos:
   - id: "loop-007-1"
@@ -1089,8 +1089,9 @@ todos:
     evidence: "Both diffs and the pinning test"
     gate: "none"
     outcome: "The adapter states one contract, and a reviewer that follows run-gate.md produces a verdict the gate can read"
-    landed: "06434b7 on loop-005-cursor. run-gate.md now instructs 'deferred', the only value in the schema enum that means 'I could not check this', with a test pinning the instruction text against the enum. NOTE the INSTALLED copy at ~/.claude/commands/run-gate.md is stale and still instructs not_applicable."
-    status: completed
+    landed: "06434b7 on loop-005-cursor discharged the SECOND check only. run-gate.md now instructs 'deferred', the only value in the schema enum that means 'I could not check this', with a test pinning the instruction text against the enum, and that fix was proven live in gate attempt 2: codex emitted deferred and its verdict validated. NOTE the INSTALLED copy at ~/.claude/commands/run-gate.md is stale and still instructs not_applicable."
+    not_landed: "The FIRST check was never done, found by code-review-agent in gate attempt 2 and confirmed against the file: next-loop.md Steps 6 and 7 still tell the worker to write and then read loop-complete.json, while core/agents/worker.md says the worker writes no programme state. Both instructions are still live in the same adapter. The controller marked this todo completed on the strength of the commit message rather than the checks, which is the defect class this phase exists to remove. Reconciling the two is Phase 7 work, tracked with the loop-complete.json carve-out."
+    status: in_progress
     complexity: medium
     priority: high
   - id: "loop-007-6"

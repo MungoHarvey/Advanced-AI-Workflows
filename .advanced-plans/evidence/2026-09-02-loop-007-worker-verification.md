@@ -432,3 +432,107 @@ the controller's word for it.
 would have bought a green precondition with a false statement. They carry criteria 1 and 2,
 so attempt 2 is expected to fail on those two; the gate is told so explicitly rather than
 being allowed to discover it as a surprise.
+
+## Gate attempt 2: what three reviewers found, and where two of them were wrong
+
+Run 2026-09-02 against the local branch `loop-007-integration` at `b684dfc`. Sentinel
+`.advanced-plans/state/gate-review-mode` was up for the whole run and removed at Step 8.
+Nothing was pushed; `main` is untouched at `171d193`.
+
+| Reviewer | Verdict | Confidence | loops_to_revert |
+|---|---|---|---|
+| codex `gpt-5.6-sol` effort high, `-s read-only` | fail | 99 | `["ralph-loop-007"]` |
+| code-review-agent | fail | 95 | `[]` |
+| phase-goals-agent | fail | 90 | `[]` |
+
+Per criterion, as each reviewer wrote it:
+
+| # | Criterion | codex | code-review-agent | phase-goals-agent |
+|---|---|---|---|---|
+| 1 | every host DISCOVERS the same core skills | deferred | failed | failed |
+| 2 | fixture programme on every host | failed | failed | failed |
+| 3 | ACC-08, only the controller writes programme state | failed | met | met |
+| 4 | evidence advances only after schema AND gate validation | failed | met | failed |
+| 5 | CI path audit fails on host-specific paths in `core/` | failed | met | met |
+| 6 | no adapter duplicates a core skill | met | met | met |
+
+Each reviewer stands alone in exactly one place. On criterion 5 the lone reviewer is the
+correct one, which is the result worth keeping: a majority vote would have passed a
+criterion that a controlled mutation shows is not met.
+
+### Criterion 5: the token the four new tests could not catch
+
+`platforms/python/path_audit.py:95-98` matches host directories with
+`re.compile(r"\.(claude|cursor|opencode|codex|gemini)/")`. `docs/path-conventions.md:150`
+and `:163` both name `.agents/` as a forbidden host directory. It is absent from the regex.
+
+Mutation through the default CI path, against `core/agents/worker.md`
+(17103 bytes, sha256 `f59d70b8cd7828c9...`), instrument checked before subject:
+
+| Planted token | Documented forbidden | In the regex | Audit exit | Named in output |
+|---|---|---|---|---|
+| `.claude/skills/x` (positive control) | yes | yes | 1 | yes |
+| `.agents/skills/x` | yes | **no** | **0** | **no** |
+
+File restored byte-exact afterwards; sha256 unchanged, worktree clean.
+
+**The finding under the finding: widening a check's ROOTS does not widen its TOKENS.**
+loop-007-4 added four scanned roots (`core/schemas`, `core/state`, `platforms/cursor`,
+`setup/cursor`) and wrote a red-green test per root. Every one of those tests planted a
+token the regex already matched, so all four passed on a regex that misses `.agents/`.
+Two of three reviewers checked the roots, confirmed the tests were real red-green pairs,
+and marked the criterion met. Neither checked the token list the roots are scanned for.
+`.agents/` is the worst one to miss: it is the shared skills root codex, opencode and agy
+all read.
+
+### The loop-007-5 record overstated what landed
+
+`code-review-agent` found the todo's FIRST check was never done. `next-loop.md` Steps 6
+and 7 still instruct the worker to write and then read `loop-complete.json`, while
+`core/agents/worker.md` says the worker writes no programme state. Both instructions are
+still live in the same adapter. Commit `06434b7` discharged only the second check, the
+`run-gate.md` status enum, and the controller marked the whole todo `completed` on the
+strength of the commit message rather than the checks. That is this phase's own defect
+class applied to its bookkeeping.
+
+Corrected in `phase-6/loops.md`: `status: in_progress`, with a `not_landed:` line stating
+what is outstanding. The status enum is `pending | in_progress | completed | cancelled |
+frozen` (`core/schemas/todo.schema.md:31`); there is no `partial`.
+
+### Three machinery findings the gate produced as a by-product
+
+1. **`aggregate_verdicts` cannot see per-criterion disagreement.** It returned
+   `{"result": "fail", "conflicts": [], "missing": []}` while the three reviewers
+   disagreed on three of six criteria. `codex_gate.py:315-329` compares only the
+   top-level `verdict` word between codex and each subagent, so an empty `conflicts`
+   list here means the three agreed on the word "fail", not on the phase. Reading it as
+   agreement would be wrong every time the disagreement is where it actually matters.
+
+2. **A todo left `in_progress` is invisible to the next worker.**
+   `state_manager.py:272` builds `pending_todos` with `status == "pending"` exactly, and
+   `todos_count` is `len(pending_todos)`. Measured on a throwaway copy: loop-007 reports
+   `todos_count: 2` with 007-5 `in_progress`, the same as when it read `completed`. So a
+   half-finished todo is neither counted nor scheduled. The 007-5 leftover is therefore
+   also named in the loop's `needed:` handoff, where something will read it.
+
+3. **The `yaml` fences in `phase-6/loops.md` are not valid YAML.** Fence 7 fails
+   `yaml.safe_load_all` with `while scanning a simple key` at the indented prose section
+   `## What this loop is for`. This is pre-existing and reproduces identically on the
+   `HEAD` version of the file, so it is not an artefact of this edit. It does not break
+   anything today because `state_manager` does not use a YAML parser, it line-scans
+   (`state_manager.py:170`, comment: "Inline minimal YAML parsing"). It would break any
+   tool that took the fence label at its word. Verified after editing by running the
+   framework's own reader against a temporary copy with a throwaway state dir: seven
+   todos parsed, `ok: true`.
+
+### What criterion 4 rests on
+
+Not disputed by the controller: `evidence_gate.validate_advancement` has zero production
+callers, every call site being in `test_evidence_gate.py`, and
+`validate_loop_complete_advancement` is called from exactly one adapter. Independently
+measured earlier in this window: `platforms/codex`, `platforms/opencode` and
+`platforms/cursor` each hold exactly one tracked file, `README.md`, and
+`platforms/shared/agent-skills/advanced-planning/SKILL.md` (the router codex, cursor and
+opencode use) contains no reference to `evidence_gate`, `validate_advancement`, or
+`validate_loop_complete_advancement`. The gap that loop-007-3's own todo required to be
+written down is recorded only here, in a controller note, and not in any shipped document.

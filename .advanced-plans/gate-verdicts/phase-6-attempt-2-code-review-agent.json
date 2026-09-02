@@ -1,0 +1,80 @@
+{
+  "phase": "phase-6",
+  "attempt": 2,
+  "timestamp": "2026-09-02T11:31:08Z",
+  "agent": "code-review-agent",
+  "backend": "subagent",
+  "verdict": "fail",
+  "confidence": 95,
+  "phase_title": "Phase 6: Advanced Planning Multi-Runtime Adapters",
+  "findings": [
+    {
+      "severity": "critical",
+      "location": ".advanced-plans/phases/phase-6/loops.md, loop-007-6",
+      "description": "Success criterion 1 (every target host discovers the same named core planning skills) is not resolved. loop-007-6, the todo that discharges this criterion, is status: pending with gate: human and carries no landed commit. Its checks -- measuring whether opencode/claude/cursor can be pointed at their own adapter's skill copy rather than a sibling's or the global profile, re-running the four-host digest table under a fake HOME, and confirming whether cursor's unstable skill listing reproduces -- are unexecuted.",
+      "evidence": "loops.md:1096-1117 (loop-007-6 block, status: pending, gate: human); loops.md:985 (handoff_summary.needed: 007-6 remains open, carries criteria 1 and 2); no commit under loop-007-6 exists on loop-007-integration (git log --oneline shows only 3f98cbd, 6cca55c, e49506d, 9603fca, d09c440, 06434b7 plus two merges)."
+    },
+    {
+      "severity": "critical",
+      "location": ".advanced-plans/phases/phase-6/loops.md, loop-007-7",
+      "description": "Success criterion 2 (a fixture programme can create one phase, one loop, and one external task on every target host) is not resolved. loop-007-7, the todo that discharges this criterion, is status: pending with gate: human and carries no landed commit. Its work -- re-running the codex and cursor fixtures to completion by pre-authorising rather than answering their trust/approval dialogs -- is unexecuted, and the phase's own prior measurement (loop-005-4) recorded the criterion as failing, not merely unmeasured.",
+      "evidence": "loops.md:1118-1137 (loop-007-7 block, status: pending, gate: human); loops.md:985 (handoff_summary.needed names both 007-6 and 007-7 as open, carrying criteria 1 and 2); no commit under loop-007-7 exists on loop-007-integration."
+    },
+    {
+      "severity": "warning",
+      "location": "platforms/python/evidence_gate.py; docs/adapting-to-new-platforms.md",
+      "description": "loop-007-3 wired validate_loop_complete_advancement into exactly one production call site (platforms/claude-code/commands/next-loop.md, Step 7a) and mutation-proved it there -- a real fix, independently verified. But the todo's own check required that the other adapters either call the joined gate too, or that the docs plainly record which adapters gate advancement and which do not, and neither happened: no adapter README or docs/ file states that codex, opencode and cursor (README-only, no loop-driving command) and cowork (agent prompts plus checkpoint.sh, no loop-driving command either) never run this gate. The scope decision exists only in an internal controller working note, not in shipped, adapter-facing documentation.",
+      "evidence": "grep -rn for validate_loop_complete_advancement, validate_path_scope and default_worker_scope across the repo (excluding platforms/python/tests/ and the two library modules) returns exactly one executable caller, next-loop.md:366-400; grep for gates advancement, README-only, evidence_gate across docs/ and platforms/codex, platforms/opencode, platforms/cursor returns no hits; the scope decision is stated only at .advanced-plans/evidence/2026-09-02-loop-007-worker-verification.md:302-311 (three of the five host adapters are README-only, recorded not fixed), which is a controller working file, not adapter documentation."
+    },
+    {
+      "severity": "warning",
+      "location": "platforms/claude-code/commands/next-loop.md (Step 6/7); core/agents/worker.md",
+      "description": "loop-007-5's first check asked that next-loop.md's instruction that the worker writes .advanced-plans/state/loop-complete.json (Step 6) and reads it back (Step 7) be reconciled with loop-006-1's rewritten worker-role contract, which says the worker emits collected-evidence and never writes programme state. The only commit landed for loop-007-5 (06434b7) fixes a different, real defect -- run-gate.md's and phase-compact.md's use of a status value the gate-verdict schema's enum does not accept -- but does not touch next-loop.md. The contradiction this check named is still present verbatim, and loops.md marks loop-007-5 status: completed without noting that its first check is unaddressed.",
+      "evidence": "next-loop.md:322 Write .advanced-plans/state/loop-complete.json and lines 326-330 Read loop-complete.json; git show 06434b7 --stat touches only platforms/claude-code/commands/phase-compact.md, platforms/claude-code/commands/run-gate.md and a new test file -- next-loop.md is not in the diff; loops.md loop-007-5 checks list (first bullet) names the next-loop.md reconciliation explicitly."
+    },
+    {
+      "severity": "info",
+      "location": "platforms/python/state_manager.py; core/agents/worker.md; platforms/claude-code/commands/next-loop.md",
+      "description": "63 references to external-task-envelope remain across role documents, host prompts, the schema itself, and two evidence_gate.py docstrings describing a parameter, and none of them open a file -- the one executable reader that used to attempt it was removed by the loop-007-3 fix. Same worker/controller-boundary migration gap as the warning above, seen from the schema-adoption side. Already disclosed by the controller as a Phase 7 finding; recorded here for completeness, not as a new defect.",
+      "evidence": ".advanced-plans/evidence/2026-09-02-loop-007-worker-verification.md:280-317 (What this does not fix / 63 external-task-envelope references remain)."
+    }
+  ],
+  "loops_to_revert": [],
+  "failure_notes": [
+    "loop-007-6 and loop-007-7 remain open (status: pending, gate: human) and are the todos that discharge success criteria 1 and 2. Do not mark the phase complete until both land with measured, host-executed evidence -- a table with names and digests for criterion 1, and per-host artefacts read back off disk for criterion 2 -- not a narration of intent.",
+    "Document, in docs/adapting-to-new-platforms.md or each adapter's own README, which of the five platforms execute the joined evidence-advancement gate (validate_loop_complete_advancement / validate_advancement) and which do not. Today only platforms/claude-code/commands/next-loop.md calls it; codex, opencode, cursor and cowork do not, and this is undocumented. loop-007-3's own check required this to be stated one way or the other.",
+    "Reconcile platforms/claude-code/commands/next-loop.md's Step 6/7 instruction to write and read loop-complete.json with core/agents/worker.md's contract that the worker emits collected-evidence and writes no programme state. loop-007-5's first check named this contradiction and it is still present verbatim; either migrate next-loop.md to the new contract or correct the role documents to describe what the command actually does, and say which is authoritative."
+  ],
+  "criteria_outcomes": [
+    {
+      "criterion": "Every target host discovers the same named core planning skills -- not host-specific copies that drift.",
+      "status": "failed",
+      "evidence": "loop-007-6 (the todo that discharges this criterion after loop-005-4's measurement found it failing) is status: pending, gate: human, with no landed commit. loops.md:985, 1096-1117."
+    },
+    {
+      "criterion": "A fixture programme can create one phase, one loop, and one external task on every target host.",
+      "status": "failed",
+      "evidence": "loop-007-7 (the todo that discharges this criterion) is status: pending, gate: human, with no landed commit. loops.md:985, 1118-1137."
+    },
+    {
+      "criterion": "Only the control checkout updates programme state; a worker attempting a planning-state edit fails collection -- ACC-08.",
+      "status": "met",
+      "evidence": "evidence_gate.py:242 and :437 call validate_path_scope from two production sites; next-loop.md Step 7a (lines 361-414) wires validate_loop_complete_advancement to default_worker_scope() and real git diff/status output, with no bare open() of an unwritten envelope. TestNegativeAssertion_ProductionCaller, TestPositiveControl_ProductionCaller and TestIntegrationWiring in test_scope_policy.py / test_evidence_gate.py drive this production entry point and are mutation-proved (commits 3f98cbd, 6cca55c, e49506d). Independently re-run: python -m pytest platforms/python/tests/ gives 1063 passed, 1 skipped."
+    },
+    {
+      "criterion": "Collected evidence advances a loop only after both schema validation and gate validation pass.",
+      "status": "met",
+      "evidence": "validate_loop_complete_advancement (evidence_gate.py:314-451) runs schema, policy-gate and path-scope checks with AND logic, refuses an empty changed_paths as VACUOUS rather than a vacuous pass, and is wired into next-loop.md Step 7a, mutation-proved. Coverage is narrow (see warning finding above): only the claude-code adapter has an executable loop to wire, and this is undocumented rather than a broken mechanism."
+    },
+    {
+      "criterion": "The CI path audit fails on any host-specific path in core/.",
+      "status": "met",
+      "evidence": "DEFAULT_SCANNED_ROOTS (path_audit.py:163-181) now includes core/schemas, core/state, platforms/cursor and setup/cursor among 17 roots. TestNewRootsAreCovered (test_path_audit.py:755-839) plants a real violation under each of the four new roots and asserts the default-rooted audit goes red, plus a clean-tree positive control; independently re-run and passing. python -m platforms.python.path_audit exits 0 on the working tree, reporting 20 named suppressions across the 15 non-empty scanned roots."
+    },
+    {
+      "criterion": "No adapter duplicates a core skill's content; adapters install and register, they do not fork.",
+      "status": "met",
+      "evidence": "Digests of all 9 files under core/skills/*/SKILL.md were independently re-measured and match the loop-005-4 four-host table exactly (e.g. phase-plan-creator 6c04c90fdc8fa82e, plan-todos 71989ea0178bd73e). No change to core/skills/ appears in the loop-007 diff. This criterion passed unanimously across all three attempt-1 reviewers and nothing in loop 007 touches it."
+    }
+  ]
+}

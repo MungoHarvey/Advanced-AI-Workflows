@@ -897,17 +897,18 @@ todos:
     forbidden_paths: ["<standard programme forbidden set>", "advanced-planning/.advanced-plans/", "setup-antigravity.js"]
     provider: "codex gpt-5.6-sol effort high — verification, not implementation"
     worktree_owner: "herdr"
+    rewritten: "2026-09-02, on the user's decision, AFTER the checks were run — the measurements are what forced it. Check 3 named --layers source,project, which cannot pass in this repository by its own documented design: two independent verifiers measured 0 current, 0 stale, 27 missing, and .github/workflows/ci.yml lines 181-186 already record that exact failure as the reason CI replaced the pair with source,global, with TestCIAuditsALayerItCanActuallyHave failing the build if anyone re-adds it. A check that cannot pass is the mirror of a check that cannot fail, and had it been 'fixed' in the code rather than in the plan it would have broken something real. Its caveat that the audit compares by MTIME was also false: install_audit contains zero mtime references and compares EOL-normalised SHA-256 digests, which is strictly stronger. Both verifiers reached that independently; the claim traces to docs/adapting-to-new-platforms.md:182 and is carried, not fixed here. Check 6 assumed the main checkout's untracked set. Recorded against the outcome line: the declared provider no longer satisfies its 'implemented none of it' clause, because codex gpt-5.6-luna authored 14da314 in this phase after this todo was written. The operator accepted that on 2026-09-01 on the ground that the controller had already verified that commit independently, so codex judged only the 18 commits it did not touch."
     checks:
       - "python -m pytest platforms/python/tests/ -v — green, with the new tests visible in the count"
       - "python -m platforms.python.path_audit — exit 0"
-      - "python -m platforms.python.install_audit --layers source,project — exit 0. NOTE the recorded limitation that this audit compares by mtime; if a drift it should have caught is invisible, that is a finding for the compatibility-manifest work, not something to wave through"
+      - "python -m platforms.python.install_audit --layers source,global — the pair CI actually runs, and the only one with a real subject here. NOT source,project: .claude/settings.json is tracked, so .claude/ always exists, install_audit's 'not found — skipped' guard never fires, and all 27 source files read as missing. Drift against the global layer is EXPECTED while commits sit unpushed; what is checked is that the audit had a subject and said so, not that the number is zero"
       - "python -m platforms.python.ast_check platforms/python/ --exclude tests/ --exclude examples/ — still dependency-free"
-      - "CI job 2's inline python over the schema directories — passes"
-      - "git status clean apart from the two named untracked files"
+      - "CI job 2's inline python — passes, AND its scope is reported rather than assumed: it globs core/state/*.json only, not core/schemas/, and validate({}, schema) reaches nested type values only for properties present in the instance. Say what it did not examine"
+      - "git status clean. In a LINKED WORKTREE that means fully clean: untracked files are per-working-directory, and setup-antigravity.js is untracked in the main checkout, not here"
     evidence: "Every command with its exit code and output"
     gate: "none"
     outcome: "The phase's own suites are green before the gate is asked to judge it, and by a provider that implemented none of it"
-    status: pending
+    status: completed
     complexity: medium
     priority: high
   - id: "loop-006-5"

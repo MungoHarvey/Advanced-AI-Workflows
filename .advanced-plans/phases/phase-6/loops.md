@@ -970,6 +970,201 @@ prompt: |
 
 ---
 
+```yaml
+---
+name: "ralph-loop-007"
+task_name: "Gate remediation - wire what was built, and make the checks able to fail"
+max_iterations: 3
+on_max_iterations: escalate
+
+opened: "2026-09-02, by the phase-6 gate returning fail on attempt 1. Three reviewers reached fail independently and agreed on only two of six criteria; the disagreements are what produced the finding list below, and each todo names the criterion it discharges. No loop was reverted: nothing built in loops 001-006 was found wrong. What was found is machinery that was built, unit-tested, and never called, plus assertions that cannot fail. Reverting the loops that built it would remove the work and leave the gap."
+
+handoff_summary:
+  done: ""
+  failed: ""
+  needed: ""
+
+todos:
+  - id: "loop-007-1"
+    content: "Give ACC-08 a production caller: the collection path must run the path-scope check against real git output, not only in tests"
+    repository: "advanced-planning"
+    base_sha: "loop-006-5"
+    allowed_paths: ["platforms/python/", "platforms/python/tests/", "core/skills/", "platforms/claude-code/", "platforms/codex/", "platforms/cursor/", "platforms/opencode/"]
+    forbidden_paths: ["<standard programme forbidden set>", "advanced-planning/.advanced-plans/", "setup-antigravity.js"]
+    provider: "opencode"
+    worktree_owner: "herdr"
+    discharges: "criterion 3 - only the control checkout updates programme state (ACC-08). Failed by all three gate reviewers, and independently reproduced a fourth time by the controller."
+    checks:
+      - "grep proves at least one caller of the path-scope check OUTSIDE platforms/python/tests/. Today there is none: validate_path_scope is a pure function over three lists of strings and every caller is a test. That is the finding, so the grep is the check"
+      - "the caller supplies changed_paths from `git diff --name-only`, as scope_policy.py's own docstring says it should, rather than from a literal the caller typed"
+      - "an END-TO-END test drives the production entry point - not the pure function - with a worker result whose changed paths include .advanced-plans/state/, and asserts collection fails and names the offending path"
+      - "positive control, F33: the same production entry point with clean paths must PASS. A guard that rejects everything is as useless as one that rejects nothing, and only the pair distinguishes an instrument fault from a subject fault"
+      - "python -m pytest platforms/python/tests/ green"
+    evidence: "The grep before and after, the diff, and both halves of the control pair with their output"
+    gate: "none"
+    outcome: "The boundary the phase claims to enforce is enforced by something production actually runs"
+    status: pending
+    complexity: high
+    priority: high
+  - id: "loop-007-2"
+    content: "Replace the negative-assertion tests that cannot fail, and prove the replacements can"
+    repository: "advanced-planning"
+    base_sha: "loop-007-1"
+    allowed_paths: ["platforms/python/tests/"]
+    forbidden_paths: ["<standard programme forbidden set>", "advanced-planning/.advanced-plans/", "setup-antigravity.js"]
+    provider: "opencode"
+    worktree_owner: "herdr"
+    discharges: "criterion 3, evidence half. Found by code-review-agent alone; neither other reviewer saw it."
+    checks:
+      - "TestNegativeAssertion_StateUnchangedOnFailure in test_scope_policy.py writes a state file under tmp_path, passes an unrelated path STRING to validate_path_scope, then byte-compares the file. validate_path_scope opens no file and can modify nothing, so the assertion cannot fail. Rewrite it against the production caller from loop-007-1"
+      - "the replacement is proven non-vacuous by MUTATION: disable the guard, run the test, show it goes red, restore the guard, show it goes green. A negative assertion that was never observed to fail is a claim, not a test"
+      - "the mutation run is recorded with its output. 'I checked and it passes' is what the original test also said"
+      - "python -m pytest platforms/python/tests/test_scope_policy.py -v green after restoration"
+    evidence: "The old test, the new test, and the red-green mutation pair"
+    gate: "none"
+    outcome: "The test that proves ACC-08 holds is itself proven able to fail"
+    status: pending
+    complexity: medium
+    priority: high
+  - id: "loop-007-3"
+    content: "Make gate validation load-bearing at every production call site, not only where a caller opts in"
+    repository: "advanced-planning"
+    base_sha: "loop-007-2"
+    allowed_paths: ["platforms/python/", "platforms/python/tests/", "platforms/claude-code/", "platforms/codex/", "platforms/cursor/", "platforms/opencode/", "core/skills/", "docs/"]
+    forbidden_paths: ["<standard programme forbidden set>", "advanced-planning/.advanced-plans/", "setup-antigravity.js"]
+    provider: "opencode"
+    worktree_owner: "herdr"
+    discharges: "criterion 4 - collected evidence advances a loop only after BOTH schema and gate validation pass. codex failed it; the other two marked it met by asking whether the mechanism exists rather than whether anything calls it."
+    checks:
+      - "next-loop.md step 7a is the only production call of validate_loop_complete_advancement and it passes no verdict_paths. evidence_gate.py then takes the else branch and gate 2 passes by default with a hardcoded result. Fix the call site, not the default"
+      - "the other three adapters do not call it at all. Either they call it, or the docs say plainly which adapters gate advancement and which do not - an undocumented gap is the defect, a documented one is a scope decision"
+      - "a test drives each adapter's own call shape with a FAILING verdict and asserts advancement is blocked. Per adapter, not once generically"
+      - "the default-pass branch keeps a test that pins it as deliberate, so a future reader cannot mistake it for an oversight"
+      - "python -m pytest platforms/python/tests/ green"
+    evidence: "The call sites before and after, and one blocked-advancement case per adapter"
+    gate: "none"
+    outcome: "A failing gate verdict stops a loop advancing on every host, or the hosts where it does not are named in writing"
+    status: pending
+    complexity: high
+    priority: high
+  - id: "loop-007-4"
+    content: "Extend the path audit to the roots it never scanned, and prove each new root can go red"
+    repository: "advanced-planning"
+    base_sha: "loop-007-3"
+    allowed_paths: ["platforms/python/", "platforms/python/tests/", "docs/", ".github/workflows/"]
+    forbidden_paths: ["<standard programme forbidden set>", "advanced-planning/.advanced-plans/", "setup-antigravity.js"]
+    provider: "opencode"
+    worktree_owner: "herdr"
+    discharges: "criterion 5 - the CI path audit fails on any host-specific path in core/. codex failed it; the other two read the criterion as being about this diff rather than about coverage."
+    checks:
+      - "DEFAULT_SCANNED_ROOTS has 13 entries and reaches only core/agents and core/skills. core/schemas and core/state are core/ directories the criterion names and the audit has never looked at. Add them"
+      - "platforms/cursor and setup/cursor are also unscanned - carried from loop-006-5 as a known gap and recorded in the release checklist rather than fixed. Fix it here"
+      - "POSITIVE CONTROL PER ROOT: plant a host-specific path in each newly added root, show the audit goes red naming that root, remove it, show green. Four roots, four red-green pairs. An audit that reports PASSED WITH N SUPPRESSED over a root it cannot see is the exact defect this phase exists to eliminate"
+      - "path_audit.py's argparse description is stale and describes something the module no longer does - correct it while here"
+      - "python -m platforms.python.path_audit exit 0 on a clean tree, and the per-root list is read rather than the verdict alone"
+    evidence: "The root list before and after, and four red-green control pairs"
+    gate: "none"
+    outcome: "The audit's pass covers the directories the criterion actually names"
+    status: pending
+    complexity: medium
+    priority: high
+  - id: "loop-007-5"
+    content: "Resolve the two instruction defects that make an adapter contradict itself and a compliant reviewer fail validation"
+    repository: "advanced-planning"
+    base_sha: "loop-007-4"
+    allowed_paths: ["platforms/claude-code/", "core/skills/", "core/agents/", "platforms/python/tests/", "docs/"]
+    forbidden_paths: ["<standard programme forbidden set>", "advanced-planning/.advanced-plans/", "setup-antigravity.js"]
+    provider: "opencode"
+    worktree_owner: "herdr"
+    discharges: "criterion 3 supporting, plus a defect in the gate machinery itself, found while running the gate."
+    checks:
+      - "next-loop.md tells the worker to write loop-complete.json at step 6 and names step 7 'Read loop-complete.json', while loop-006-1 rewrote the worker contract to say the worker writes no programme state. Both instructions are live in the same file. Reconcile them and say which is the contract"
+      - "run-gate.md instructs reviewers to emit criteria_outcomes.status 'not_applicable'. The gate-verdict schema enum is exactly [met, deferred, failed] with additionalProperties false, so a reviewer that OBEYS the instruction produces a verdict that fails extract_and_validate and is logged as a skipped reviewer rather than as an instruction defect. Measured 2026-09-02 while gating this phase"
+      - "a test pins the instruction text against the schema enum, so the two cannot drift apart again silently. This is the second time a phase-6 instruction and its schema disagreed"
+      - "python -m pytest platforms/python/tests/ green"
+    evidence: "Both diffs and the pinning test"
+    gate: "none"
+    outcome: "The adapter states one contract, and a reviewer that follows run-gate.md produces a verdict the gate can read"
+    status: pending
+    complexity: medium
+    priority: high
+  - id: "loop-007-6"
+    content: "Host discovery: separate what the adapters control from what the hosts control, fix the first and make the second falsifiable"
+    repository: "advanced-planning"
+    base_sha: "loop-007-5"
+    allowed_paths: ["setup/", "platforms/", "core/skills/", "docs/", "platforms/python/", "platforms/python/tests/"]
+    forbidden_paths: ["<standard programme forbidden set>", "advanced-planning/.advanced-plans/", "setup-antigravity.js"]
+    provider: "opencode for the adapter work; controller for the live four-host measurement"
+    worktree_owner: "herdr"
+    discharges: "criterion 1 - every target host discovers the same named core planning skills. Failed by phase-goals-agent on measured evidence, which overturned the controller's own ruling that it was met. The controller had compared installer skill lists; the criterion is about what each host DISCOVERS."
+    rewritten_scope: "Opened on the operator's decision of 2026-09-02 to remediate everything including host discovery, having been offered the narrower option of waiving this criterion as a recorded host limit."
+    checks:
+      - "F20: opencode resolves .claude/skills - claude-code's copy - rather than its own adapter's. Determine whether opencode can be pointed at its own directory by configuration we install, or whether it is fixed host behaviour. The answer decides whether this is a defect or a documented constraint, and it must be MEASURED, not reasoned about"
+      - "F21: claude and cursor serve global profile copies over the project's. Same question, same standard of proof: an A/B under a fake HOME with the project copy differing from the global one, so which one answered is visible in the content and not inferred"
+      - "F23: cursor never listed one skill, so its list is not stable evidence. Establish whether the omission reproduces; an intermittent list cannot support a criterion either way"
+      - "the four-host table is re-run under a fake HOME with the DIGEST column, not just names. Identical names with drifted bodies is the failure the criterion actually names"
+      - "where a finding is genuinely host behaviour we cannot change, the criterion is rewritten to something falsifiable about the adapter - and the rewrite is recorded with its reason, in the plan, not quietly in a check. Do not mark a criterion met by narrowing it until it fits"
+    evidence: "The A/B measurements per host, the four-host digest table, and a written verdict per finding: adapter defect, or host constraint"
+    gate: "human"
+    outcome: "Criterion 1 is either satisfied or replaced by one that can be tested, with the difference between the two stated rather than blurred"
+    status: pending
+    complexity: high
+    priority: high
+  - id: "loop-007-7"
+    content: "Complete the fixture programme on the two hosts where it stopped at a dialog, by pre-authorising rather than by answering"
+    repository: "advanced-planning"
+    base_sha: "loop-007-6"
+    allowed_paths: ["docs/", "platforms/", "setup/"]
+    forbidden_paths: ["<standard programme forbidden set>", "advanced-planning/.advanced-plans/", "setup-antigravity.js"]
+    provider: "controller drives the hosts; opencode for any adapter change the runs expose"
+    worktree_owner: "herdr"
+    discharges: "criterion 2 - a fixture programme can create one phase, one loop and one external task on every target host."
+    checks:
+      - "the two incomplete hosts stopped at trust and approval dialogs that the operator cleared or declined. Pre-authorise instead: herdr-trust.py for claude, --trust --auto-review for cursor. A dialog answered by sending keys is not a passing run and must not be recorded as one"
+      - "each host creates one phase, one loop and one external task, and the ARTEFACTS are read back - a host that printed a success banner and wrote nothing has told you about its banner"
+      - "record mode per host: write or read-only. A permission the operator withheld is not an adapter defect, and conflating the two corrupts the evidence"
+      - "where a host still cannot complete unattended, that is recorded as the result with its blocker named, not as a deferral. A criterion deferred twice is failing"
+    evidence: "Per host: the commands, the artefacts read back, and the mode"
+    gate: "human"
+    outcome: "The criterion has a measured answer on all four hosts, including the answer 'this host cannot, and here is why'"
+    status: pending
+    complexity: medium
+    priority: medium
+
+  ## What this loop is for
+
+  The gate did not find the phase's work wrong. It found three things built and never
+  connected, two assertions that cannot fail, and two instructions that contradict
+  themselves. Every one of those is the phase's own declared defect class turned on the
+  phase: a check that cannot fail, and its mirror, a mechanism whose existence was
+  mistaken for its use.
+
+  ## Hard rules
+  - A mechanism with no production caller discharges no criterion. Asking "does this exist"
+    instead of "is anything calling it" is how two of three reviewers marked criterion 4 met
+    over code that never runs.
+  - Every guard added here ships with a positive control. Red and green, both observed, both
+    recorded. F33.
+  - Mutation is the only proof a negative assertion works. Disable the guard, watch the test
+    fail, restore it. A test never seen to fail is a claim.
+  - Do not narrow a criterion to fit the result. Rewriting one is allowed and sometimes right;
+    doing it without recording the reason is how a phase passes its own gate.
+  - No remote writes. advanced-planning has never had a push approved and this loop does not
+    change that.
+
+  ## Success criteria
+  - [ ] the path-scope check has a production caller, driven by real git output, with a red-green pair
+  - [ ] the negative-assertion tests are proven able to fail by mutation
+  - [ ] a failing gate verdict blocks advancement on every adapter, or the exceptions are documented
+  - [ ] the path audit scans `core/schemas`, `core/state`, `platforms/cursor` and `setup/cursor`, each proven able to go red
+  - [ ] `next-loop.md` states one worker contract, and `run-gate.md` instructs a status value its schema accepts
+  - [ ] every criterion-1 finding has a verdict: adapter defect or host constraint, measured either way
+  - [ ] the fixture programme has a measured outcome on all four hosts
+---
+```
+
+---
+
 ## Loop order and why
 
 | Loop | Delivers | Why here |
@@ -980,6 +1175,7 @@ prompt: |
 | 004 | Codex + OpenCode adapters | The two hosts with the strongest evidence base — opencode is the only unattended runtime in the fleet |
 | 005 | Cursor adapter + the four-host discovery proof | Cursor is the most constrained host, so it goes last of the three; the four-host table needs all of them |
 | 006 | ACC-08, evidence-gated advancement, v0.17.0 staged | Edits `core/` prompts, so it runs after the audit is armed and the schemas exist |
+| 007 | gate remediation - the wiring, the controls, the host-discovery verdicts | Opened by the attempt-1 gate returning fail; every todo names the criterion it discharges |
 
 ## Exit criteria for the phase gate
 
@@ -987,12 +1183,17 @@ Taken verbatim from `plan.md`, with the loop that discharges each:
 
 | Criterion | Discharged by |
 |---|---|
-| Every target host discovers the same named core planning skills | loop-005-4 |
-| A fixture programme creates one phase, one loop and one external task on every host | loop-004-4, loop-005-3 |
-| Only the control checkout updates programme state — ACC-08 | loop-006-1, loop-006-2 |
-| Collected evidence advances a loop only after schema and gate validation | loop-006-3 |
-| The CI path audit fails on any host-specific path in `core/` | loop-003-2, loop-003-4 |
+| Every target host discovers the same named core planning skills | loop-005-4, **loop-007-6** |
+| A fixture programme creates one phase, one loop and one external task on every host | loop-004-4, loop-005-3, **loop-007-7** |
+| Only the control checkout updates programme state — ACC-08 | loop-006-1, loop-006-2, **loop-007-1, loop-007-2** |
+| Collected evidence advances a loop only after schema and gate validation | loop-006-3, **loop-007-3** |
+| The CI path audit fails on any host-specific path in `core/` | loop-003-2, loop-003-4, **loop-007-4** |
 | No adapter duplicates a core skill's content | loop-004-2, loop-004-3, loop-005-2, loop-005-4 |
+
+**Attempt 1 of this gate returned fail on 2026-09-02**, on five of these six criteria. The
+bolded loop-007 todos are what was added in response; the unbolded ones are the work already
+done, which the gate did not find wrong. Only criterion 6, no adapter duplicating a core
+skill, passed unanimously and needed nothing.
 
 Not a plan criterion but a phase-6 finding in its own right: the shared Python runtime is
 unreachable from any installed project (loop-001). It is not in the plan's deliverable table

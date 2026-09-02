@@ -1232,14 +1232,36 @@ todos:
     evidence: "The decision, its reasoning, and the exact change 008-2 is to make"
     gate: "none"
     outcome: "Neither implemented-but-uncalled gate function remains undecided in the module"
-    status: pending
+    result: "Run 2026-09-02 as a read-only `codex exec -s read-only -m gpt-5.6-sol` probe on the same worktree as 008-1; clean tree and unchanged HEAD verified afterwards. DECISION 1, the interface: neither Python signature is exposed unchanged, because the two router sites cannot supply the same arguments. `loop next` never names an envelope - the token does not occur anywhere in SKILL.md 100-160 - while the external-dispatch block has both an envelope (validated at 190) and an evidence path (196), and NEITHER site has verdict paths. So the CLI takes two subcommands: `collected-evidence EVIDENCE ENVELOPE` routing to validate_advancement, and `loop-complete LOOP_COMPLETE --baseline GIT_REF` which measures changed paths from the baseline, takes scope from default_worker_scope('.') and routes to validate_loop_complete_advancement. That second shape is not invented: it is what the claude-code adapter already does at next-loop.md:397, and test_evidence_gate.py:734 records in its own name why - `does_not_read_the_envelope_that_nobody_writes`. DECISION 2: delete can_advance_loop. DECISION 3: a derived reachability test, not an enumerated one. The controller reached the same three answers independently before reading the probe, which is agreement rather than confirmation; the probe was better on two points the controller had left vague - where changed_paths comes from, and that an absent verdict list must be an explicit assertion rather than a default."
+    status: completed
     complexity: low
     priority: medium
-  - id: "loop-008-2"
-    content: "Give evidence_gate a CLI whose three failure modes an operator can tell apart"
+  - id: "loop-008-7"
+    content: "Make the gate read the policy block it is handed, so evidence that says review FAILED cannot advance a loop"
     repository: "advanced-planning"
     base_sha: "loop-008-5"
     allowed_paths: ["platforms/python/evidence_gate.py", "platforms/python/tests/"]
+    forbidden_paths: ["<standard programme forbidden set>", "advanced-planning/.advanced-plans/", "setup-antigravity.js"]
+    provider: "opencode"
+    worktree_owner: "herdr"
+    discharges: "criterion 4 - schema AND gate validation. Found by 008-5 and REPRODUCED by the controller, not inferred: a collected-evidence document carrying policy.independent_review_passed=false is schema-valid, ships in the repository as a fixture under tests/fixtures/run-contracts/VALID/, and validate_advancement returns ok=True with zero reasons against it. Measured 2026-09-02 by calling the function on evidence-review-complete.json and envelope-implementation-complete.json unmodified"
+    checks:
+      - "the mechanism is an omission, not a bug in a branch: grep evidence_gate.py for independent_review_passed, tests_passed and path_scope_passed and every hit is a docstring. Every `policy` reference in the module is about VERDICT FILES; the evidence document's own policy block is never read. So a worker reporting its own review as failed is advanced by the gate that exists to stop it"
+      - "the schema is not the place to fix it and must not be changed here. core/state/collected-evidence.schema.json:113 already REQUIRES all three booleans to be present, and its own description says a missing gate must fail validation rather than default to true. It guards against absent, which is correct; false is a legitimate value a worker must be able to report honestly. The gate is what must act on it"
+      - "this lands BEFORE 008-2 so the CLI is built on the fixed semantics. A CLI shipped first would expose a gate that passes evidence saying it failed, and 008-4's tests would then pin the wrong behaviour as correct"
+      - "red-green using the fixture already in the tree: evidence-review-complete.json currently advances and must stop advancing. Restore any mutated source byte-exact, and carry a positive control - an all-true policy block must still advance, or the new check is simply refusing everything"
+      - "say what happens to the existing fixture. It lives in valid/ because it is SCHEMA-valid, which stays true; if a test elsewhere relies on it advancing, that test encoded the defect and is changed with a note saying so"
+    evidence: "The grep showing the omission, the before/after run of validate_advancement on the unmodified fixture pair, the diff, and the positive control"
+    gate: "none"
+    outcome: "Evidence that reports its own policy failure is blocked, and the gate's decision includes the document it was handed"
+    status: pending
+    complexity: medium
+    priority: high
+  - id: "loop-008-2"
+    content: "Give evidence_gate a CLI whose three failure modes an operator can tell apart"
+    repository: "advanced-planning"
+    base_sha: "loop-008-7"
+    allowed_paths: ["platforms/python/evidence_gate.py", "platforms/python/ap_launcher.py", "platforms/python/tests/"]
     forbidden_paths: ["<standard programme forbidden set>", "advanced-planning/.advanced-plans/", "setup-antigravity.js"]
     provider: "opencode"
     worktree_owner: "herdr"
@@ -1249,6 +1271,8 @@ todos:
       - "the three failure modes 007-3 established for the claude-code caller stay distinguishable here: a path-scope violation, a VACUOUS measurement, and a schema failure. The operator acts differently on each - revert the worker, distrust the baseline, distrust the report - so one undifferentiated non-zero exit is not sufficient"
       - "a VACUOUS measurement must NOT exit 0. loop-007-2 established that a path-scope gate over zero paths must fail rather than pass; the CLI inherits that and a test pins it"
       - "the violating paths are PRINTED, not merely counted. A gate that says '3 violations' sends an operator back to the diff to work out which"
+      - "the SHAPE is decided by 008-5 and is not the implementer's to redesign: two subcommands, `collected-evidence EVIDENCE ENVELOPE` and `loop-complete LOOP_COMPLETE --baseline GIT_REF`, each taking `--verdict PATH` repeatably OR a required `--no-verdicts-requested`. The mutually-exclusive verdict flag is the point, not decoration: both validators today turn an omitted verdict list into a fabricated pass (evidence_gate.py 219 and 400), so a router that simply failed to find the verdict files would read as `no review was requested`. Exit 0 advance, 1 blocked, 2 usage; 3 stays the launcher's"
+      - "a bare `loop-complete LOOP_COMPLETE` with neither verdicts nor a baseline is REFUSED, not accepted. Step 7 has already schema-validated that file, and with gates 2 and 3 both skipped the call would be a second schema check presented as a joined gate - present and inert, which is the failure mode this whole loop exists to remove"
       - "close the dispatch path in the same change: `ap_launcher` accepts any importable module under platforms.python and runs it with run_name='__main__', which is what made a CLI-less module report success. Give it an explicit allow-list, or make an absent __main__ a non-zero error rather than a silent normal return. A CLI added without this leaves the hole open for the next module, which is 008-1's point and the reason this check is here rather than in a test"
       - "red-green: each new assertion is proved able to fail by mutation, with the source restored byte-exact afterwards and a positive control showing the instrument is not simply broken"
     evidence: "The diff, the mutation log, the CLI output for all four cases including the clean pass, and a dispatch of a CLI-less module through the launcher showing it is now non-zero"
@@ -1334,6 +1358,7 @@ todos:
   - [ ] the three failure modes are distinguishable by exit code and message, with the violating paths printed
   - [ ] a module named in a shipped command but lacking a __main__ fails a test derived from those commands
   - [ ] validate_advancement and can_advance_loop are each exposed or deleted, and the decisions are recorded in the module
+  - [ ] the gate reads the policy block of the evidence it is handed, proven by a schema-valid document that reports its own review as failed and is blocked
   - [ ] criterion 4 has a measured pass AND a measured fail on one non-Claude host, on an installed copy
 ---
 ```

@@ -199,3 +199,119 @@ Normalised to 839/839/839 with no stray `\r\r`, then re-verified: 37 passed, aud
 Panes `w10:p1` and `w21:p1` closed after their work was collected and committed. Both
 worktrees are left in place: `loop-007-audit` holds `9603fca` and `d09c440`, and
 `loop-007-acc08` holds `3f98cbd`, none of them pushed.
+
+---
+
+## Controller work, 2026-09-02: wiring the gate to a scope the system can produce
+
+This section covers my own changes rather than a worker's, and it is here because the
+finding it answers was that a block had never been run. A record that repeats that mistake
+would be worthless.
+
+### The finding, restated
+
+`next-loop.md` step 7a read `.advanced-plans/state/external-task-envelope.json` with a bare
+`open()`. **measured:** nothing in the running system writes that file. The live state
+directory holds `loop-ready.json` and `loop-complete.json` and no envelope, and
+`loop-ready.schema.json` has eight properties, none of them paths, with
+`additionalProperties` absent — so the orchestrator could not add one without a schema
+change. The block's first real invocation would have raised `FileNotFoundError`.
+
+Every reviewer who passed that block read it. None ran it. That is the whole defect class.
+
+### What replaced it
+
+`default_worker_scope(repo_root)` in `platforms/python/scope_policy.py` derives the pair the
+gate needs from the repository itself. The allow-list is the load-bearing half and it is
+**derived, not enumerated**: every top-level entry except `.advanced-plans/` is allowed, and
+two carve-outs are added back (`phases/`, and `state/loop-complete.json`). A programme-state
+file invented tomorrow is therefore `not_allowed` on the day it appears, with no list for
+anyone to remember to update. An enumerated forbidden list has the opposite property — it
+permits whatever nobody listed, which is a check that cannot fail.
+
+`_ALWAYS_FORBIDDEN` names six paths that the derivation already refuses. It is belt and
+braces: it makes the violation report say `forbidden` rather than `not_allowed` for the
+paths that matter most, and a future widening of the allow-list cannot quietly expose them.
+
+**measured.** `test_default_worker_scope.py`, 22 tests, all green. Two of them are the
+instrument check — an empty allow-list would make every rejection test pass for the wrong
+reason, so the file asserts first that something is accepted. The load-bearing test is
+`test_an_unlisted_state_file_is_refused_too`, which asserts the refusal reason is
+`not_allowed` rather than `forbidden`: if that ever flips, the general property has been
+quietly replaced by a specific one.
+
+**Mutation-proved.** Changing the exclusion from `(".git", ".advanced-plans")` to
+`(".git",)` turns `test_an_unlisted_state_file_is_refused_too` and
+`test_the_carve_out_is_a_file_not_the_directory` red. Restored byte-exact afterwards.
+
+### The block was executed, in three scenarios
+
+**measured.** A harness extracted the python block **from the shipped markdown** rather than
+from a copy — a harness that runs its own transcription proves nothing about what ships — and
+ran it in three throwaway git repositories. The single substitution was the
+`.advanced-plans/bin/ap.py` bootstrap line, which does not exist in the framework repo
+because it is installed into a consuming project; a `sys.path` insert does the same job.
+
+| Scenario | Expected | Result |
+|---|---|---|
+| worker edited `core/file.md` | pass | exit 0, "gate passed over 1 path(s)" |
+| worker wrote `.advanced-plans/state/history.jsonl` | fail | exit 1, `path_scope`, the path named, reason `forbidden` |
+| worker changed nothing | fail | exit 1, `path_scope: VACUOUS` |
+
+Scenario 1 is the positive control. Without it a gate that refused everything would score
+two out of three and look correct.
+
+### One deliberate deviation from the approved option
+
+The option chosen sketched moving step 7a to after step 9 so the diff would be non-empty. I
+kept it at 7a. Steps 8 and 9 are the **main thread's** writes — `PLANNING.md` and
+`history.jsonl` — and both are forbidden to the worker, so a gate that ran after them would
+report the controller's own writes as worker violations on every single loop. The intent
+behind the move (never hand the gate an empty list) is met a different way: the measurement
+is now committed changes since the checkpoint tag **union** the dirty tree, which is
+non-empty on both of the paths `ralph-loop-worker.md` offers the worker.
+
+Two smaller changes went in with it. A missing checkpoint tag is now a stated failure naming
+what to do about it, rather than a traceback from `check=True`. And `loop-ready.json` is
+excluded by name because the orchestrator wrote it at step 4, before the worker existed —
+that exclusion is deliberately one path wide, so any *other* state file appearing in the
+measurement still fires the gate.
+
+### What this does not fix
+
+The role documents and the commands still disagree. `core/agents/worker.md` and
+`ralph-loop-worker.md` say the worker emits collected-evidence and never writes programme
+state; `next-loop.md` and `state_manager.py` still run the loop-complete.json protocol. The
+`.advanced-plans/state/loop-complete.json` carve-out and
+`test_loop_complete_is_writable_and_this_is_the_divergence` are the two in-code markers for
+that gap. When the adapter is migrated they should both be **deleted, not amended** — an
+amended carve-out is how a temporary hole becomes permanent. Recorded as a Phase 7 finding:
+*role docs declare a contract the commands do not execute*.
+
+### Two measurements that bear on the remaining loop-007 todos
+
+**One production call site, and it is now the wired one.** A repo-wide grep for
+`validate_loop_complete_advancement`, `validate_path_scope` and `default_worker_scope`,
+excluding tests and the two library modules themselves, returns exactly one executable
+caller: `platforms/claude-code/commands/next-loop.md`. Everything else is a CHANGELOG line
+or prose. So the criterion "the gate is load-bearing at every production call site" is
+satisfied trivially — there is one, and it now runs.
+
+That is a weaker result than it sounds, and the reason is the second measurement.
+
+**Three of the five host adapters are README-only.** `platforms/codex/`,
+`platforms/cursor/` and `platforms/opencode/` each contain a single `README.md` and nothing
+else. `platforms/cowork/` has two agent prompts, a `checkpoint.sh` and a SKILL, but no
+command that drives a loop. Only `platforms/claude-code/` has an executable loop at all.
+
+This matters for the two remaining human-gated todos. A fixture programme "on all four
+hosts" presumes four hosts that can run one; on this measurement, one can. Whether the
+right answer is to build the missing adapters, to narrow the criterion to the hosts that
+exist, or to treat the READMEs as the deliverable is an operator decision, not something to
+settle by rewording a success criterion. Recorded, not fixed.
+
+**63 `external-task-envelope` references remain**, all of them in role documents, host
+prompts, the schema itself, and two `evidence_gate.py` docstrings describing a parameter.
+None of them open a file. The one executable reader is gone. That is the same divergence
+recorded above, seen from the other side: the contract is documented in five places across
+every host and executed in none.

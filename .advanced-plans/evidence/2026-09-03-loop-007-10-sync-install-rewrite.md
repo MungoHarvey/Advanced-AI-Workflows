@@ -85,6 +85,7 @@ controller rather than taken from the worker's report, and both reproduced.
 ## Attribution
 
 `3949abd` carries `Co-Authored-By: opencode (Qwen) via herdr worker syncinstall-fix` and
-`Loop: loop-007-10`. It is the first worker commit in this programme to do so, and it
+`Loop: loop-007-10`. It is the third worker commit in this programme to do so, not the first as this
+note originally claimed (corrected 2026-09-03; see the loop-007-9 note), and it
 carried them because the envelope stated them verbatim — the enforcement point named in
 `docs/agents/worker-attribution.md`, working first time.

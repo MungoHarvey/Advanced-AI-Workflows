@@ -93,8 +93,15 @@ one new test = 1098, so nothing was quietly dropped to get there.
 
 ## Attribution
 
-`0f138de` was written by the opencode/Qwen worker `aplaunch-fix` but carries no
-`Co-Authored-By: opencode (Qwen) via herdr worker aplaunch-fix` trailer — it is authored as
-the repository owner. `05d1e55` has the same gap. Neither commit was rewritten to add one:
-the record is here instead, and the convention needs enforcing at the worker envelope
-rather than repaired afterwards.
+**Corrected 2026-09-03, during the phase 6 gate.** This section previously said that
+`0f138de` carried no `Co-Authored-By: opencode (Qwen) via herdr worker aplaunch-fix`
+trailer and that `05d1e55` had the same gap. Both statements are false. Running
+`git log -1 --format=%B` on each commit shows both trailers present, and `git reflog`
+shows every entry as `commit:` with author date equal to commit date, so the trailers
+were there at creation and were not amended in later.
+
+The error was found by the gate's own `code-review-agent`, which opened the commits.
+I had not. That is this programme's central defect class committed by its controller:
+a claim about an artefact, asserted without reading the artefact. The convention itself
+is sound and still holds, but the observation that motivated writing it down was wrong,
+and there was no attribution gap to record.

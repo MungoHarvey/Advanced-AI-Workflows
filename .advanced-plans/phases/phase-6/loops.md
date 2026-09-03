@@ -1213,7 +1213,9 @@ todos:
     evidence: "The reproduction, the diff, both halves of the mutation check, and the full suite count"
     gate: "human"
     outcome: "A refreshed global install is byte-equivalent to a fresh one, and a check exists that notices when it stops being"
-    status: pending
+    result: "Fixed. Step 4 now carries a global-layer-only paragraph instructing the same rewrite install.sh performs, naming ap_rewrite_call_sites, and stating the project layer keeps the relative form as a plain cp. The audit blindness was confirmed by the controller against the real _file_hash rather than assumed: the two forms of the same file differ on disk and hash identically to f2b40fa3. The worker guard had the defect it was written to catch - it asserted the prose CONTAINS the string line 224 and never opened install.sh, so its subject was a string it supplied itself. Demonstrated before touching it: inserting one line near the top of install.sh moves the function to 225, leaves the citation false, and all 51 tests pass. Controller 97ebd0b makes the assertion extract the cited number and read that line of install.sh; move the function and it fails, restore it and it passes. Both halves of the worker mutation check were re-run by the controller and both reproduced. Suite 1099 passed 1 skipped, which is 1098 plus the one new test. 3949abd is the first worker commit in this programme to carry its attribution trailers, because the envelope stated them verbatim."
+    evidence_note: ".advanced-plans/evidence/2026-09-03-loop-007-10-sync-install-rewrite.md"
+    status: completed
     complexity: medium
     priority: high
 

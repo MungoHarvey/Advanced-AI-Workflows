@@ -1373,6 +1373,27 @@ todos:
     complexity: high
     priority: high
 
+  - id: "loop-008-9"
+    content: "Close the three loop-008 criteria the audit left open, and make exit 1 mean a verdict"
+    repository: "advanced-planning"
+    base_sha: "loop-008-8"
+    allowed_paths: ["platforms/python/evidence_gate.py", "platforms/python/tests/"]
+    forbidden_paths: ["<standard programme forbidden set>", "advanced-planning/.advanced-plans/", "setup-antigravity.js"]
+    provider: "opencode"
+    worktree_owner: "herdr"
+    discharges: "the three success criteria loop-008 left unticked, measured and recorded in .advanced-plans/evidence/2026-09-03-loop-008-success-criteria-audit.md. Two are documentation debts the fixes created; the third is a design decision plus two defects that decision exposes"
+    checks:
+      - "criterion 1387 was REWORDED by the audit, from `runs the gate at both sites` to `runs it, or refuses and says why`, because F5 chose refusal at the resume site for a stated reason and the criterion was written before that difficulty was understood. A criterion reworded to fit the code is worthless unless something then checks it, so this loop supplies the check: execute the shipped block at BOTH sites in the installed copy and show that site 1 runs the gate and site 2 refuses AND names the missing baseline. Do not tick it on the rewording alone"
+      - "criterion 1390, the cheap half: can_advance_loop is gone from the source and validate_advancement is in __all__, so both names are settled, but NOTHING in the module records the removal. A reader arriving from an older call site finds silence. Add the record next to __all__ - what was removed, and that validate_advancement is the supported entry point. Grep for the name first: if any caller outside a .pyc survives, that is a finding and the deletion is not clean"
+      - "criterion 1388, the decision: KEEP one blocked exit code. Nothing in any shipped command branches on which gate failed, so three codes would be a contract nothing consumes and a future edit could break in silence. Record that reasoning in main()'s docstring as a decision, not as a description - the next reader must be able to tell it was chosen"
+      - "1388 defect A: VACUOUS is printed with the path_scope: prefix (evidence_gate.py:718), so that prefix matches both a real scope violation and the refusal to rule on zero paths. Give VACUOUS its own vacuous: prefix so the three modes really are separable by message, which is the half of the criterion that IS achievable"
+      - "1388 defect B: the five git-subprocess failures return 1, the same code as a real refusal, so an environment failure is reported as a verdict about the operator's change. That is this programme's own defect class - an exit code asserting something the gate never checked. Move them to 2 and widen 2's documented meaning to THE GATE DID NOT REACH A VERDICT, malformed invocation or environment failure alike. Exit 1 then means, always, that the gate ruled and blocked"
+      - "red-green on both defects, by reversion rather than by writing the test after the fix: each new test must FAIL on 8cf17b5's evidence_gate.py and pass on the fix, proven by restoring the file and re-running. A test written green-first says only that it passes now"
+      - "positive controls or it is not a measurement: a clean loop-complete run must still exit 0, and a real path-scope violation must still exit 1 naming the path. A gate that started refusing everything, or one that stopped refusing anything, must fail this loop"
+    evidence: "The grep for can_advance_loop across the source tree; the before/after exit codes for a git failure and for VACUOUS, captured before any pipe; the reversion run showing each new test red on 8cf17b5; and the controller-run suite at the tip."
+    status: pending
+    gate: agent
+
   ## Non-negotiables
   - The gap is callable-and-silently-green, not unwired. A fix that adds a CLI and leaves
     runpy dispatching arbitrary module names has closed the symptom and left the mechanism.
@@ -1384,7 +1405,7 @@ todos:
 
   ## Success criteria
   - [x] dispatching the gate module through the launcher can no longer exit 0 having checked nothing
-  - [ ] the shared router runs the gate as well as the schema validation, at BOTH sites, before the advancement is logged, proven by executing the shipped block in three scenarios
+  - [ ] the shared router runs the gate as well as the schema validation, at BOTH sites, before the advancement is logged - or refuses to advance and says why, which is what the resume site does since F5, because the step-6 baseline SHA does not survive a crash and a guessed one would make the gate meaningless - proven by executing the shipped block in three scenarios
   - [ ] the three failure modes are distinguishable by exit code and message, with the violating paths printed
   - [x] a module named in a shipped command but lacking a __main__ fails a test derived from those commands
   - [ ] validate_advancement and can_advance_loop are each exposed or deleted, and the decisions are recorded in the module

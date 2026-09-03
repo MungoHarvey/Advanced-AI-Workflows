@@ -198,3 +198,25 @@ Exit 0, captured before any pipe. The comparable run at loop-008-4 was
 `1080 passed, 1 skipped in 437s`, so the +22 are the new classes across the two
 commits and nothing that previously passed has started failing or been removed.
 The one skip is the same long-standing one.
+
+## A stale docstring the fix left behind
+
+Found while preparing loop-008-6, after this loop was recorded. The module
+docstring of `platforms/python/evidence_gate.py` still says, of the
+loop-complete path:
+
+> Path scope is NOT validated because loop-complete.json does not contain
+> changed_paths, so path scope cannot be checked from it. There is no
+> commit-stage path-scope enforcement today.
+
+That was true before F1 and is false after it. The `loop-complete` subcommand in
+`main()` now derives the changed set from git and runs `validate_path_scope` over
+it, which is the whole of what F1 added and what the thirteen scenarios above
+measure. The code is right and the prose above it describes the code it
+replaced.
+
+Not fixed here, deliberately: this loop is closed and its branch is finished.
+Recorded so the next loop that touches the module corrects the docstring rather
+than trusting it. It is a documentation defect with a real cost — a reader
+deciding whether the commit-stage gate exists gets the wrong answer from the
+first thing they read.

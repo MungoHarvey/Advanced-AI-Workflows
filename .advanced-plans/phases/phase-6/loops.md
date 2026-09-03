@@ -1143,6 +1143,28 @@ todos:
     evidence_note: ".advanced-plans/evidence/2026-09-03-loop-007-7-fixture-programme-four-hosts.md"
     complexity: medium
     priority: medium
+  - id: "loop-007-8"
+    content: "Make the install audit look at the surface the hosts actually read, and make the gate preflight audit a layer that resolves from the project it is run in"
+    repository: "advanced-planning"
+    base_sha: "loop-007-7"
+    allowed_paths: ["platforms/python/", "platforms/claude-code/commands/", "platforms/python/tests/", "docs/"]
+    forbidden_paths: ["<standard programme forbidden set>", "advanced-planning/.advanced-plans/", "setup-antigravity.js", "setup/"]
+    provider: "opencode"
+    worktree_owner: "herdr"
+    discharges: "criterion 1 - the rewritten form. loop-007-6 landed the preflight fix and loop-007-7's global install exposed two defects in it that the rewrite's own wording already required and the tests could not see."
+    checks:
+      - "install_audit.SURFACES is exactly [(platforms/claude-code/commands, commands), (platforms/claude-code/agents, agents), (core/schemas, schemas)]. It has NO skills surface. The four hosts were measured reading SKILLS, and loop-007-6's digest table found 6 of 7 shared skills drifted in the global layer. So the audit criterion 1 names as its instrument is blind to the exact files the criterion is about. Add (core/skills, skills). Directory-per-skill, not flat files - the existing surfaces are flat, so the walk has to change, not just the table"
+      - "POSITIVE CONTROL: plant a difference in an installed skill copy, show the audit goes red naming skills/<name>, remove it, show green. An added surface that cannot report drift is the defect this phase exists to remove, and a table entry alone does not prove the walk reaches it"
+      - "the gate preflight in platforms/claude-code/commands/run-gate.md uses --layers all. install_audit resolves the project layer as find_repo_root(__file__)/'.claude' (install_audit.py:439,449), which is the FRAMEWORK checkout, never the project the gate is running in. Measured 2026-09-03 from the AAW project: it audited the worktree's own .claude (which holds only settings.json), reported 27 MISSING and exited 1. That makes the gate's WARN unconditional and permanent, so real drift is indistinguishable from it. Change the preflight to --layers source,global, which resolves from USERPROFILE and works from any project, and record WHY in the file next to the call"
+      - "the existing test_gate_preflight_layers.py passes today against the broken argument, because it only asserts the value is parser-valid and mentions global. Tighten it so 'all' can no longer satisfy the preflight assertion, and MUTATION-CHECK it: with --layers all in run-gate.md the test must FAIL. A test that passes both before and after a fix has told you nothing"
+      - "do not weaken or delete test_every_layer_argument_is_one_the_parser_accepts - it is the control that caught the original source,project,global mistake"
+      - "python -m pytest platforms/python/tests -q -p no:cacheprovider green, and report the count"
+    evidence: "The SURFACES diff, the per-surface red-green control, the run-gate.md diff with its reason, and the mutation result for the tightened test"
+    gate: "human"
+    outcome: "The audit covers the surface the hosts read, and the preflight reports drift the invoking project can act on rather than a permanent false positive"
+    status: pending
+    complexity: medium
+    priority: high
 
   ## What this loop is for
 

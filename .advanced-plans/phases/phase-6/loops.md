@@ -1162,6 +1162,33 @@ todos:
     evidence: "The SURFACES diff, the per-surface red-green control, the run-gate.md diff with its reason, and the mutation result for the tightened test"
     gate: "human"
     outcome: "The audit covers the surface the hosts read, and the preflight reports drift the invoking project can act on rather than a permanent false positive"
+    result: "Discharged, with the skills surface rebuilt twice. The worker (opencode/Qwen, 05d1e55) fixed the preflight soundly and added a skills surface that collected only NAME/SKILL.md - measured to report `current` for a skill whose installed references/ file differed, an affirmative false green over 7 files install.sh copies and the planning skills read at runtime. Its test_skills_surface_is_defined asserts the table entry and was measured to PASS against that broken walk, which is exactly what this loop's check warned a table entry cannot prove. Controller correction f16ae91 removed the branch; the resulting wholesale walk then made the audit stop completing, because the installed skills/ directory is shared - measured 261 entries and 18404 files, 17946 of them one unrelated tool's. SURFACES entries now carry shared_namespace and the installed side is enumerated per source-declared item. Three mutation checks confirmed: narrowing the walk to SKILL.md, widening the installed walk to wholesale, and restoring --layers all each fail their guard. Live audit source,global: 42 current, 1 stale, 0 missing, 0 source-missing, 13 extra (56 rows, up from 40 - exactly the 9 SKILL.md plus 7 references/ files), 1s. Suite: 5 failed, 1092 passed, 1 skipped - all five in test_ap_launcher.py, all five reproducing identically at 05d1e55^, and all five referred up rather than patched. They are loop-007-9."
+    evidence_note: ".advanced-plans/evidence/2026-09-03-loop-007-8-skills-surface-and-gate-preflight.md"
+    status: completed
+    complexity: medium
+    priority: high
+
+  - id: "loop-007-9"
+    content: "Decide whether the launcher adopting the profile directory is a test-isolation gap or a product defect, then fix whichever it is"
+    repository: "advanced-planning"
+    base_sha: "f16ae91"
+    allowed_paths: ["platforms/python/", "platforms/python/tests/", "docs/"]
+    forbidden_paths: ["<standard programme forbidden set>", "advanced-planning/.advanced-plans/", "setup-antigravity.js", "setup/"]
+    provider: "opencode"
+    worktree_owner: "herdr"
+    discharges: "the one check loop-007-8 could not close. Five test_ap_launcher.py failures, pre-dating the loop, exposed by loop-007-7 global install - the supported installation - so the suite is red on any machine where the product is installed the normal way"
+    checks:
+      - "DIAGNOSE BEFORE FIXING, and say which it is in writing. find_manifest (ap_launcher.py:206-246) returns the first .advanced-plans/runtime.json at or above start, checking the manifest at :234 BEFORE the project boundary at :236 and the repo boundary at :238. The global install writes ~/.advanced-plans/runtime.json. So on a machine with a global install every directory under the profile now finds that record by upward walk and treats the profile as a project. Before the global install the same directory held .advanced-plans/ with no manifest, so the walk raised Boundary(home, project) - which is the branch the tests handle. Decide and state whether the profile record being reachable by upward walk is intended global fallback or the borrowing the boundary stop exists to refuse. The names of two failing tests assert the latter: test_the_profile_directory_is_never_adopted_as_a_checkout and test_the_global_record_is_read_beside_the_launcher_not_from_the_caller_home. resolve() at :269 consults sibling_manifest and global_manifest separately, so the walk is not the only path to the global record - say what that implies for your answer"
+      - "REPRODUCE IT FIRST, on the real machine, and paste the output. python -c importing ap_launcher and calling find_manifest on a fresh tempfile.TemporaryDirectory must currently return C:/Users/mharvey2/.advanced-plans/runtime.json. If it does not reproduce, stop and report that - do not proceed on my description of the fault"
+      - "the five failing tests are test_the_global_record_is_read_beside_the_launcher_not_from_the_caller_home, test_the_inline_call_sites_get_the_guard_not_a_traceback, test_the_profile_directory_is_never_adopted_as_a_checkout, test_missing_manifest_is_reported_as_such, test_find_manifest_walks_up_and_stops. All five reproduce identically at commit 05d1e55^ from a clean git archive, so none of them is a regression from loop-007-8. Confirm that yourself rather than taking it from me"
+      - "if the verdict is a product defect: fix ap_launcher so the profile directory is not adopted, and keep the diagnostic honest - a project that genuinely has no manifest must still reach the global record by the path resolve() intends, not be broken into a false Unreachable. If the verdict is test isolation: fix the fixtures so ancestry is controlled, and say plainly why the two test names above do not mean what they appear to"
+      - "MUTATION CHECK whichever you do. Revert your fix, show the guarding test FAILS, restore it, show it PASSES. Paste both. A test that passes before and after has told you nothing - this phase has now been bitten by that three times"
+      - "the failure is invisible on a machine with no global install, which is how it shipped. Whatever you write must fail on a machine that HAS one. State how your test achieves that, and do not rely on the developer's real profile to supply the condition"
+      - "do not weaken, skip, xfail or delete any of the five tests to make the suite green. Making a check unable to fail is the exact defect this phase exists to remove"
+      - "python -m pytest platforms/python/tests -q -p no:cacheprovider and report the FULL count. The target is 0 failed, and the last measured state is 5 failed 1092 passed 1 skipped"
+    evidence: "The reproduction output, the written verdict with its reasoning, the diff, the mutation result for the guarding test, and the full suite count"
+    gate: "human"
+    outcome: "The suite means something on a machine with a global install, and the launcher either refuses the profile directory or is documented as rightly accepting it"
     status: pending
     complexity: medium
     priority: high

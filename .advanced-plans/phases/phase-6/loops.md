@@ -1383,10 +1383,10 @@ todos:
   - Criteria 1 and 2 are NOT in scope. They are 007-6 and 007-7, gate: human, and still open.
 
   ## Success criteria
-  - [ ] dispatching the gate module through the launcher can no longer exit 0 having checked nothing
+  - [x] dispatching the gate module through the launcher can no longer exit 0 having checked nothing
   - [ ] the shared router runs the gate as well as the schema validation, at BOTH sites, before the advancement is logged, proven by executing the shipped block in three scenarios
   - [ ] the three failure modes are distinguishable by exit code and message, with the violating paths printed
-  - [ ] a module named in a shipped command but lacking a __main__ fails a test derived from those commands
+  - [x] a module named in a shipped command but lacking a __main__ fails a test derived from those commands
   - [ ] validate_advancement and can_advance_loop are each exposed or deleted, and the decisions are recorded in the module
   - [x] the gate reads the policy block of the evidence it is handed, proven by a schema-valid document that reports its own review as failed and is blocked
   - [x] criterion 4 has a measured pass AND a measured fail on one non-Claude host, on an installed copy

@@ -1327,6 +1327,29 @@ todos:
     status: completed
     complexity: medium
     priority: high
+  - id: "loop-008-8"
+    content: "Close the five gate defects criterion 4 depends on: two silent passes, one unreadable failure, one cwd dependency, and a third advancement path that gates nothing"
+    repository: "advanced-planning"
+    base_sha: "loop-008-3"
+    allowed_paths: ["platforms/python/evidence_gate.py", "platforms/python/tests/", "platforms/shared/agent-skills/advanced-planning/"]
+    forbidden_paths: ["<standard programme forbidden set>", "advanced-planning/.advanced-plans/", "setup-antigravity.js"]
+    provider: "opencode"
+    worktree_owner: "herdr"
+    discharges: "criterion 4"
+    checks:
+      - "F1 - the loop-complete path-scope arm is blind to STAGED and UNTRACKED changes. evidence_gate.py:632 runs `git diff --name-only` with no --cached and no ref, which reads worktree-against-index only, while the comment directly above it claims `staged + unstaged`. Measured: the same forbidden file staged gives rc=0 and silence, committed gives rc=1 naming it. The VACUOUS guard does not cover the gap because it tests the UNION, so real committed work plus a staged forbidden write passes. `git diff --name-only HEAD` covers tracked staged and unstaged in one call, `git ls-files --others --exclude-standard` covers untracked. The proof must be the MIXED case - a genuine committed in-scope change alongside a staged forbidden write must FAIL naming the path. A test that stages a forbidden write on an otherwise empty tree passes for the wrong reason, because VACUOUS would have caught that one anyway"
+      - "F2 - the collected-evidence arm has no vacuity guard at all, and this is the site the programme's own Herdr workers route through. `validate_advancement` Gate 3 (evidence_gate.py:245-262) takes changed_paths straight from the worker's own report and calls validate_path_scope, which returns ok=True on an empty list; the schema permits it, declaring changed_paths a required array of non-empty strings with no minItems. Measured with a positive control in the same run: an envelope allowing NOTHING and forbidding everything returned rc=0 on an empty list and rc=1 naming the path on a single entry. Mirror the guard its sibling already carries 200 lines above, gate-side rather than schema-side, and state in the commit why the schema was left alone rather than leaving the reader to guess"
+      - "F3 - both arms collect schema_errors and print only the count. Measured: `schema: 1 validation error(s)` and nothing else, with the cause recoverable only by calling validate_document directly, which named it at once. An operator following the shipped block gets a failure they cannot act on. The proof is an invalid document whose stderr NAMES the offending pointer, not a test that merely asserts a non-zero exit"
+      - "F4 - the gate takes its allow-list from the process cwd. evidence_gate.py:664 calls `default_worker_scope('.')`, which derives the allow-list from that directory's own top-level entries, while git returns repository-relative paths. Measured, same commit and same baseline: rc=0 from the project root, rc=1 from `src/` naming `src/app.py` as not_allowed - the same in-scope change. Resolve the repository root and pass that. The proof needs BOTH arms: the same in-scope change must give the same verdict from the root and from a subdirectory, AND a genuinely forbidden path must still fail from the subdirectory. Without that second arm the check is satisfied by a gate that has stopped refusing anything"
+      - "F5 - the shared router has a THIRD advancement path and it gates nothing. Under `resume`, the branch `loop-complete.json matches loop-ready.json: Finalize without rerunning` runs state_validate on both files and stops. That is a finalize step, which is the exact moment criterion 4 is about. Decide it and say so in the block: either resume runs the evidence gate with an operator-supplied baseline, or it refuses to finalize and sends the operator to step 7. Do not leave a finalize step that gates nothing, and do not paper over the real difficulty - a resume after a crash may no longer know the baseline the loop started from - whichever way it goes, the block must say why"
+      - "Red-green on every fix, by mutation and not by assertion. Each new test must be shown able to FAIL by mutating away the fix it pins, with the source restored byte-exact and compared by sha256 rather than by eye, and every run must carry a positive control so a detector that has started failing everything is distinguishable from one that is working. Four of the five defects above were found by exactly this discipline before any diff existed"
+      - "Execute, do not read. Every before/after pair must be produced by running the shipped CLI in a throwaway installed project, because the framework repo has no `.advanced-plans/bin/ap.py` and any other route proves a path the operator does not use. Report the exit code and the stderr text for each, not a summary of them"
+    evidence: "The diff, and for each of F1-F4 a before/after pair carrying the exit code and the stderr text, each with its positive control; the mutation result for every new test; the decision taken on F5 and the words it is stated in; and a controller-run suite"
+    gate: "none"
+    outcome: "The gate cannot report a pass it never earned, and no advancement path in the shared router is left ungated"
+    status: pending
+    complexity: medium
+    priority: high
   - id: "loop-008-6"
     content: "Prove criterion 4 on a real non-Claude host, against the installed copy"
     repository: "advanced-planning (read-only for the host; the fixture lives outside both checkouts)"

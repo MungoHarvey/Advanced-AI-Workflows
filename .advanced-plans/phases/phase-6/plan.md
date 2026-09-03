@@ -51,14 +51,52 @@ that exist, add the two run-contract schemas, and add the CI path audit. Estimat
 
 ## Success Criteria
 
-- ✓ Every target host discovers the same named core planning skills — not host-specific copies
-  that drift.
+- ✓ Every layer a target host is measured to read is covered by the shipped install audit, and
+  the gate preflight runs it over those layers, so a drifted copy is reported before a run rather
+  than discovered after one. The per-host discovery table is maintained as recorded constraint,
+  each entry marked adapter defect or host behaviour with the measurement that decided it.
+  [rewritten 2026-09-03 — see note below]
 - ✓ A fixture programme can create one phase, one loop, and one external task on every target host.
 - ✓ Only the control checkout updates programme state; a worker attempting a planning-state edit
   fails collection — ACC-08.
 - ✓ Collected evidence advances a loop only after both schema validation and gate validation pass.
 - ✓ The CI path audit fails on any host-specific path in `core/`.
 - ✓ No adapter duplicates a core skill's content; adapters install and register, they do not fork.
+
+### Note — criterion 1 was rewritten on 2026-09-03, and why
+
+The original read: *"Every target host discovers the same named core planning skills — not
+host-specific copies that drift."* `loop-007-6` measured it across all four hosts and the
+subject turned out to be the wrong thing. Evidence:
+`.advanced-plans/evidence/2026-09-03-loop-007-6-host-discovery-measured.md`.
+
+Three of four host outcomes turn on behaviour no adapter can configure:
+
+- **opencode** does load project skills — a unique-name control proved it, quoting canaries
+  from both `.agents/skills` and `.opencode/skills`. But on a *name collision* with a global
+  `~/.claude/skills` skill, the global copy wins. Measured three ways: default install,
+  `skills.paths` pointed at our directory, and the skill placed at opencode's own documented
+  project path. All three answered from the global copy.
+- **cursor** discovers no project skill at all under `-p --mode ask`, across four runs, from
+  any of `.agents/skills`, `.claude/skills` or `.cursor/skills`. `cursor-agent --help` has no
+  skills concept; it has rules and `AGENTS.md`.
+- **claude** also answered from the global copy, but that result is confounded by an untrusted
+  workspace and cannot be discriminated without writing host trust into the operator's profile
+  — which is `loop-007-7`'s decision, not this loop's.
+
+Only **codex** read its own adapter's copy.
+
+A criterion whose subject is host behaviour cannot be satisfied or falsified by anything this
+project ships. The rewrite moves the subject to the adapter without dropping the failure the
+old criterion named: **drifted copies under identical names still fail it.** The four-surface
+digest table is what makes that concrete — the two project surfaces are byte-identical on all
+seven shared skills, while the global copies, dated Jun 16, differ on six of seven, two of them
+substantively. `install_audit --layers source,global` already detects exactly this and already
+fails (26 stale of 40). What was missing is that the gate's Step 1 preflight audits
+`source,project` only — the layer the hosts were measured *not* to prefer.
+
+This is a rewrite, not a narrowing to fit. The old criterion was passing on a comparison of
+installer file lists; the new one fails today, on a measurement, until the preflight is fixed.
 
 ## Dependencies
 

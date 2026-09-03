@@ -196,6 +196,39 @@ adapter and keeps the failure it names:
 The old criterion's substance is preserved: drifted copies under identical names still
 fail it. What changes is that failing it is now something our code can detect.
 
+## Correction, added 2026-09-03 after loop-007-7 — right layer, wrong files
+
+The section above says twenty-six stale files were found by our own instrument "in the
+layer two of four hosts actually read", and treats that as the remedy meeting criterion 1.
+Both halves of that sentence are true and they are about **different files**. Putting them
+in one sentence made the remedy look complete when it is not.
+
+`install_audit.SURFACES` (`install_audit.py:168-172`) is exactly three entries — commands,
+agents, schemas. **There is no skills surface.** The twenty-six stale files were commands,
+agents and schemas. The drift the digest table measured, and the drift the hosts were
+serving, was in **skills**, which that audit has never looked at and still cannot.
+
+So the instrument criterion 1 names is blind to the files criterion 1 is about. The global
+layer was indeed stale and indeed the layer the hosts read; the audit simply was not
+reporting the part of it that mattered.
+
+A second defect, found the same way: the gate preflight's `--layers all` resolves its
+project half as `find_repo_root(__file__) / ".claude"` (`install_audit.py:439,449`) — the
+**framework** checkout, never the project the gate is running in. Measured from the AAW
+project: it audited this worktree's own `.claude`, which holds only `settings.json`,
+reported 27 MISSING and exited 1. The gate's warning would fire permanently, which makes
+real drift indistinguishable from the noise.
+
+Criterion 1 as rewritten is therefore **not met**, and the regression test written with it
+passes anyway — asserting that a layer argument is parser-valid and mentions `global`
+cannot see an omitted surface. Both defects are `loop-007-8`.
+
+One thing did improve without the audit's help: `loop-007-7`'s global install refreshed the
+skills as a side effect, and all nine now hash identically to source. The precedence
+behaviour F20 and F21 describe is unchanged — the global copy still wins a name collision —
+but it is now the same bytes, so the collision is harmless until the next drift. Which is
+precisely the drift nothing is currently watching for.
+
 ## Artefacts
 
 `scratchpad/l0076/`: `canary.py`, `digest.py`, `probe.sh`, `probes/{claude,codex,opencode,cursor}.txt`,

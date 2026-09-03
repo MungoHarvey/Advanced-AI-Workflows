@@ -1195,6 +1195,28 @@ todos:
     complexity: medium
     priority: high
 
+  - id: "loop-007-10"
+    content: "Make sync-install Step 4 install what install.sh installs, and guard it with the only check that can see the difference"
+    repository: "advanced-planning"
+    base_sha: "9854ade"
+    allowed_paths: ["platforms/claude-code/commands/", "platforms/python/tests/", "docs/"]
+    forbidden_paths: ["<standard programme forbidden set>", "setup/ (readable, not writable)", "advanced-planning/.advanced-plans/", "setup-antigravity.js"]
+    provider: "opencode"
+    worker: "syncinstall-fix"
+    worktree_owner: "herdr"
+    discharges: "a finding recorded in loop-007-8 and deliberately left open. sync-install.md Step 4 (:124) refreshes a stale file with a plain cp. install.sh rewrites the two literal launcher call-site forms to an absolute path when installing globally (ap_rewrite_call_sites, install.sh:224, called at :293-307), so the two install paths disagree and only one matches what the product ships"
+    checks:   # reproduce the disagreement before editing; fix Step 4 for the GLOBAL layer
+              # only, project stays a plain cp; name ap_rewrite_call_sites and its line in
+              # the prose; add a test that FAILS if the instruction is removed; mutation-check
+              # it both ways; full suite, last measured 1098 passed 1 skipped 0 failed
+    audit_blind: "install_audit._file_hash (:159) applies LAUNCHER_PATH_RE.sub before hashing, deliberately, so it reports current for a file installed either way. The audit can NEVER report this defect and must not be changed to try. The added test is the only guard there will be"
+    evidence: "The reproduction, the diff, both halves of the mutation check, and the full suite count"
+    gate: "human"
+    outcome: "A refreshed global install is byte-equivalent to a fresh one, and a check exists that notices when it stops being"
+    status: pending
+    complexity: medium
+    priority: high
+
   ## What this loop is for
 
   The gate did not find the phase's work wrong. It found three things built and never

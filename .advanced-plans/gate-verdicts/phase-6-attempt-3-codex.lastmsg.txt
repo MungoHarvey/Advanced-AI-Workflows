@@ -1,0 +1,91 @@
+```json
+{
+  "phase": "phase-6",
+  "attempt": 3,
+  "timestamp": "2026-09-03T22:30:47.449Z",
+  "agent": "codex",
+  "verdict": "fail",
+  "confidence": 99,
+  "findings": [
+    {
+      "severity": "critical",
+      "location": "platforms/claude-code/commands/run-gate.md:34",
+      "description": "The gate preflight does not audit every layer and surface that target hosts were measured to read.",
+      "evidence": "Lines 36-40 claim to audit project and global copies but invoke only `--layers source,global`. install_audit.py:404-405 and 473-490 map both supported installed layers exclusively to `.claude/`. Codex project skills are installed under `.agents/skills/` by setup/codex/install.sh:722-747, and Cursor uses the project AGENTS.md surface. Neither is audited. The live source/global run contained only global `.claude` rows and reported 41 current, 2 stale, and 13 extra."
+    },
+    {
+      "severity": "critical",
+      "location": "platforms/claude-code/commands/next-loop.md:354",
+      "description": "The shipped Claude Code route cannot produce the external task required by the every-host fixture criterion.",
+      "evidence": "Lines 355-359 explicitly state that nothing in the adapter writes an external task envelope and defer that migration to Phase 7. The same command instead writes loop-ready.json directly and instructs the worker to write loop-complete.json at lines 231-240 and 317-329."
+    },
+    {
+      "severity": "critical",
+      "location": "platforms/python/evidence_gate.py:208",
+      "description": "ACC-08 trusts worker-supplied claims instead of collecting the worker's actual filesystem changes.",
+      "evidence": "collected-evidence.schema.json:4 and 47-81 say the controller independently computes git identity and changed paths. In conflict, core/agents/worker.md:212-247 and the shared worker prompt at lines 203-237 instruct the worker to author those fields. validate_advancement then reads policy booleans and git.changed_paths directly from that document at evidence_gate.py:215-249. A worker can omit a forbidden planning-state edit while supplying an allowed path. The tests repeat the defect by passing literal changed_paths arrays, for example test_scope_policy.py:375-381."
+    },
+    {
+      "severity": "critical",
+      "location": "platforms/claude-code/commands/next-loop.md:312",
+      "description": "The shipped state-writing contract contradicts the controller-only requirement.",
+      "evidence": "next-loop.md:317-329 instructs the worker to write `.advanced-plans/state/loop-complete.json`. core/state/README.md:18-22 and 28-52 likewise assign loop-ready.json to the orchestrator and loop-complete.json to the worker. This directly conflicts with core/agents/worker.md:214-216 and the current criterion."
+    },
+    {
+      "severity": "critical",
+      "location": "platforms/python/evidence_gate.py:193",
+      "description": "Collected evidence can advance without any gate verdict being validated.",
+      "evidence": "When verdict_paths is absent, evidence_gate.py:193-206 fabricates a passing policy-gate result. test_evidence_gate.py:513-523 explicitly pins this default pass. The shipped router tells callers to use `--no-verdicts-requested` and proceed to advance state on exit 0 at platforms/shared/agent-skills/advanced-planning/SKILL.md:219-225. The remaining policy and path checks consume the worker-authored evidence document, so they do not supply an independent gate."
+    },
+    {
+      "severity": "critical",
+      "location": "platforms/python/path_audit.py:78",
+      "description": "The CI path audit misses real host-specific paths under core.",
+      "evidence": "The host-directory regex at lines 103-105 recognizes only dot-prefixed runtime directories. core/skills/plan-subagent-identification/references/agent-catalogue.md contains six `platforms/claude-code/agents/...` paths, and core/skills/permission-config/SKILL.md:30 contains another. The production audit nevertheless exited 0 with `PASSED WITH 24 SUPPRESSED`, so the claimed any-host-specific-path failure property is false."
+    }
+  ],
+  "loops_to_revert": [],
+  "failure_notes": [
+    "loop-007-6 and loop-007-8: model the measured host surfaces explicitly. Audit Codex's `.agents/skills`, Cursor's AGENTS.md route, and the global `.claude/skills` layer; make the preflight command match its project-and-global claim.",
+    "loop-007-7: complete the Claude Code adapter's real envelope-writing route and rerun the fixture through the shipped command rather than a manually chosen path.",
+    "loop-007-1 and loop-007-2: make the controller collect git identity and changed paths from the worker worktree. Test ACC-08 by making a real forbidden write and proving collection observes it.",
+    "loop-007-5: reconcile next-loop.md and core/state/README.md with the controller-only state-writing contract.",
+    "loop-008: do not turn an absent verdict list into a passing gate. Require and validate the evidence appropriate to advancement, independently of worker-authored policy fields.",
+    "loop-003: extend the host-neutrality rule to source adapter paths such as `platforms/claude-code/`, then mutation-test that exact token through the default CI roots."
+  ],
+  "criteria_outcomes": [
+    {
+      "criterion": "Every layer a target host is measured to read is covered by the shipped install audit, and the gate preflight runs it over those layers, so a drifted copy is reported before a run rather than discovered after one. The per-host discovery table is maintained as recorded constraint, each entry marked adapter defect or host behaviour with the measurement that decided it.",
+      "status": "failed",
+      "evidence": "run-gate.md claims project and global coverage but invokes only source,global. install_audit supports only `.claude` installed bases and cannot inspect the measured `.agents/skills` or AGENTS.md project surfaces."
+    },
+    {
+      "criterion": "A fixture programme can create one phase, one loop, and one external task on every target host.",
+      "status": "failed",
+      "evidence": "The shipped Claude Code next-loop command states that its adapter writes no external task envelope and defers that capability to Phase 7."
+    },
+    {
+      "criterion": "Only the control checkout updates programme state; a worker attempting a planning-state edit fails collection - ACC-08.",
+      "status": "failed",
+      "evidence": "The Claude route instructs the worker to write loop-complete.json, while collected-evidence validation trusts the worker-authored changed_paths list instead of independently reading the worktree."
+    },
+    {
+      "criterion": "Collected evidence advances a loop only after both schema validation and gate validation pass.",
+      "status": "failed",
+      "evidence": "The shipped route permits `--no-verdicts-requested`; evidence_gate then constructs a passing policy-gate result without validating a verdict and relies on worker-authored policy and changed-path fields."
+    },
+    {
+      "criterion": "The CI path audit fails on any host-specific path in core/.",
+      "status": "failed",
+      "evidence": "The real core tree contains multiple `platforms/claude-code/agents/...` paths that the host-directory regex does not match. The production audit exited 0."
+    },
+    {
+      "criterion": "No adapter duplicates a core skill's content; adapters install and register, they do not fork.",
+      "status": "met",
+      "evidence": "A SHA-256 scan found no adapter SKILL.md identical to a core skill. The Codex, OpenCode, and Cursor installers copy approved skills directly from core/skills; Claude Code installs that canonical directory; the Cowork and shared routing skills have distinct digests."
+    }
+  ],
+  "phase_title": "Advanced Planning Multi-Runtime Adapters",
+  "backend": "codex"
+}
+```

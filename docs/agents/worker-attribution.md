@@ -5,7 +5,7 @@ A commit written by a delegated worker must say so.
 **Corrected 2026-09-03.** This document opened by claiming that two commits, `05d1e55`
 and `0f138de`, had been authored as the repository owner without attribution trailers.
 That was wrong. Both carry `Co-Authored-By: <provider> via herdr worker <name>` and
-`Loop: <id>`, present at creation and not amended in, which `git log` and `git reflog`
+`Loop: <id>` (the trailer this convention used before ticket numbers replaced loop ids on 2026-09-07), present at creation and not amended in, which `git log` and `git reflog`
 both confirm. The phase 6 gate found the error by opening the commits, which the author
 of this document had not done.
 
@@ -19,14 +19,14 @@ Every commit a worker authors ends with:
 
 ```
 Co-Authored-By: <provider> via herdr worker <worker-name>
-Loop: <loop-id>
+Ticket: #<n>
 ```
 
-So for the opencode/Qwen worker `aplaunch-fix` on loop-007-9:
+So for the opencode/Qwen worker `aplaunch-fix` on ticket #42:
 
 ```
 Co-Authored-By: opencode (Qwen) via herdr worker aplaunch-fix
-Loop: loop-007-9
+Ticket: #42
 ```
 
 Controller commits keep the controller's own trailers instead. A commit never carries
@@ -59,6 +59,6 @@ distinction the verification discipline depends on.
 
 ## Related
 
-- `.advanced-plans/evidence/2026-09-03-loop-007-9-profile-boundary.md` — carries the
-  same correction. Its Attribution section originally recorded the gap that turned out
-  not to exist.
+- `.advanced-plans/evidence/2026-09-03-loop-007-9-profile-boundary.md` carried the
+  same correction. It was deleted in the 2026-09-07 collapse and survives only in git
+  history.

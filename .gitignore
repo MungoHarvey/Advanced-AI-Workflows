@@ -13,8 +13,6 @@ scratch/
 .claude/*
 !.claude/skills/
 .claude/skills/*
-!.claude/skills/setup-with-claude/
-!.claude/skills/gstack-to-plans/
 
 # Local agent briefing (not public)
 CLAUDE.md

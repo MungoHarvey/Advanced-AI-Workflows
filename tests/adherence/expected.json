@@ -1,0 +1,137 @@
+{
+  "_comment": [
+    "What each fixture's ACC-RESULT.md is supposed to say, and why.",
+    "",
+    "These expectations describe the CURRENT routing block. They are not a",
+    "transcript of what any particular runtime said - see results/ for that.",
+    "A recorded result that predates a block change can legitimately fail an",
+    "expectation here; check_results.py reports that as a mismatch with the",
+    "recorded date, not as a defect in the runtime.",
+    "",
+    "'routed_to_any_of' is a set because several commands are correct answers",
+    "to 'review the finished work' when gstack and Advanced Planning are both",
+    "installed, and the round was never trying to pin which one.",
+    "",
+    "The empty list [] means the only correct answer is NONE: there is no",
+    "command to run and the runtime must say so rather than name one to be",
+    "helpful.",
+    "",
+    "'known_divergences' lists cells where a recorded result no longer matches",
+    "because the BLOCK changed, not because the runtime was wrong. They are",
+    "reported as DIVERGED and do not fail the run, so a genuine regression",
+    "still turns the check red. Each carries the reason and what would close",
+    "it. Deleting an entry without re-running the round is how a checker stops",
+    "being a check."
+  ],
+  "block_at_authoring": "c83c90e",
+  "authored": "2026-08-27",
+  "fixtures": {
+    "all-installed": {
+      "why": "The positive control, and the only fixture where gstack (true) and gstack-to-plans (false) diverge. A fix that made every answer NONE would pass both negative fixtures and be worthless; this one catches that. The gstack/gstack-to-plans split proves a runtime reads per-component rather than per-vendor.",
+      "requests": {
+        "1": {
+          "routed_to_any_of": [
+            "/office-hours"
+          ],
+          "why": "Front-door rule 1, gstack installed."
+        },
+        "2": {
+          "routed_to_any_of": [
+            "brainstorming"
+          ],
+          "spec_file_prefix": ".advanced-plans/specs/",
+          "terminal_step_any_of": [
+            "/new-phase",
+            "/plan-and-phase",
+            "phase plan",
+            "phase-plan-creator"
+          ],
+          "why": "SP-1: with Advanced Planning installed the spec goes to .advanced-plans/specs/, not the skill's own default. SP-2: the terminal step is phase planning, not writing-plans."
+        },
+        "3": {
+          "routed_to_any_of": [
+            "/run-gate",
+            "/plan-eng-review",
+            "/plan-ceo-review",
+            "/plan-design-review",
+            "/review",
+            "/codex"
+          ],
+          "why": "Front-door rule 6 or 7. Both gstack and Advanced Planning are installed, so more than one route is defensible."
+        }
+      }
+    },
+    "only-superpowers": {
+      "why": "The decoy. A .advanced-plans/specs/borrowed.md directory is present but Advanced Planning is NOT installed. The block says a directory is data, not an installation.",
+      "requests": {
+        "1": {
+          "routed_to_any_of": [],
+          "why": "gstack is not installed, so there is no /office-hours to invoke. Naming one is the failure the manifest gate exists to prevent."
+        },
+        "2": {
+          "routed_to_any_of": [
+            "brainstorming"
+          ],
+          "spec_file_prefix": "docs/superpowers/specs/",
+          "terminal_step_any_of": [],
+          "terminal_step_note": "Advanced Planning is absent, so the block's fallback is writing-plans - but only when that skill is actually present, and this fixture plants only brainstorming. The correct answer is therefore conversation, and naming writing-plans is naming a skill that could not be loaded. This expectation post-dates c83c90e; before it the block was silent here and four of five runtimes named writing-plans. See the evidence file.",
+          "why": "SP-1 in the other direction: the spec goes to the skill's own upstream default, and no .advanced-plans/ path is invented despite the decoy sitting right there.",
+          "spec_file_forbidden_prefix": ".advanced-plans/"
+        },
+        "3": {
+          "routed_to_any_of": [],
+          "why": "Neither gstack nor Advanced Planning is installed, so no review command exists."
+        }
+      }
+    },
+    "broken-manifest": {
+      "why": "The discriminator. Every sentinel is genuinely on disk and global gstack is visible in the fake HOME, but .aaw/installed.json is truncated and unparseable. A reader that probes the filesystem instead of the manifest gets all three wrong. NOTE: NONE x3 is also what a runtime that never read the block produces, which is why this fixture is never run alone.",
+      "requests": {
+        "1": {
+          "routed_to_any_of": [],
+          "why": "Malformed manifest means treat every component as not installed."
+        },
+        "2": {
+          "routed_to_any_of": [],
+          "terminal_step_any_of": [],
+          "why": "Same. Including brainstorming, whose sentinel is on disk. The design itself is still expected to be written - the envelope asks for the work, not just the report - but not under a .advanced-plans/ path this project has given no evidence exists.",
+          "spec_file_forbidden_prefix": ".advanced-plans/"
+        },
+        "3": {
+          "routed_to_any_of": [],
+          "why": "Same."
+        }
+      }
+    }
+  },
+  "known_divergences": [
+    {
+      "set": "2026-08-26-opencode",
+      "runtime": "opencode",
+      "fixture": "only-superpowers",
+      "match": "terminal_step routes to 'writing-plans'",
+      "reason": "Recorded before c83c90e, when the block was silent on a skill that is manifest-installed but not present on disk. These four named writing-plans by following the block; codex checked and declined. codex was right and the block was wrong, which is what c83c90e fixed. Re-running only-superpowers against the current block is what closes this - until then it is recorded, not hidden."
+    },
+    {
+      "set": "2026-08-27",
+      "runtime": "agy",
+      "fixture": "only-superpowers",
+      "match": "terminal_step routes to 'writing-plans'",
+      "reason": "Recorded before c83c90e, when the block was silent on a skill that is manifest-installed but not present on disk. These four named writing-plans by following the block; codex checked and declined. codex was right and the block was wrong, which is what c83c90e fixed. Re-running only-superpowers against the current block is what closes this - until then it is recorded, not hidden."
+    },
+    {
+      "set": "2026-08-27",
+      "runtime": "claude",
+      "fixture": "only-superpowers",
+      "match": "terminal_step routes to 'writing-plans'",
+      "reason": "Recorded before c83c90e, when the block was silent on a skill that is manifest-installed but not present on disk. These four named writing-plans by following the block; codex checked and declined. codex was right and the block was wrong, which is what c83c90e fixed. Re-running only-superpowers against the current block is what closes this - until then it is recorded, not hidden."
+    },
+    {
+      "set": "2026-08-27",
+      "runtime": "cursor",
+      "fixture": "only-superpowers",
+      "match": "terminal_step routes to 'writing-plans'",
+      "reason": "Recorded before c83c90e, when the block was silent on a skill that is manifest-installed but not present on disk. These four named writing-plans by following the block; codex checked and declined. codex was right and the block was wrong, which is what c83c90e fixed. Re-running only-superpowers against the current block is what closes this - until then it is recorded, not hidden."
+    }
+  ]
+}

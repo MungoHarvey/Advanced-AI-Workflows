@@ -1,0 +1,108 @@
+{
+  "phase": "phase-4",
+  "attempt": 1,
+  "timestamp": "2026-08-26T09:38:37Z",
+  "agent": "code-review-agent",
+  "backend": "claude",
+  "verdict": "fail",
+  "confidence": 90,
+  "findings": [
+    {
+      "severity": "critical",
+      "location": "C:/Users/mharvey2/Coding/aaw worktrees/aaw-packaging-repair/.claude/skills/setup-with-claude/SKILL.md:268",
+      "description": "The install-time Step 6 (Install the gstack-to-plans glue skill) instructs a direct global copy through a raw tilde path -- \"If global: copy to `~/.claude/skills/gstack-to-plans/SKILL.md`.\" -- instead of the <profile> placeholder that Step 1 defines and requires (\"<profile> is %USERPROFILE% on Windows. Not HOME, and never ~\", SKILL.md:91). The same document explains why this matters: \"On a domain machine HOME can point at a redirected network drive while the real profile stays on C: ... That has happened on a machine this stack is developed on\" (SKILL.md:92-96), which matches the exact defect class the repo own history already caught once (controller checkout commit 3557bfa: gate: phase-2 PASSED (attempt 2) -- caught + fixed wrong-HOME global deploy). A second occurrence is the uninstall flow Step U7, which checks and deletes global components via raw ~/.claude/ rather than the resolved profile (SKILL.md:527, 529-530, 534, 541, 544, 562-564). Searching the whole file, <profile> notation appears only in Step 1 (lines 82-91); Steps 6 and U7 -- both agent-executed actions, not user-run terminal commands like the explicitly-carved-out Step R2 -- revert to literal tilde paths. This directly contradicts the plan stated success criterion (No global path in the installer resolves through ~ or HOME) and is not covered by any test in tests/packaging/ (the idempotency suite deliberately never exercises global-scope install/uninstall, per its own hard rule against touching the live profile).",
+      "evidence": "Quoted text from .claude/skills/setup-with-claude/SKILL.md lines 91, 268, 527-544, 562-564, read directly in the aaw-packaging-repair worktree; cross-checked commit 3557bfa in the controller checkout (git log --oneline shows gate: phase-2 PASSED (attempt 2) -- caught + fixed wrong-HOME global deploy) showing this exact bug class recurring after being fixed once already; grep -n <profile> on SKILL.md returns only lines 82-91, confirming Steps 6 and U7 never use the required placeholder."
+    },
+    {
+      "severity": "info",
+      "location": ".advanced-plans/evidence/2026-08-26-phase-4-loop-001-gstack-sync.md:117-136",
+      "description": "Plan success criterion (The upstream suite passes, with the exact command and exit code recorded) is not literally met: bun run test:windows on the sync branch exits 1 with 7 failing tests. This is not scored as a critical code-quality defect because (a) the phase plan own Risk Assessment table anticipated exactly this outcome -- The upstream gstack suite does not run on native Windows... Record the failure honestly as a platform limitation; do not claim a passing suite that was not run -- and the loop did exactly that; (b) every one of the 7 failures was individually re-run in isolation and attributed to environment (missing jq, Windows Developer Mode off, a Git Bash fork() flake, one load-induced flake) or to a genuine pre-existing upstream bug (browse/test/build.test.ts:16, an unquoted execSync interpolation), none to the sync itself; and (c) the branch carries an empty net tree patch from the merge base, so there is structurally no fork-specific code the sync could have broken.",
+      "evidence": "Independently re-verified in C:/Users/mharvey2/Coding/gstack-fork: git rev-parse upstream/main and git rev-parse sync/upstream-2026-08-26 both return ad8400543cd9ce8d07641362db48d44a95417e33 (identical); git diff --stat 029356e1f0693f22cb1fa4524c9b0f28ceab5a1b origin/main returns empty (empty net patch, exit 0, no output); git rev-list --left-right --count upstream/main...origin/main returns 89 and 3; browse/test/build.test.ts:16 read directly in the sync worktree confirms execSync with an unquoted SERVER_NODE interpolation, matching the reported bug exactly; command -v jq on this machine exits 1 (absent), matching the attribution."
+    },
+    {
+      "severity": "info",
+      "location": ".advanced-plans/phases/phase-4/plan.md:37 vs .advanced-plans/evidence/2026-08-26-phase-4-loop-003-installation-state.md:7,213",
+      "description": "The plan Explicitly NOT included scope states Pushing anything. Every branch in this phase stays local until the external-write gate, yet both feat/aaw-packaging-repair and docs/herdr-v0.2-import were pushed to origin during this phase, per the loop-003 evidence record (Pushed: yes, on 2026-08-26, under the loop-003-5 human gate). Independently confirmed the push actually happened. This is recorded as an out-of-primary-scope process observation for the record, not a code-quality defect: the evidence frames it as a deliberate, disclosed decision made under an explicit human gate, and it is for the orchestrating process (not this code-quality review) to judge whether that gate satisfied the external-write gate the plan refers to.",
+      "evidence": "git ls-remote origin refs/heads/feat/aaw-packaging-repair in the aaw-packaging-repair worktree returns 360ab3c3af1d47d9e6cb495f9042a470cb7f29ae for refs/heads/feat/aaw-packaging-repair, matching git rev-parse HEAD exactly -- the branch is genuinely on origin, not merely claimed."
+    },
+    {
+      "severity": "info",
+      "location": "(project root -- no CLAUDE.md file found)",
+      "description": "No project-root CLAUDE.md is present or accessible in either the controller checkout or the aaw-packaging-repair worktree (it is deliberately gitignored per the .gitignore own comment: Local agent briefing (not public)), so this review could not check the phase Python/shell style against an authoritative project-specific convention document. Observed instead, without a confirmed convention to check against: the tests/packaging/*.sh scripts use a bash shebang with bash-specific constructs (arrays, mktemp -d, double bracket tests) rather than POSIX sh; the four Python modules (.aaw/detect.py, tools/aaw-audit.py, tests/packaging/project_ops.py, tests/packaging/validate-manifest.py) have extensive module and function docstrings but largely omit explicit parameter and return type annotations on function signatures (e.g. def user_profile(env=None) at .aaw/detect.py:50). Recorded as info only since no CLAUDE.md was found to confirm these are violated conventions for this project.",
+      "evidence": "ls CLAUDE.md fails with No such file or directory in both the aaw-packaging-repair worktree and the Advanced-AI-Workflows controller checkout; the .gitignore comment above the CLAUDE.md exclusion line confirms it is an intentionally untracked local file, not merely missing from this checkout."
+    },
+    {
+      "severity": "info",
+      "location": ".claude/skills/gstack-to-plans/SKILL.md (0 occurrences of AskUserQuestion); tests/packaging/test-fresh-clone.sh:157-178; tests/packaging/documented-destinations.txt",
+      "description": "Three caveats already disclosed by loops 002/003 and their cross-model reviewer were independently confirmed accurate rather than newly discovered: (1) the restored glue skill contains zero AskUserQuestion callouts although phase 1 accepted it on the basis of three such callouts; (2) the fresh-clone doc-scan still cannot match a documented install source with no file extension at all; (3) tests/packaging/documented-destinations.txt is an exception allowlist whose reason convention is not parser-enforced. All three are pre-existing, honestly disclosed in the evidence/README/SETUP, and already tracked as open follow-up work rather than undisclosed defects from this phase.",
+      "evidence": "grep -c AskUserQuestion on the glue skill returns 0 in the aaw-packaging-repair worktree, confirming the disclosed gap; tests/packaging/documented-destinations.txt read directly shows the file has no real entries by design, matching the disclosed caveat text."
+    }
+  ],
+  "loops_to_revert": [],
+  "failure_notes": [
+    "Critical finding: .claude/skills/setup-with-claude/SKILL.md Steps 6 and U7 still instruct global-scope actions through raw tilde-based paths rather than the <profile> (percent USERPROFILE percent) resolution Step 1 of the same file mandates and the plan success criteria require (No global path in the installer resolves through ~ or HOME). This reintroduces, in newly-authored phase-4 content, the same defect class the programme own history already caught and fixed once (controller commit 3557bfa: caught + fixed wrong-HOME global deploy). Recommended fix: rewrite Step 6 global-copy instruction and Step U7 global-check and removal instructions to resolve and use <profile> exactly as Step 1 does, then re-run the gate."
+  ],
+  "phase_title": "Phase 4: gstack Sync and AAW Packaging Repair",
+  "criteria_outcomes": [
+    {
+      "criterion": "sync/upstream-<date> is created from a freshly fetched upstream/main, not from the fork tree.",
+      "status": "met",
+      "evidence": "Independently run in C:/Users/mharvey2/Coding/gstack-fork: git rev-parse upstream/main and git rev-parse sync/upstream-2026-08-26 both return ad8400543cd9ce8d07641362db48d44a95417e33 (identical SHAs); git diff --stat upstream/main sync/upstream-2026-08-26 produced no output (empty diff)."
+    },
+    {
+      "criterion": "The empty-net-patch claim is re-verified at execution time with git diff <merge-base> origin/main, not with git diff upstream/main origin/main -- the latter measures how far behind the fork is and will look alarming while proving nothing.",
+      "status": "met",
+      "evidence": "Independently run in C:/Users/mharvey2/Coding/gstack-fork: git merge-base upstream/main origin/main returns 029356e1f0693f22cb1fa4524c9b0f28ceab5a1b; git diff --stat of that SHA against origin/main produced no output (exit 0, empty), and git log --merges --oneline over that range lists exactly 3 merge commits (a5dc03bd, 973fedc8, 58479465), matching the evidence file claim."
+    },
+    {
+      "criterion": "The upstream suite passes, with the exact command and exit code recorded.",
+      "status": "failed",
+      "evidence": ".advanced-plans/evidence/2026-08-26-phase-4-loop-001-gstack-sync.md:117-136 records bun run test:windows exit=1 with 7 failing tests. The suite does not pass. See the corresponding info-level finding for why this is not scored critical (plan own risk table anticipated and pre-authorised honest-failure recording; empty net patch and per-failure attribution make none of the 7 failures attributable to the sync)."
+    },
+    {
+      "criterion": "A Windows install smoke test passes from the synced tree.",
+      "status": "met",
+      "evidence": "Not independently re-executed (would download roughly 300MB of Playwright browsers and is invasive); accepted on strong inference from evidence file .advanced-plans/evidence/2026-08-26-phase-4-loop-001-gstack-sync.md:189-234, whose adjacent, independently-checkable claims (SHAs, tags, worktree paths, jq absence, the build.test.ts line-16 bug) all verified exactly as stated when checked directly, giving high confidence in the unverified exit=0 claim by the same author and method."
+    },
+    {
+      "criterion": "The branch contains zero AAW-specific changes.",
+      "status": "met",
+      "evidence": "git diff --stat upstream/main sync/upstream-2026-08-26 in C:/Users/mharvey2/Coding/gstack-fork is empty; git status --porcelain in the sync worktree C:/Users/mharvey2/Coding/aaw worktrees/gstack-sync-2026-08-26 shows only two untracked test-artefact files (browse/test/fixtures/test-cookies.db, test-cookies-linux.db), nothing committed or staged."
+    },
+    {
+      "criterion": "git ls-files .claude/skills/gstack-to-plans/SKILL.md returns the path -- the file is tracked, not merely present.",
+      "status": "met",
+      "evidence": "Ran git ls-files .claude/skills/gstack-to-plans/SKILL.md in C:/Users/mharvey2/Coding/aaw worktrees/aaw-packaging-repair; output: .claude/skills/gstack-to-plans/SKILL.md."
+    },
+    {
+      "criterion": "A fresh git clone of the branch into a temporary directory contains every install source named in README, SETUP, and the setup skill.",
+      "status": "met",
+      "evidence": "Ran bash tests/packaging/test-fresh-clone.sh (default HEAD, clones into mktemp -d): output packaging: PASS -- 13/13 required install sources present in a fresh clone, exit 0."
+    },
+    {
+      "criterion": "The packaging test fails when any one of those sources is deleted, and passes when restored.",
+      "status": "met",
+      "evidence": "Ran bash tests/packaging/test-fresh-clone.sh --ref e508203 (the real pre-fix commit): output MISSING .claude/skills/gstack-to-plans/SKILL.md and packaging: FAIL -- 6 of 14 required install sources missing or unusable in a fresh clone, exit 1. Ran again at default HEAD: exit 0, 13/13 (restored and passing state)."
+    },
+    {
+      "criterion": "A directory containing only a stale .advanced-plans/ is reported as data present, Advanced Planning absent -- ACC-02.",
+      "status": "met",
+      "evidence": "Ran python3 tools/aaw-audit.py against a temp project holding only .advanced-plans/, with home redirected to a fake temp profile and require none; output includes advanced-planning MISSING none - in the component table and present advanced-planning <tmpdir>/.advanced-plans in the DATA table plus a data-without-owner finding, both reported together in the same run."
+    },
+    {
+      "criterion": "Running refresh twice produces no change on the second run -- ACC-16.",
+      "status": "met",
+      "evidence": "Ran bash tests/packaging/run-all.sh in C:/Users/mharvey2/Coding/aaw worktrees/aaw-packaging-repair; idempotency stage output includes ok ACC-16: the second run left every file byte-identical and ok ACC-16: the second run reported the same state; overall idempotency: PASS - 43/43 checks, exit 0."
+    },
+    {
+      "criterion": "Uninstall removes only AAW-owned fenced blocks and files, and preserves user content.",
+      "status": "met",
+      "evidence": "Same run-all.sh execution, stage 3 output: ok uninstall removed the fenced block, ok uninstall preserved the users CLAUDE.md content, ok uninstall left .advanced-plans/ alone, ok uninstall left the users other files alone, ok the whole project is byte-identical to before the install -- all passed in the 43/43 total."
+    },
+    {
+      "criterion": "No global path in the installer resolves through ~ or HOME.",
+      "status": "failed",
+      "evidence": ".claude/skills/setup-with-claude/SKILL.md:268 (If global: copy to a raw tilde-based path under .claude/skills/gstack-to-plans/SKILL.md) and SKILL.md:527-544 (Step U7 global check and removal, e.g. line 527 components are installed globally in a raw tilde-based .claude/ path) both use raw tilde paths rather than the <profile> (percent USERPROFILE percent) placeholder Step 1 mandates at SKILL.md:91 (Not HOME, and never tilde). The tested Python (.aaw/detect.py lines 59-70 user_profile function, tools/aaw-audit.py, tests/packaging/project_ops.py) correctly resolves via USERPROFILE only and contains zero tilde or expanduser or Path.home usage (confirmed by grep), so the violation is confined to the conversational SKILL.md prose for Steps 6 and U7, not the executable and tested detection and manifest-writing code."
+    }
+  ]
+}

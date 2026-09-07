@@ -1,0 +1,97 @@
+{
+  "phase": "phase-4",
+  "attempt": 1,
+  "timestamp": "2026-08-26T00:00:00Z",
+  "agent": "phase-goals-agent",
+  "backend": "claude",
+  "verdict": "fail",
+  "confidence": 88,
+  "phase_title": "Phase 4: gstack Sync and AAW Packaging Repair",
+  "findings": [
+    {
+      "severity": "critical",
+      "location": "gstack-fork sync/upstream-2026-08-26 (Success Criteria, gstack, bullet 3)",
+      "description": "The phase plan's gstack success criteria states '\u2713 The upstream suite passes, with the exact command and exit code recorded.' The recorded and independently re-verified result is a failing suite: `bun run test:windows` exit=1, 7 failing tests, 3/7 shards passing. The criterion as literally worded is not met; only the honest-recording half of it is.",
+      "evidence": ".advanced-plans/evidence/2026-08-26-phase-4-loop-001-gstack-sync.md:117-138 records 'bun run test:windows / exit=1 / real 1m21.061s' with the shard table showing 3 PASS, 4 FAIL. Directly confirmed the cited genuine defect at C:\\Users\\mharvey2\\Coding\\aaw worktrees\\gstack-sync-2026-08-26\\browse\\test\\build.test.ts:16, which reads `expect(() => execSync(`node --check ${SERVER_NODE}`, { stdio: 'pipe' })).not.toThrow();` \u2014 an unquoted interpolation, exactly as the evidence file describes at line 172. Note for context: .advanced-plans/phases/phase-4/plan.md's own Risk Assessment table (row 'The upstream gstack suite does not run on native Windows') names this exact scenario and its accepted mitigation is 'Record the failure honestly ... do not claim a passing suite that was not run' \u2014 which is what the loop did. The mitigation covers honesty of reporting; it does not retroactively satisfy the stated pass bar."
+    },
+    {
+      "severity": "info",
+      "location": "tests/packaging/ tracked-file and fresh-clone criteria (AAW packaging, bullets 1-2)",
+      "description": "This gate-review session had no shell/Bash tool available, only Read/Glob/Grep/Write. `git ls-files` and a live `git clone` into a temp directory could not be re-run independently this pass. Verification for those two criteria rests on (a) direct inspection of .gitignore and the file's presence in the aaw-packaging-repair worktree, which is consistent with tracked status, and (b) the loop's and the independent codex reviewer's own contemporaneous command output quoted in the evidence files.",
+      "evidence": "C:\\Users\\mharvey2\\Coding\\aaw worktrees\\aaw-packaging-repair\\.gitignore:17 reads '!.claude/skills/gstack-to-plans/'; the file exists at .claude/skills/gstack-to-plans/SKILL.md in that same worktree (confirmed by Read). .advanced-plans/phases/phase-4/loops.md:202-205 (loop-002-3) quotes 'git ls-files .claude/skills/gstack-to-plans/SKILL.md -> returns the path' and a byte-identical cmp against the deployed copy. .advanced-plans/evidence/2026-08-26-phase-4-loop-002-packaging-repair.md:129-140 records HEAD exit 0 9/9 on a fresh clone, independently re-run by reviewer codex ('HEAD_EXIT=0')."
+    },
+    {
+      "severity": "info",
+      "location": "Key Deliverables table, row 'Idempotency evidence'",
+      "description": "The phase plan's Key Deliverables table names the idempotency-evidence file as '.advanced-plans/evidence/<date>-packaging-repair.md'. The idempotency work (ACC-16, uninstall preservation, the 43-check test) is actually documented in a differently-named file, '.advanced-plans/evidence/2026-08-26-phase-4-loop-003-installation-state.md'; the packaging-repair.md file (loop 002) explicitly defers idempotency to 'loop 003' in its own closing section. The substance exists; only the filename the plan predicted differs from the one actually used.",
+      "evidence": ".advanced-plans/evidence/2026-08-26-phase-4-loop-002-packaging-repair.md:223 states '.aaw/installed.json does not exist yet ... That is loop 003.' The idempotency assertions (ACC-16, user-content preservation) were found instead in tests/packaging/test-idempotency.sh, documented in .advanced-plans/evidence/2026-08-26-phase-4-loop-003-installation-state.md."
+    }
+  ],
+  "loops_to_revert": [],
+  "failure_notes": [
+    "The gstack upstream suite does not pass on this machine (bun run test:windows exit=1, 7 failing tests). Of the 7, 3 need `jq` on PATH, 2 need Windows Developer Mode (symlink privilege), 1 is a Git Bash fork() flake, and 1 is a genuine upstream bug (browse/test/build.test.ts:16, unquoted execSync interpolation, triggered by the space in the worktree path) that pre-dates the sync and is not fork-specific. None of the 7 is attributable to re-running loop-001; the fix requires either environment remediation (install jq, enable Developer Mode) that is outside any loop's allowed paths, or an upstream fix to gstack, or an explicit human waiver of this specific success criterion. loops_to_revert is left empty because re-running ralph-loop-001 with the same environment would reproduce the same result."
+  ],
+  "criteria_outcomes": [
+    {
+      "criterion": "sync/upstream-<date> is created from a freshly fetched upstream/main, not from the fork tree.",
+      "status": "met",
+      "evidence": "C:\\Users\\mharvey2\\Coding\\gstack-fork\\.git\\refs\\heads\\sync\\upstream-2026-08-26 (read directly) contains ad8400543cd9ce8d07641362db48d44a95417e33, identical to upstream/main as recorded in .advanced-plans/evidence/2026-08-26-fork-divergence-reaudit.md:17. gstack-fork\\.git\\refs\\heads\\main (read directly) is unchanged at a5dc03bdd64124b302cb56927f0866edc0c11879, confirming the branch was built from upstream, not the fork tree."
+    },
+    {
+      "criterion": "The empty-net-patch claim is re-verified at execution time with git diff <merge-base> origin/main, not with git diff upstream/main origin/main.",
+      "status": "met",
+      "evidence": ".advanced-plans/evidence/2026-08-26-fork-divergence-reaudit.md:24-27 shows `git diff --stat 029356e1... origin/main` returning empty, using the merge-base form. .advanced-plans/phases/phase-4/loops.md:59 (loop-001-2 checks) specifies exactly this command and explicitly forbids the upstream-to-fork form in the prompt at loops.md:129-132."
+    },
+    {
+      "criterion": "The upstream suite passes, with the exact command and exit code recorded.",
+      "status": "failed",
+      "evidence": ".advanced-plans/evidence/2026-08-26-phase-4-loop-001-gstack-sync.md:117-138: `bun run test:windows` exit=1, 7 failing tests, 3/7 shards passing. The command and exit code ARE recorded (satisfying half the sentence) but the suite does not pass. Directly re-confirmed the cited upstream defect at C:\\Users\\mharvey2\\Coding\\aaw worktrees\\gstack-sync-2026-08-26\\browse\\test\\build.test.ts:16 (unquoted execSync interpolation, matches evidence exactly)."
+    },
+    {
+      "criterion": "A Windows install smoke test passes from the synced tree.",
+      "status": "met",
+      "evidence": ".advanced-plans/evidence/2026-08-26-phase-4-loop-001-gstack-sync.md:189-234: `./setup --host claude -q` into an isolated HOME, exit=0, real 4m7.631s; live profile verified byte-identical before/after (245 entries, matching md5 over sorted SKILL.md list)."
+    },
+    {
+      "criterion": "The branch contains zero AAW-specific changes.",
+      "status": "met",
+      "evidence": ".advanced-plans/evidence/2026-08-26-phase-4-loop-001-gstack-sync.md:356 records the independent reviewer's confirmation 'No AAW-specific change on the branch \u2014 CONFIRMED \u2014 only the two untracked fixtures' (test artefacts, not committed, per section 8). The sync branch head (ad840054...) is git-diff-empty against upstream/main, structurally ruling out any added AAW change."
+    },
+    {
+      "criterion": "git ls-files .claude/skills/gstack-to-plans/SKILL.md returns the path \u2014 the file is tracked, not merely present.",
+      "status": "met",
+      "evidence": "C:\\Users\\mharvey2\\Coding\\aaw worktrees\\aaw-packaging-repair\\.gitignore:17 (read directly) contains '!.claude/skills/gstack-to-plans/', re-admitting the directory; the file exists at .claude/skills/gstack-to-plans/SKILL.md in that worktree (read directly, frontmatter 'name: gstack-to-plans' confirmed). .advanced-plans/phases/phase-4/loops.md:202 quotes the actual `git ls-files` command returning the path. This session had no shell tool to re-run `git ls-files` itself; see the corresponding info-level finding above."
+    },
+    {
+      "criterion": "A fresh git clone of the branch into a temporary directory contains every install source named in README, SETUP, and the setup skill.",
+      "status": "met",
+      "evidence": "tests/packaging/required-sources.txt (read in full, C:\\Users\\mharvey2\\Coding\\aaw worktrees\\aaw-packaging-repair\\tests\\packaging\\required-sources.txt) lists exactly 9 paths matching README/SETUP/setup-skill references (confirmed via Grep of README.md and SETUP.md for 'gstack-to-plans' and via Glob of the setup-with-claude/references directory); all 9 paths exist in the worktree (confirmed by Glob/Read of each). .advanced-plans/evidence/2026-08-26-phase-4-loop-002-packaging-repair.md:129-140 records a fresh clone at HEAD exit 0, 9/9, independently re-run by the reviewer ('HEAD_EXIT=0'). No shell tool was available this session to perform the clone directly; see the corresponding info-level finding."
+    },
+    {
+      "criterion": "The packaging test fails when any one of those sources is deleted, and passes when restored.",
+      "status": "met",
+      "evidence": "C:\\Users\\mharvey2\\Coding\\aaw worktrees\\aaw-packaging-repair\\tests\\packaging\\test-fresh-clone.sh (read directly) clones into mktemp -d and checks each required-sources.txt path for MISSING/EMPTY/UNTRACKED. .advanced-plans/evidence/2026-08-26-phase-4-loop-002-packaging-repair.md:129-140 table: HEAD exit 0 9/9; --ref e508203 (real pre-fix commit) exit 1 'MISSING .claude/skills/gstack-to-plans/SKILL.md'; scratch clone with the skill git rm'd, exit 1; scratch clone with SETUP.md truncated, exit 1 EMPTY."
+    },
+    {
+      "criterion": "A directory containing only a stale .advanced-plans/ is reported as data present, Advanced Planning absent \u2014 ACC-02.",
+      "status": "met",
+      "evidence": "C:\\Users\\mharvey2\\Coding\\aaw worktrees\\aaw-packaging-repair\\.aaw\\detect.py:30 (read directly) states 'without phase-plan-creator/SKILL.md means \"data present, tool absent\"'. tests/packaging/test-audit.sh:138-144 (read directly) contains the assertion 'ok  ACC-02: data present and component MISSING, reported together'."
+    },
+    {
+      "criterion": "Running refresh twice produces no change on the second run \u2014 ACC-16.",
+      "status": "met",
+      "evidence": "C:\\Users\\mharvey2\\Coding\\aaw worktrees\\aaw-packaging-repair\\tests\\packaging\\test-idempotency.sh:4-5 (read directly) states 'ACC-16 is the headline: a refresh run twice must be a no-op on the second run.' Lines 191, 198, 209 contain 'ok \"ACC-16: the second run left every file byte-identical\"', 'ok \"ACC-16: the second run reported the same state\"', and a third-run no-op check."
+    },
+    {
+      "criterion": "Uninstall removes only AAW-owned fenced blocks and files, and preserves user content.",
+      "status": "met",
+      "evidence": "C:\\Users\\mharvey2\\Coding\\aaw worktrees\\aaw-packaging-repair\\tests\\packaging\\test-idempotency.sh:134-135 and :226-227 (read directly) contain 'ok \"install preserved the user's CLAUDE.md content\"' and 'ok \"uninstall preserved the user's CLAUDE.md content\"'. .advanced-plans/evidence/2026-08-26-phase-4-loop-003-installation-state.md documents the _survivors() fix (C3, adversarial finding) ensuring unrelated user hooks/settings entries are not deleted."
+    },
+    {
+      "criterion": "No global path in the installer resolves through ~ or HOME.",
+      "status": "met",
+      "evidence": "C:\\Users\\mharvey2\\Coding\\aaw worktrees\\aaw-packaging-repair\\.claude\\skills\\setup-with-claude\\SKILL.md:692-693,706-707 (read directly): 'resolve the profile from %USERPROFILE%... Do not use ~, and do not use HOME' and 'Detection and manifest writes resolve the profile from %USERPROFILE% and never use ~.' .aaw\\detect.py:50-70 (read directly) implements USERPROFILE-first resolution on Windows (os.name=='nt'), consulting HOME only in the POSIX branch."
+    }
+  ],
+  "summary": "Eleven of the twelve phase-4 success criteria are satisfied by direct, independently re-checked evidence: the gstack sync branch exists in gstack-fork exactly at upstream/main's head with fork main untouched (verified by reading the git refs directly), the merge-base net-patch test was used correctly, the Windows install smoke passed and left the live profile untouched, the branch carries zero AAW-specific changes, and all seven AAW-packaging criteria (tracked glue skill, fresh-clone completeness, a proven-failing packaging test, ACC-02, ACC-16, uninstall content preservation, and USERPROFILE-only global path resolution) are backed by file content read directly from the feat/aaw-packaging-repair worktree at C:\\Users\\mharvey2\\Coding\\aaw worktrees\\aaw-packaging-repair. The one criterion that fails on a literal reading is 'The upstream suite passes': the recorded, independently-reproducible result is bun run test:windows exit=1 with 7 failing tests, 3 environmental (missing jq), 2 environmental (Windows Developer Mode off), 1 a Git Bash fork() flake, and 1 a genuine upstream quoting bug in browse/test/build.test.ts:16 that this review re-confirmed by reading the file directly. The phase plan's own risk register anticipated exactly this outcome and accepted honest-failure-recording as the mitigation, which the loop executed with unusual rigor (isolation re-runs, an (invalid) pre-sync control run, and an independent cross-model review that re-derived every claim) \u2014 but that mitigation covers the honesty of the report, not the literal 'passes' bar the success criterion states. This session had no shell tool available (Read/Glob/Grep/Write only), so two criteria requiring a live `git ls-files` and a live fresh `git clone` rest on direct file/gitignore inspection plus the loop's and an independent codex reviewer's own contemporaneously recorded command output, rather than a rerun performed by this review. One minor, non-blocking discrepancy: the Key Deliverables table names the idempotency-evidence file as '<date>-packaging-repair.md', but the actual idempotency content lives in '<date>-phase-4-loop-003-installation-state.md'; the substance is present under a different filename than the plan predicted. Given the one critical, high-confidence, directly-reproduced failure against a stated success criterion, the verdict is fail; the failure is narrow, fully attributed, and does not implicate the quality of the AAW packaging repair work, which is unusually thoroughly proven."
+}

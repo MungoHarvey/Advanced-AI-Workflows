@@ -1,0 +1,56 @@
+{
+  "phase": "phase-5",
+  "loop": "ralph-loop-002",
+  "todo": "loop-002-7",
+  "attempt": 1,
+  "timestamp": "2026-08-26T16:19:57Z",
+  "agent": "rev-qwen",
+  "backend": "opencode",
+  "model_claimed": "Qwen/Qwen3.5-397B-A17B-FP8",
+  "model_actual": "Qwen/Qwen3.5-397B-A17B-FP8 via the Edinburgh ELM proxy",
+  "model_evidence": "The opencode status bar read 'Build - Qwen3.5 397B (ELM, on-campus only) ELM Proxy (Edinburgh)'; the reviewer's self-report agrees.",
+  "implementer": "claude / Opus 5 (the routing block); opencode / Qwen3.5-397B (the ACC behaviour runs)",
+  "differs_from_implementer": true,
+  "differs_caveat": "This backend ran the ACC-04/ACC-05 behaviour rounds, so its Q4 answer is partly self-assessment. It did not author the routing block, which is the artefact under review.",
+  "verdict": "pass_with_findings",
+  "confidence": 80,
+  "findings": [
+    {
+      "severity": "major",
+      "location": ".claude/skills/setup-with-claude/references/claude-md-routing.md:94-99",
+      "description": "The precedence claim over skill defaults is too broad; an agent could override a skill default the section never mentions, despite the saving clause.",
+      "evidence": "Quoted :94 against the :7-10 disclaimer.",
+      "recommendation": "Narrow it to the three specific additions: where this section specifies a spec location, a terminal state, or a question format that differs from the skill's default, this section wins - for those three things only."
+    },
+    {
+      "severity": "minor",
+      "location": ".claude/skills/setup-with-claude/references/claude-md-routing.md:152-159",
+      "description": "The Companion Tools section is conditional in intent but does not restate the manifest-read requirement, risking an agent inferring installation from the presence of .advanced-plans/.",
+      "evidence": "Tied directly to the without-ap fixture's borrowed.md decoy.",
+      "recommendation": "Add an explicit instruction to read .aaw/installed.json and not to infer installation from a directory."
+    },
+    {
+      "severity": "minor",
+      "location": ".claude/skills/setup-with-claude/references/claude-md-routing.md:111",
+      "description": "AskUserQuestion is named as an example, but a non-Claude reader may not know the equivalent in their own harness.",
+      "evidence": "Quoted :111-115 including the existing prose fallback, and judged the shape already correct.",
+      "recommendation": "Cosmetic only: '(AskUserQuestion in Claude Code, or the equivalent structured-question tool in your harness)'."
+    }
+  ],
+  "answers": {
+    "Q1_overreach": "The block does not claim precedence over the user's own instructions, but it does over the skill's, and a user may have chosen the skill for its defaults. Narrow the claim.",
+    "Q2_predicate": "Contains a factual error - see disputed_claims. Its own new finding, on Companion Tools, is separate and stands.",
+    "Q3_host_neutral": "Yes. Zero harness paths, no host-specific permission syntax, AskUserQuestion correctly an example with a fallback. Its verdict was 'What should change: Nothing.'",
+    "Q4_proofs": "Method sound. Would not believe the block is delivered in the real world rather than in a hand-built fixture: the fixture's AGENTS.md was placed by the controller, so what is proven is that the block works when present, not that aaw init puts it there.",
+    "Q5_mirror_or_patch": "Publish as a pure mirror. All four intents are carried by the block; a patch would be redundant because the block is read before any skill loads."
+  },
+  "disputed_claims": [
+    {
+      "claim": "The Front-Door Rules (1-7) all either explicitly gate on 'When Advanced Planning is installed' (rules 2, 3, 5, 7) or are unconditional by design (rules 1, 4, 6).",
+      "status": "FALSE",
+      "controller_check": "Read .claude/skills/setup-with-claude/references/claude-md-routing.md:42-86 directly. Only rule 5 carries the predicate. Rules 2, 3 and 7 invoke /plan-and-phase, /new-phase and /run-gate with no gate of any kind. The contradicting codex account is the correct one."
+    }
+  ],
+  "loops_to_revert": [],
+  "failure_notes": []
+}

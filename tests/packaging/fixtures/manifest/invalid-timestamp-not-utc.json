@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-08-26 14:32:07",
+  "generated_by": "setup-with-claude 0.2.0",
+  "platform": "windows",
+  "project_root": "C:\\Users\\example\\Coding\\my-project",
+  "components": {
+    "gstack": {
+      "installed": true,
+      "scope": "global",
+      "install_path": "C:\\Users\\example\\.claude\\skills\\gstack",
+      "sentinel": "C:\\Users\\example\\.claude\\skills\\gstack\\SKILL.md",
+      "version": "1.60.1.0"
+    }
+  }
+}

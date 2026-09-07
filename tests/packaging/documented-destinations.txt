@@ -1,0 +1,16 @@
+# Paths under .claude/skills/ that the install documentation names and this repository
+# is NOT expected to ship. test-fresh-clone.sh reads this file and skips what it lists,
+# so a path here is a claim that the file's absence from a fresh clone is correct.
+#
+# Two things belong here and nothing else does:
+#   - somewhere an installer WRITES in the user's own project, named so the user knows
+#     what will appear;
+#   - a path used only to illustrate a shape, not to point at a file.
+#
+# One repo-relative path per line, each with the reason on the line above it. A path
+# added here without a reason is a path nobody can later judge. If the honest answer is
+# that this repository should ship the file, ship it instead - that is what the check is
+# for.
+#
+# Empty on purpose: today every skill path the docs name is either shipped here, under
+# the user's ~/ profile, or one of the sub-packages test-fresh-clone.sh excludes.

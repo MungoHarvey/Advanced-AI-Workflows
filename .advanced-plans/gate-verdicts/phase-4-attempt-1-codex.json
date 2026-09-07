@@ -1,0 +1,84 @@
+{
+  "phase": "phase-4",
+  "attempt": 1,
+  "timestamp": "2026-08-26T09:30:52Z",
+  "agent": "codex",
+  "backend": "codex",
+  "verdict": "fail",
+  "confidence": 96,
+  "findings": [
+    {
+      "severity": "critical",
+      "location": "ralph-loop-001",
+      "description": "The required upstream suite did not pass.",
+      "evidence": ".advanced-plans/evidence/2026-08-26-phase-4-loop-001-gstack-sync.md:117-138 records `bun run test:windows`, `exit=1`, with 7 failing tests."
+    }
+  ],
+  "loops_to_revert": [],
+  "failure_notes": [
+    "The gstack upstream-suite success criterion is conclusively unmet; the evidence correctly records the failure rather than treating attributed environmental and upstream defects as a pass."
+  ],
+  "phase_title": "Phase 4: gstack Sync and AAW Packaging Repair",
+  "criteria_outcomes": [
+    {
+      "criterion": "`sync/upstream-<date>` is created from a freshly fetched `upstream/main`, not from the fork tree.",
+      "status": "met",
+      "evidence": ".advanced-plans/evidence/2026-08-26-fork-divergence-reaudit.md:3-8 records `git fetch --prune --tags`; .advanced-plans/evidence/2026-08-26-phase-4-loop-001-gstack-sync.md:17-28 records the sync head equal to upstream/main and an empty upstream-to-sync diff. Confirmed from narrative evidence only; the gstack repository is unavailable here."
+    },
+    {
+      "criterion": "The empty-net-patch claim is re-verified at execution time with `git diff <merge-base> origin/main`, not with `git diff upstream/main origin/main` - the latter measures how far behind the fork is and will look alarming while proving nothing.",
+      "status": "met",
+      "evidence": ".advanced-plans/evidence/2026-08-26-fork-divergence-reaudit.md:22-43 records `git diff --stat 029356e1. origin/main` as empty and explicitly distinguishes it from the invalid upstream-to-origin comparison. Confirmed from narrative evidence only; the gstack repository is unavailable here."
+    },
+    {
+      "criterion": "The upstream suite passes, with the exact command and exit code recorded.",
+      "status": "failed",
+      "evidence": ".advanced-plans/evidence/2026-08-26-phase-4-loop-001-gstack-sync.md:117-138 records `bun run test:windows`, `exit=1`, and 7 failing tests."
+    },
+    {
+      "criterion": "A Windows install smoke test passes from the synced tree.",
+      "status": "met",
+      "evidence": ".advanced-plans/evidence/2026-08-26-phase-4-loop-001-gstack-sync.md:189-228 records the isolated Windows smoke command, `exit=0`, installed skill verification, and unchanged live-profile hash. Confirmed from narrative evidence only; the gstack repository is unavailable here."
+    },
+    {
+      "criterion": "The branch contains zero AAW-specific changes.",
+      "status": "met",
+      "evidence": ".advanced-plans/evidence/2026-08-26-phase-4-loop-001-gstack-sync.md:22-31 records an empty diff between upstream/main and the sync branch; lines 343-356 record an independent review confirming no AAW-specific change. Confirmed from narrative evidence only; the gstack repository is unavailable here."
+    },
+    {
+      "criterion": "`git ls-files .claude/skills/gstack-to-plans/SKILL.md` returns the path - the file is tracked, not merely present.",
+      "status": "met",
+      "evidence": "C:\\Users\\mharvey2\\Coding\\aaw worktrees\\aaw-packaging-repair\\.gitignore:13-17 explicitly re-includes the gstack-to-plans directory; direct `git ls-files` inspection returned `.claude/skills/gstack-to-plans/SKILL.md`."
+    },
+    {
+      "criterion": "A fresh `git clone` of the branch into a temporary directory contains every install source named in README, SETUP, and the setup skill.",
+      "status": "deferred",
+      "evidence": "C:\\Users\\mharvey2\\Coding\\aaw worktrees\\aaw-packaging-repair\\tests\\packaging\\test-fresh-clone.sh:77-90 implements an isolated clone and tracked-file check; .advanced-plans/evidence/2026-08-26-phase-4-loop-003-installation-state.md:207-214 narrates 13/13 fresh-clone success. Executable verification is blocked by the read-only sandbox."
+    },
+    {
+      "criterion": "The packaging test fails when any one of those sources is deleted, and passes when restored.",
+      "status": "deferred",
+      "evidence": "C:\\Users\\mharvey2\\Coding\\aaw worktrees\\aaw-packaging-repair\\tests\\packaging\\test-fresh-clone.sh:107-124 defines MISSING, EMPTY, and UNTRACKED failures; .advanced-plans/evidence/2026-08-26-phase-4-loop-002-packaging-repair.md:129-140 narrates successful and mutation-failure runs. Executable verification is blocked by the read-only sandbox."
+    },
+    {
+      "criterion": "A directory containing only a stale `.advanced-plans/` is reported as *data present, Advanced Planning absent* - ACC-02.",
+      "status": "deferred",
+      "evidence": "C:\\Users\\mharvey2\\Coding\\aaw worktrees\\aaw-packaging-repair\\.aaw\\detect.py:26-36 and 244-255 implement separate data and sentinel detection; .advanced-plans/evidence/2026-08-26-phase-4-loop-003-installation-state.md:39-41 narrates the ACC-02 test result. Executable verification is blocked by the read-only sandbox."
+    },
+    {
+      "criterion": "Running refresh twice produces no change on the second run - ACC-16.",
+      "status": "deferred",
+      "evidence": "C:\\Users\\mharvey2\\Coding\\aaw worktrees\\aaw-packaging-repair\\tests\\packaging\\test-idempotency.sh:179-200 asserts byte-identical files and state after the second run; .advanced-plans/evidence/2026-08-26-phase-4-loop-003-installation-state.md:48-51 describes the 43-check temporary-project test. Executable verification is blocked by the read-only sandbox."
+    },
+    {
+      "criterion": "Uninstall removes only AAW-owned fenced blocks and files, and preserves user content.",
+      "status": "deferred",
+      "evidence": "C:\\Users\\mharvey2\\Coding\\aaw worktrees\\aaw-packaging-repair\\tests\\packaging\\test-idempotency.sh:219-271 asserts fenced-block removal, preservation of user content and files, and a no-op second uninstall; project_ops.py:341-355 stops on incomplete markers. Executable verification is blocked by the read-only sandbox."
+    },
+    {
+      "criterion": "No global path in the installer resolves through `~` or `HOME`.",
+      "status": "met",
+      "evidence": "C:\\Users\\mharvey2\\Coding\\aaw worktrees\\aaw-packaging-repair\\.aaw\\detect.py:50-70 selects USERPROFILE on Windows without consulting HOME; lines 175-220 apply `os.path.abspath` and construct component paths from that resolved profile."
+    }
+  ]
+}

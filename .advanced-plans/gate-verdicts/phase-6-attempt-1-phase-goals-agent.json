@@ -1,0 +1,87 @@
+{
+  "phase": "phase-6",
+  "attempt": 1,
+  "timestamp": "2026-09-02T00:00:00Z",
+  "agent": "phase-goals-agent",
+  "backend": "subagent",
+  "verdict": "fail",
+  "confidence": 85,
+  "phase_title": "Phase 6: Advanced Planning Multi-Runtime Adapters",
+  "findings": [
+    {
+      "severity": "critical",
+      "location": "advanced-planning: platforms/shared/agent-skills/advanced-planning/, evidence/2026-09-01-four-host-skill-discovery.md",
+      "description": "The phase's own four-host discovery proof (loop-005-4) concludes in its own words that the headline criterion FAILS: skill file content never drifted (7 shared skills byte-identical by SHA-256 across all four hosts), but the RESOLUTION differs by host. Only codex reads the copy its own adapter installed; opencode reads claude-code's .claude/skills copy instead of its own .agents/skills copy (F20, and the APPROVED_SKILLS exclusion list that keeps companion-detection/permission-config off non-Claude hosts is therefore not enforced at the discovery layer wherever claude-code is co-installed); on a real (non-fake) HOME, claude and cursor serve the global profile's skills over the project's (F21); cursor never listed phase-plan-creator at all. Of these, F19 (missing YAML frontmatter on the shared router skill, which made codex/opencode unable to load it at all) was fixed the same day and is now pinned by platforms/python/tests/test_skill_frontmatter.py. F20, F21 and F23 (a host's skill *list* is unstable evidence across repeated calls, per the evidence file) are explicitly recorded as still open.",
+      "evidence": ".advanced-plans/evidence/2026-09-01-four-host-skill-discovery.md lines 1-27 (\"the phase's headline criterion fails\" / per-host discovery table) and lines 227-230 (\"F20, F21, F22 and F23 remain open\"); platforms/shared/agent-skills/advanced-planning/SKILL.md now has frontmatter (verified) and platforms/python/tests/test_skill_frontmatter.py exists as the regression guard for F19 only."
+    },
+    {
+      "severity": "critical",
+      "location": "advanced-planning: loop-004-4 (codex fixture), loop-005-3 (cursor fixture)",
+      "description": "Only one of the three new adapters (opencode) completed all three fixture steps end to end (create one phase, decompose one loop, emit one validated external-task envelope). codex created a phase and then stopped -- it never decomposed a loop nor emitted an envelope, on a human decision made because the codex account stood at 98% of its weekly quota. cursor completed phase creation and loop decomposition but was BLOCKED at the external-task-envelope step by a machine-specific hook incompatibility (a Claude Code PreToolUse hook that cursor executes and cannot run), recorded honestly as BLOCKED.md rather than faked. So 'a fixture programme can create one phase, one loop, and one external task on every target host' is proven for one of the three new hosts only.",
+      "evidence": ".advanced-plans/phases/phase-6/loops.md loop-004-4 result: \"CHECK 1 IS SATISFIED ON OPENCODE ONLY. codex created the phase and stopped correctly at the gate; it did not decompose a loop or emit an envelope...\"; loop-005-3 result: \"Steps 1-3 done; step 4 BLOCKED and recorded as BLOCKED.md rather than faked\"."
+    },
+    {
+      "severity": "critical",
+      "location": "advanced-planning: platforms/python/scope_policy.py, platforms/python/evidence_gate.py, core/agents/orchestrator.md, platforms/shared/agent-skills/advanced-planning/references/orchestrator-prompt.md",
+      "description": "ACC-08's actual enforcement code -- scope_policy.validate_path_scope, aggregated inside evidence_gate.validate_advancement -- is extensively and rigorously unit-tested (byte-unchanged negative assertions, specific-error assertions, mutation-style load-bearing proofs) but has NO production caller anywhere in the repository. A repository-wide search for 'scope_policy' and 'validate_advancement' under platforms/ returns only: the two source modules themselves, their two test files, and one unrelated string match in next-loop.md (which in fact imports a *different* function, validate_loop_complete_advancement, that explicitly skips path-scope validation by design). Neither core/agents/orchestrator.md nor the cross-host orchestrator-prompt.md used by codex/opencode/cursor (platforms/shared/agent-skills/advanced-planning/references/orchestrator-prompt.md) instructs anyone to run this check; both describe the worker/controller boundary only in prose (\"the controller writes programme state from that evidence\"). The mechanism that would make 'a worker attempting a planning-state edit fails collection' true of the running system is therefore unreachable from any command, skill or agent prompt today -- it exists, and is correct, but nothing calls it.",
+      "evidence": "Grep for 'scope_policy|validate_path_scope|evidence_gate' under advanced-planning/platforms/ returns exactly: platforms/python/scope_policy.py, platforms/python/evidence_gate.py, platforms/python/tests/test_scope_policy.py, platforms/python/tests/test_evidence_gate.py, and platforms/claude-code/commands/next-loop.md (which imports validate_loop_complete_advancement, not validate_advancement -- see evidence_gate.py lines 314-350, 'Path scope is not validated here'). core/agents/orchestrator.md lines 15, 126, 151-154 and platforms/shared/agent-skills/advanced-planning/references/orchestrator-prompt.md contain no reference to evidence_gate or scope_policy."
+    },
+    {
+      "severity": "warning",
+      "location": "advanced-planning: platforms/claude-code/commands/next-loop.md:317-322 vs platforms/claude-code/agents/ralph-loop-worker.md:18",
+      "description": "next-loop.md's own Step 6 still reads 'The worker will: ... Write `.advanced-plans/state/loop-complete.json`', directly contradicting the corrected worker contract loop-006-1 wrote into ralph-loop-worker.md ('I do NOT write programme state ... My output is a collected-evidence document'). loop-006-1's evidence file documents extensive work correcting the worker-side prompts (core/agents/worker.md, ralph-loop-worker.md, the shared worker-prompt.md) but does not mention updating next-loop.md's own Step 6 text, which still describes the pre-fix behaviour.",
+      "evidence": "platforms/claude-code/commands/next-loop.md lines 317-322 ('Write `.advanced-plans/state/loop-complete.json`'); platforms/claude-code/agents/ralph-loop-worker.md line 18 ('I do NOT write programme state ... The controller writes these from the collected-evidence document I emit')."
+    },
+    {
+      "severity": "warning",
+      "location": "advanced-planning: platforms/python/path_audit.py:140-154",
+      "description": "DEFAULT_SCANNED_ROOTS still omits platforms/cursor and setup/cursor (it does include platforms/codex, platforms/opencode, setup/codex, setup/opencode). This was flagged as a carried defect in loop-005-2's own result ('add platforms/cursor and setup/cursor to DEFAULT_SCANNED_ROOTS') and was never actioned. It does not affect success criterion 5 (the core/-scoped host-neutrality rule, which only ever applied to core/agents and core/skills and is unaffected), but it does mean the Cursor adapter's own directories are not covered by the doubled-prefix / wrong-nesting / deprecated-token family of checks that DO cover the Codex and OpenCode adapter directories.",
+      "evidence": "platforms/python/path_audit.py lines 140-154 (DEFAULT_SCANNED_ROOTS list); .advanced-plans/phases/phase-6/loops.md loop-005-2 result, 'Carried: add platforms/cursor and setup/cursor to DEFAULT_SCANNED_ROOTS'."
+    },
+    {
+      "severity": "info",
+      "location": "advanced-planning: .github/workflows/ci.yml job schema-validation; docs/adapting-to-new-platforms.md:182",
+      "description": "Two carried findings from loop-006-4's independent two-verifier full-suite check, neither of which is a plan success criterion but both worth recording for the phase gate: (1) CI job 2 validates each core/state/*.json schema against an empty instance, which catches a bad `type` value or unknown keyword at the top level but not one nested inside `properties` -- its own inline comment overstates what it catches. (2) docs/adapting-to-new-platforms.md:182 still says install_audit 'compares by mtime'; it actually compares EOL-normalised SHA-256 content digests, a strictly stronger check than the doc describes.",
+      "evidence": ".advanced-plans/evidence/2026-09-02-loop-006-4-full-suite-verification.md, 'Check 5: a pass over ground it never examined' and 'Carried findings' items 1-2."
+    }
+  ],
+  "loops_to_revert": [],
+  "failure_notes": [
+    "Criterion 1 (same named core planning skills, no drift) fails on real hosts despite byte-identical files: fix the discovery-layer resolution gap before claiming this criterion met -- specifically F20 (opencode reads claude-code's .claude/skills copy over its own) and F21 (claude/cursor serve a global profile copy over the project's on a real, non-fake HOME). This may require adapter-level precedence changes or documentation of the limitation in docs/adapting-to-new-platforms.md's contract tables, not just a passing digest comparison.",
+    "Criterion 2 (fixture programme on every host) is proven for opencode only among the three new adapters. codex's loop-decomposition and envelope-emission steps were skipped by a human quota decision, not executed; cursor's external-task-envelope step is blocked by a machine-local hook incompatibility unrelated to the adapter. Both need a genuine re-run (codex once quota resets; cursor once the PowerShell/POSIX hook conflict is resolved on that machine) before the criterion can be called met, or the phase gate must explicitly accept the partial proof with the reason recorded.",
+    "Criterion 3 (ACC-08 executed and enforced) has thorough unit-test coverage but zero production callers of the enforcement code (scope_policy.validate_path_scope / evidence_gate.validate_advancement) anywhere in commands, skills, or agent prompts. Wire this into the actual collection step -- whichever code path is meant to process a worker's collected-evidence.json before the controller writes programme state -- and add an integration-pinning test analogous to test_next_loop_command_invokes_advancement_gate, which already exists for the narrower (schema+gate only) loop-complete.json path.",
+    "Correct next-loop.md's Step 6, which still describes the worker writing loop-complete.json directly -- a description loop-006-1 intended to retire everywhere but which survives in the one file most directly read by the running system."
+  ],
+  "criteria_outcomes": [
+    {
+      "criterion": "Every target host discovers the same named core planning skills — not host-specific copies that drift.",
+      "status": "failed",
+      "evidence": ".advanced-plans/evidence/2026-09-01-four-host-skill-discovery.md: the phase's own loop-005-4 concludes 'THE CRITERION FAILS' -- shared skill content is byte-identical (7 skills, SHA-256 confirmed) but the copy each host actually resolves differs: opencode reads claude-code's .claude/skills copy rather than its own (F20), claude and cursor serve a global profile copy over the project's on a real HOME (F21), and cursor never listed phase-plan-creator at all. F19 (missing frontmatter, which made the shared router skill unloadable by 3 of 5 hosts) was fixed same-day and is pinned by platforms/python/tests/test_skill_frontmatter.py; F20/F21/F23 remain open per the evidence file's own closing line."
+    },
+    {
+      "criterion": "A fixture programme can create one phase, one loop, and one external task on every target host.",
+      "status": "failed",
+      "evidence": ".advanced-plans/phases/phase-6/loops.md: loop-004-4 result states codex 'did not decompose a loop or emit an envelope' (human decision, quota-driven) while opencode completed all steps; loop-005-3 result states cursor's step 4 (external task emission) was 'BLOCKED and recorded as BLOCKED.md rather than faked' due to a machine-local PowerShell/POSIX hook conflict. Only opencode of the three new adapters completed phase+loop+validated-task end to end."
+    },
+    {
+      "criterion": "Only the control checkout updates programme state; a worker attempting a planning-state edit fails collection — ACC-08.",
+      "status": "failed",
+      "evidence": "ACC-08 is thoroughly unit-tested (platforms/python/tests/test_scope_policy.py: TestACC08_ProgrammeStatePathFails, with byte-unchanged negative assertions) but its enforcement function, scope_policy.validate_path_scope (reached only via evidence_gate.validate_advancement), has no caller anywhere in production code: a repository-wide search under platforms/ for these names returns only the two source modules and their two test files. core/agents/orchestrator.md and the cross-host platforms/shared/agent-skills/advanced-planning/references/orchestrator-prompt.md describe the boundary in prose only. next-loop.md's Step 6 (platforms/claude-code/commands/next-loop.md:317-322) still says the worker writes loop-complete.json directly, contradicting ralph-loop-worker.md:18's corrected contract."
+    },
+    {
+      "criterion": "Collected evidence advances a loop only after both schema validation and gate validation pass.",
+      "status": "met",
+      "evidence": "platforms/python/evidence_gate.py implements the joined AND-logic gate (validate_loop_complete_advancement: schema + policy gates); platforms/python/tests/test_evidence_gate.py proves Case A (schema-invalid, gates-passing -> blocked), Case B (schema-valid, gate-failing -> blocked) and Case C (both pass -> advances), plus load-bearing mutation proofs that disabling either check makes the wrong case advance. Production wiring is confirmed at platforms/claude-code/commands/next-loop.md lines 332-353 (Step 7a), pinned by test_next_loop_command_invokes_advancement_gate which fails if the gate block is removed from the command file. Caveat: the collected-evidence-specific variant that also folds in the ACC-08 path-scope gate (validate_advancement) has no confirmed production caller for the codex/opencode/cursor adapters — see the ACC-08 finding above — so this criterion is met for the wired Claude Code path and unproven end-to-end for the other three hosts."
+    },
+    {
+      "criterion": "The CI path audit fails on any host-specific path in core/.",
+      "status": "met",
+      "evidence": "platforms/python/path_audit.py defines three core-only host-neutrality patterns (host-directory, host-tool-name, host-permission-syntax; lines 95-111) applied when scanning core/agents and core/skills (DEFAULT_SCANNED_ROOTS, lines 140-154). Mutation-proven as a permanent fixture: platforms/python/tests/test_path_audit.py::TestMainExitCodes::test_main_exits_one_on_host_directory_violation plants a token, asserts exit 1 naming the file and line, removes it, asserts exit 0 on the same tree. Wired unconditionally into CI at .github/workflows/ci.yml job 'path-convention-audit' (lines 138-161), which runs `python -m platforms.python.path_audit` with no `|| true` and no skip guard."
+    },
+    {
+      "criterion": "No adapter duplicates a core skill's content; adapters install and register, they do not fork.",
+      "status": "met",
+      "evidence": ".advanced-plans/evidence/2026-09-01-four-host-skill-discovery.md's digest table shows 7 shared skill names byte-identical (SHA-256) across codex, opencode and cursor; F22 in the same file confirms cowork's 9 skills equal claude-code's 9, byte-identical, so the property holds across all five platforms at the content level. loops.md's loop-004-2/004-3/004-cigate/005-2 results each record a hash-comparison proof (loop-005-2's first attempt was caught as VACUOUS — no SKILL.md shipped in the source tree to hash — and correctly re-run against the install script's copy sources instead, at which point the no-fork property held). All three new adapters consume the single shared payload at platforms/shared/agent-skills/advanced-planning/, proven by the ownership-registry tests in platforms/python/tests/test_adapter_lifecycle.py (41/41 in both orientations per loop-004-3)."
+    }
+  ]
+}

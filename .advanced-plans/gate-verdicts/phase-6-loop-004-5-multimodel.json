@@ -1,0 +1,731 @@
+{
+  "phase": "phase-6",
+  "loop": "ralph-loop-004",
+  "todo": "loop-004-5",
+  "recorded": "2026-08-29",
+  "gate": "human",
+  "reviewed": {
+    "repository": "~/.herdr/worktrees/advanced-planning/loop-004-cigate",
+    "range": "fbc559b..c6f7a53",
+    "commits_in_range": 19,
+    "head": "c6f7a53",
+    "tree_clean_at_review": true,
+    "files": 24,
+    "insertions": 6477,
+    "deletions": 12
+  },
+  "rounds": [
+    {
+      "round": 1,
+      "dir": "C:/Users/mharvey2/.herdr/reviews/loop-004-cigate-20260829-080458",
+      "scope": "full range",
+      "reviewers": {
+        "cursor": {
+          "model": "cursor-grok-4.6-medium",
+          "status": "ok",
+          "bytes": 10365
+        },
+        "agy": {
+          "model": "gemini-3.1-pro-high",
+          "status": "FAILED",
+          "bytes": 0,
+          "cause": "headless mode auto-denied a tool requiring the 'command' permission and cannot prompt. Both remedies it names - an allow-rule under permissions.allow, or --dangerously-skip-permissions - are provider-permission broadening, which the controller is not authorised to do. Not retried, not routed around"
+        }
+      },
+      "envelope_truncated": {
+        "truncated": true,
+        "sent_bytes": 200000,
+        "target_bytes": 261036,
+        "silent": false,
+        "marker": "ENVELOPE.md line 5149 reads [TRUNCATED at 200000 bytes of 261036 -- ask for specific files if you need more]",
+        "coverage": "21 of 24 file headers present. ABSENT ENTIRELY: platforms/python/minischema.py, setup/opencode/install.sh, setup/opencode/uninstall.ps1, setup/opencode/uninstall.sh. setup/opencode/install.ps1 carried 140 of its 516 diff lines. All four setup/codex/ files were present in full - so the envelope showed one half of the comparison Q1 asked for",
+        "mitigation": "cursor cited setup/opencode/install.sh:368-392, :555-574, :211, :295-305 and :607 - all beyond the truncation point - so it demonstrably read from the worktree rather than the envelope alone. The gap was closed by round 2 regardless"
+      }
+    },
+    {
+      "round": 2,
+      "dir": "C:/Users/mharvey2/.herdr/reviews/loop-004-cigate-20260829-080613",
+      "scope": "scoped supplement over exactly the bytes round 1 dropped, plus setup/codex/install.sh and the shared SKILL.md as comparison baseline. 102490B envelope, NOT truncated",
+      "reviewers": {
+        "cursor": {
+          "model": "cursor-grok-4.6-medium",
+          "status": "ok",
+          "bytes": 5294
+        },
+        "agy": {
+          "status": "not run",
+          "cause": "same permission gate as round 1"
+        }
+      },
+      "yield": "found the loop's most severe defect, which round 1 missed because setup/opencode/install.sh was outside the truncated envelope"
+    },
+    {
+      "round": 3,
+      "dir": "C:/Users/mharvey2/.herdr/reviews/loop-004-cigate-20260829-082722",
+      "scope": "second model on the same scoped question set, 83019B envelope",
+      "reviewers": {
+        "opencode": {
+          "model": "elm/Qwen/Qwen3.5-397B-A17B-FP8",
+          "status": "ok",
+          "bytes": 5224
+        }
+      },
+      "why": "operator decision 'Route the second lens to opencode/Qwen' after agy was found blocked on a permission the controller may not widen"
+    }
+  ],
+  "questions": {
+    "Q1_has_either_adapter_forked_a_core_skill": {
+      "answer": "NO in the repository, YES on disk after --global",
+      "controller_verified": true,
+      "evidence": "diffed all four file pairs directly. setup/opencode/{install,uninstall}.{sh,ps1} are the setup/codex/ files under a codex -> opencode token substitution and nothing else: install.sh 84 diff lines, install.ps1 68, uninstall.sh 34, uninstall.ps1 38, every one a branding, fence-marker, owner-token or usage string. Neither installer embeds skill text - the four heredocs write AGENTS.md fence content, runtime.json, PLANNING.md and README.md, never a SKILL.md. Both copy the routing skill from platforms/shared/agent-skills/advanced-planning. BUT --global runs ap_rewrite_call_sites (sed) over the copied markdown, so the installed global copy no longer matches the shared source",
+      "drift_already_present": "install.ps1 is 507 lines for codex and 510 for opencode; the three extra lines are a comment block present only in the opencode copy. The pair is therefore no longer a pure substitution, which is drift in a 607-line wholesale duplication that nothing enforces"
+    },
+    "Q2_is_the_human_approval_gate_real": {
+      "answer": "NO on either host - it is prose the model may simply not obey",
+      "controller_verified": true,
+      "evidence": "the gate is an instruction in SKILL.md and references/manual-review.md. No installer hook, permission or runtime predicate refuses decomposition without a phase_approved record, and setup/codex and setup/opencode both install no host config at all. manual-review.md:39 states 'No absent hook may silently approve or skip', which is precisely what happens",
+      "corroborating_measurement": "loop-004-4 measured this from the other side: the codex host DID stop at the gate unprompted, so the prose works when obeyed. That is evidence of compliance, not of enforcement"
+    }
+  },
+  "findings": [
+    {
+      "id": "F1",
+      "severity": "critical",
+      "title": "--global never writes skill-ownership.json, so a global uninstall deletes the shared skill the other adapter is using",
+      "found_by": [
+        "cursor round 2",
+        "opencode/Qwen round 3"
+      ],
+      "independently_confirmed_by_controller": true,
+      "evidence": "write_ownership is defined at setup/codex/install.sh:304 and called exactly ONCE, at line 597, on the project path. The global branch opens at line 360 and ends with exit 0 at line 424 - before 597. Identical line numbers in setup/opencode/install.sh. Uninstall calls process_ownership at lines 266/269 regardless of mode (uninstall_from is invoked for global at :336 and project at :343), and with no registry the owners list is empty, so the decision falls to 'elif skill_exists: REMOVE'",
+      "consequence": "codex --global then opencode --global: uninstalling either removes ~/.agents/skills/advanced-planning while the other adapter is still installed. The ownership mechanism that exists to prevent exactly this is never engaged on the global path",
+      "why_round_1_missed_it": "setup/opencode/install.sh was one of the four files the truncated envelope dropped entirely"
+    },
+    {
+      "id": "F2",
+      "severity": "critical",
+      "title": "CI job 2 imports a module that no longer exists - introduced inside the reviewed range",
+      "found_by": [
+        "cursor round 1"
+      ],
+      "independently_confirmed_by_controller": true,
+      "evidence": ".github/workflows/ci.yml:51 reads 'from platforms.python.tests.minischema import validate, UnsupportedKeyword'. At the base fbc559b that path EXISTED and the import was correct. Commit c8057d2, which IS inside fbc559b..c6f7a53, moved it to platforms/python/minischema.py. ci.yml was touched once in range (05918a5) for an unrelated reason and the import was not updated. At tip c6f7a53 platforms/python/tests/minischema.py is absent and every other importer uses the new path",
+      "attribution_correction": "the controller first judged this pre-existing, on a git log that returned c8057d2 without checking whether c8057d2 was in range. It is. The reviewer's attribution was right and the controller's softening of it was wrong",
+      "consequence": "CI job 2 fails with ModuleNotFoundError the first time any of these branches is pushed. It has never fired because none has been pushed - so the CI gate this very loop built is itself unexercised",
+      "not_on_main": "main (c7efad6) has neither minischema path and its ci.yml has no minischema reference at all, so merging loop-003-hostneutral does NOT carry this defect. fbc559b is self-consistent"
+    },
+    {
+      "id": "F3",
+      "severity": "critical",
+      "title": "Both uninstallers delete the shared launcher unconditionally, ignoring the other adapter",
+      "found_by": [
+        "cursor round 1",
+        "cursor round 2",
+        "opencode/Qwen round 3"
+      ],
+      "independently_confirmed_by_controller": true,
+      "evidence": "setup/codex/uninstall.sh:295-305 removes bin/ap.py and runtime.json with no ownership check, immediately after the KEEP/REMOVE loop that IS ownership-aware. Same block in the opencode copy",
+      "consequence": "project dual-install: skills correctly survive via skill-ownership.json while the runtime they call is deleted, so every surviving command fails at exit 3. Ownership protects skill directories only",
+      "unanimous": true
+    },
+    {
+      "id": "F4",
+      "severity": "important",
+      "title": "A third-party skill's registration is destroyed when no approved skill has owners left",
+      "found_by": [
+        "opencode/Qwen round 3",
+        "cursor round 1 (narrower framing)"
+      ],
+      "independently_confirmed_by_controller": true,
+      "evidence": "in uninstall.sh's process_ownership, any_remaining is initialised False at line 196 and set True only at line 214, inside 'for skill in approved_skills'. Line 241 then reads 'elif not any_remaining and confirmed and os.path.exists(owner_file): os.remove(owner_file)'. A non-approved skill with live owners never sets the flag, so the whole registry file is deleted with its entry in it. The if-branch at 221 does carefully preserve non-approved entries - which makes the else-branch an inconsistency, not a deliberate choice"
+    },
+    {
+      "id": "F5",
+      "severity": "important",
+      "title": "The OpenCode README asserts the opposite of the contract it ships",
+      "found_by": [
+        "cursor round 1"
+      ],
+      "independently_confirmed_by_controller": true,
+      "evidence": "platforms/opencode/README.md:79-85 states 'OpenCode can commit' and 'Worker: Can stage, commit, and manage git state as needed'. The worker prompt BOTH adapters install - references/worker-prompt.md Hard Contract (a) - states 'NEVER commit ... it never issues git commit, git add, or git reset'. platforms/codex/README.md at the same lines is consistent with the contract",
+      "why_it_is_worse_than_a_doc_bug": "the README is factually correct about capability - opencode is the one runtime in this fleet that CAN commit from a linked worktree - and wrong about policy. A reader gets no cue that it contradicts the installed contract. The operator reads one, the worker obeys the other"
+    },
+    {
+      "id": "F6",
+      "severity": "important",
+      "title": "The POSIX collision check does not recurse; the PowerShell one does",
+      "found_by": [
+        "cursor round 1"
+      ],
+      "independently_confirmed_by_controller": true,
+      "evidence": "setup/codex/install.sh:211 iterates 'for _src_file in \"$_src\"/*' - top level only. setup/codex/install.ps1:119 uses Get-ChildItem -File -Recurse, and the copy at :54 is -Recurse. So references/ is installed but never collision-checked by the shell installer",
+      "consequence": "the SHA refusal story does not hold for the reference prompts, which are exactly where the human gate and the Hard Contract live"
+    },
+    {
+      "id": "F7",
+      "severity": "important",
+      "title": "The differential tests can pass vacuously - this phase's defect class inside the test suite",
+      "found_by": [
+        "controller, unprompted by any reviewer"
+      ],
+      "independently_confirmed_by_controller": true,
+      "evidence": "test_adapter_lifecycle.py test_removal_counts_agree parses counts out of installer stdout with a helper that returns None when the line is not found, then asserts count_sh == count_ps1. If the 'Done. N path(s) removed, M kept.' wording ever changes, both sides return None and the test passes having compared nothing. test_registry_contents_agree is worse: it discards both _run_script return codes and treats FileNotFoundError as None on both sides, so two uninstallers that failed to run at all compare equal",
+      "note": "this is the phase's central defect exactly - a check whose subject is a string it parsed, with no guard that the parse succeeded - sitting in the suite meant to catch it"
+    },
+    {
+      "id": "F8",
+      "severity": "important",
+      "title": "No test compares the two adapters to each other",
+      "found_by": [
+        "controller"
+      ],
+      "independently_confirmed_by_controller": true,
+      "evidence": "test_adapter_lifecycle.py parametrises over (adapter, language), so each adapter is exercised independently and TestLanguagesAgree compares sh against ps1 WITHIN one adapter. Nothing compares codex against opencode, and nothing installs both. The CI job named 'Audit install-layer drift' checks platforms/claude-code and core/schemas against .claude/ - a different axis entirely",
+      "consequence": "607 duplicated lines per file across four files, with drift already present (F-Q1), and no guard on the duplication"
+    },
+    {
+      "id": "F9",
+      "severity": "minor",
+      "title": "Installers print a pointer to a README that does not exist",
+      "found_by": [
+        "cursor round 1"
+      ],
+      "independently_confirmed_by_controller": true,
+      "evidence": "setup/codex/install.sh:607 prints 'See setup/codex/README.md'. setup/codex/ and setup/opencode/ each contain exactly four files, all scripts. The docs live at platforms/codex/README.md"
+    }
+  ],
+  "fleet_findings": [
+    {
+      "id": "X1",
+      "title": "agy cannot review here at all under its current permissions",
+      "evidence": "both rounds returned 0 bytes with 'jetski: no output produced - a tool required the \"command\" permission that headless mode cannot prompt for, so it was auto-denied'. --mode plan is documented read-only, yet the run still needs the command permission, so the read-only framing does not exempt it",
+      "action": "NOT worked around. Both remedies are provider-permission broadening. Surfaced to the operator, who routed the second lens to opencode/Qwen instead"
+    },
+    {
+      "id": "X2",
+      "title": "herdr pane run silently failed to deliver 3 of 4 review launches",
+      "evidence": "fanout wrote .launched naming all four panes. Round 1 cursor ran; round 1 agy, round 2 cursor and round 2 agy did not - their panes were alive but had painted nothing, no process existed, and stderr-agy.log had never even been created by the redirect. Running the generated run-*.sh scripts directly worked first time in every case",
+      "defect_class": ".launched records the intent string, not a verified fact - the same shape this phase has now hit nine times. A launcher that cannot report a failed launch is not a launcher",
+      "workaround": "fanout --no-panes runs the reviewer directly and worked"
+    },
+    {
+      "id": "X3",
+      "title": "A second model agreed on the conclusion while fabricating the citations",
+      "evidence": "Qwen located F1 independently but cited setup/opencode/install.sh:326 for the global exit and :445 for write_ownership. Line 326 is 'try:' inside a Python block and line 445 is a say statement; the true values are 424 and 597, which is what the controller measured from disk and what cursor cited",
+      "why_it_matters": "cross-model agreement raised confidence in the CONCLUSION while one model's EVIDENCE was invented. Consensus is not verification; only the disk settled it. This is the argument for the standing rule that a reviewer's summary is never taken as evidence"
+    },
+    {
+      "id": "X4",
+      "title": "The compiler correctly refused to round up a failed reviewer",
+      "evidence": "collect.sh reported 'reviewers ok: 1/2' and printed agy's stderr as the cause rather than treating 0 bytes as a clean review",
+      "note": "recorded because it is the behaviour the rest of this phase kept finding absent"
+    }
+  ],
+  "controller_defects": {
+    "instance_8_averted": "grep -rln opencode tests/ returned zero and was about to be read as 'no test references opencode'. tests/ does not exist - the path is platforms/python/tests/, where two files do reference it. Caught by running a control grep for a token that had to be present",
+    "instance_9_committed_and_corrected": "judged F2 pre-existing on a git log that named c8057d2 without checking whether c8057d2 lay inside the reviewed range. It does. Corrected in the same session, before the verdict"
+  },
+  "verdict": "NOT READY TO MERGE",
+  "reasoning": "three confirmed criticals. F1 loses a shared skill on global dual-install; F3 loses the shared runtime on project dual-install and the test suite blesses it; F2 breaks CI job 2 inside the reviewed range. Q2 is answered negatively on both hosts - the human gate is unenforced prose, which manual-review.md:39 explicitly forbids",
+  "reviewer_limitations": [
+    "no reviewer executed the installers or pytest; all findings are static",
+    "agy contributed nothing - permission-blocked, not run",
+    "round 1's envelope was truncated; rounds 2 and 3 were scoped to close it",
+    "whether ubuntu-latest ships pwsh is still unmeasured and settles free on the first CI run"
+  ],
+  "controller_actions": {
+    "every_finding_independently_reproduced_before_recording": true,
+    "findings_fixed": [],
+    "findings_escalated": [
+      "F1",
+      "F2",
+      "F3",
+      "F4",
+      "F5",
+      "F6",
+      "F7",
+      "F8",
+      "F9"
+    ],
+    "note": "no fix written. The branch is unpushed and loop-004-5 is gate: human, so the fixes are the operator's call, not the controller's"
+  },
+  "amendments": [
+    {
+      "date": "2026-08-29",
+      "authorised_by": "operator, in session: fix the 3 criticals first",
+      "repository": "advanced-planning",
+      "branch": "loop-004-cigate",
+      "commit": "e139468",
+      "pushed": false,
+      "findings_resolved": [
+        "F1",
+        "F2",
+        "F3"
+      ],
+      "findings_still_open": [
+        "F4",
+        "F5",
+        "F6",
+        "F7",
+        "F8",
+        "F9"
+      ],
+      "verdict_unchanged": "the recorded verdict stands as written. Six findings remain open, so this amendment records progress, not a re-verdict",
+      "how_each_was_proven": {
+        "F1": "codex install.sh --global against a sandboxed USERPROFILE. At HEAD the ownership file was ABSENT afterwards; with the fix it lists all 8 skills owned by codex",
+        "F2": "the ci.yml step extracted verbatim (42 lines of heredoc) and run. At HEAD the import raises ModuleNotFoundError; with the fix it exits 0 and validates all 6 schema files",
+        "F3": "the full dual-adapter project lifecycle, run in both sh and PowerShell. At HEAD, codex uninstall left ownership ['opencode'] and the skill directory present but ap.py and runtime.json deleted -- the other adapter installed but inert. With the fix both survive, and the sole-owner path still removes them"
+      },
+      "test_that_encoded_the_defect": "test_adapter_lifecycle.py B.10 ran on the SHARED-ownership fixture and asserted bin/ap.py was removed, while B.5, B.7 and B.8 in the same class assert the other adapter's skill and registration survive. The suite specified leaving that adapter inert. B.10 now asserts the launcher survives and fails on unfixed code in all four adapter/language combinations; new F.22 asserts removal when sole owner and fails when the guard is forced permanently on. Both directions checked.",
+      "controller_defect_avoided": "the first patch silently rewrote nine LF files to CRLF. git diff hid it -- autocrlf normalises on diff -- and only test_line_endings caught it, 8 failures. Re-applied with newline='' on both read and write, and the patch now asserts on the raw CR count. A tenth instance of the phase's defect class, caught by a test rather than by inspection.",
+      "not_fixed_and_why": {
+        "global_dual_install": "still unreachable: --global seds the copied markdown, so the second adapter's collision check sees a fork of the shared skill and exits 1. Measured, not inferred -- opencode install --global returned exit 1 after codex had installed. F1's fix is necessary but not sufficient there, and the rewrite-fork finding is untouched",
+        "F4_to_F9": "out of the scope the operator authorised"
+      },
+      "suite": "755 passed, 1 failed. The failure is test_self_heal_integration.py:586, which fails identically at unmodified HEAD on a hard-coded absolute path"
+    },
+    {
+      "date": "2026-08-29",
+      "authorised_by": "operator, in session: clear the global rewrite-fork",
+      "repository": "advanced-planning",
+      "branch": "loop-004-cigate",
+      "commit": "619c924",
+      "pushed": false,
+      "supersedes": "amendment 1's not_fixed_and_why.global_dual_install, which recorded the global path as still unreachable. True when written; not now. Amendment 1 is left as written",
+      "defect": "--global copies the shared skill and then rewrites the COPY to an absolute launcher. The next adapter to install globally compared the raw repo source against that rewritten destination and exited 1. The two adapters rewrite to the identical path, so they agree -- the check was comparing the wrong two things, not detecting a real fork",
+      "fix": "the collision check takes an optional launcher and, when given one, compares what THIS installer would write. The project branch passes nothing and keeps a raw-vs-raw comparison, so it is unchanged",
+      "how_it_was_proven": "the real installers run into a sandboxed profile, sh and PowerShell, both directions. At the parent commit the second --global install exits 1 with ownership ['codex']; with the fix it exits 0, reports 'shared; unchanged' for all 8 skills, and records ['codex', 'opencode']. The PowerShell baseline was taken from a git-archive extract verified byte-identical to the HEAD blob, not inferred from the sh run -- the two collision checks are separate code",
+      "coverage_added": "TestGlobalDualAdapterInstall -- the first test anywhere to pass --global, and the first to compare one adapter against the other, which is the F8 gap that let this reach a live run. G.1 fails on the unfixed installers in both languages. G.2 asserts the shared skill still calls an ABSOLUTE launcher and fails when the rewrite is removed -- which would otherwise satisfy G.1 while leaving every global install unable to resolve its launcher from another directory",
+      "side_effect": "the ownership guard from amendment 1 is now exercised on the global path for the first time: the first global uninstall keeps bin/ap.py for the remaining adapter, the second removes it. Previously only provable on the project path",
+      "controller_defect": "instance 11 of the phase's defect class, and mine: the guard asserting the HEAD extract lacked the fix searched for '[string]$Launcher', which already exists in HEAD on a different function, so it reported the extract as fixed when it was not. The SHA-256 comparison against the git blob is what settled it. A check whose subject is a string I chose rather than a fact I read",
+      "findings_still_open": [
+        "F4",
+        "F5",
+        "F6",
+        "F7",
+        "F8",
+        "F9"
+      ],
+      "f8_note": "F8 is narrowed, not closed: the adapter-vs-adapter comparison now exists for the global install path only",
+      "suite": "759 passed, 1 failed (the same pre-existing absolute-path failure)"
+    },
+    {
+      "date": "2026-08-29",
+      "authorised_by": "operator, in session: F6 next, implemented by a worker",
+      "repository": "advanced-planning",
+      "branch": "loop-004-cigate",
+      "commit": "1ce77fa",
+      "pushed": false,
+      "findings_resolved": [
+        "F6"
+      ],
+      "findings_still_open": [
+        "F4",
+        "F5",
+        "F7",
+        "F8",
+        "F9",
+        "F10"
+      ],
+      "f6": "the POSIX collision check iterated only the top level of a skill directory while the PowerShell twin used -Recurse, so a divergent references/*.md installed silently on POSIX and was caught on Windows",
+      "uncovered_by_the_fix": "the COPY of a skill is recursive but the REWRITE loop was not, so nested files under a core skill were copied and never rewritten. Fixed in the same commit: both rewrite loops are now recursive in both languages, which also drops a hardcoded 'references' special case that would throw on any skill lacking that subdirectory",
+      "new_finding": {
+        "id": "F10",
+        "severity": "not yet triaged by a reviewer; found by the controller",
+        "claim": "a shell global install and a PowerShell global install produce byte-different copies of every skill file",
+        "mechanism": "ap_rewrite_call_sites uses sed -i, which converts CRLF to LF on this platform; the PowerShell Set-ApCallSites uses ReadAllText/WriteAllText and preserves line endings. The rewrite runs over every .md in the destination whether or not it contains a call site, so it mutates files it has no business changing",
+        "measured": "all 21 installed skill .md files are CRLF, and NO file under core/skills contains a launcher call site at all. sed -i on core/skills/phase-plan-creator/references/phase-plan-template.md shrinks it from 8626 to 8336 bytes -- 290 CR bytes -- changing nothing else",
+        "not_fixed_and_why": "fixing it changes the installed bytes of every skill file and deserves its own decision: normalise to LF in both languages, or preserve the source line endings in both. Folding that into an F6 commit would have been scope the operator did not authorise",
+        "how_it_surfaced": "it was invisible until the collision check became recursive and the rewrite-aware comparison had something to compare. The same CRLF trap cost this phase a controller defect earlier (instance 10); this is the shipped-code instance of it"
+      },
+      "delegation": "implemented by an opencode/Qwen worker in this worktree at the operator's instruction, verified here. The worker's first run reported '50 skipped' because sh was absent from its PATH and it initially stated sh was unavailable on this machine, which is false -- sh is at /usr/bin/sh. Its change had therefore never been executed, and it had in fact broken a test. Running the shell half here is what caught it. It reported its lack of verification plainly both times, which is what made the gap recoverable",
+      "how_it_was_proven": "the new nested-divergence tests fail at 619c924 for sh in both hosts -- 'installer exited 0 despite nested file divergence' -- and pass for ps1, which never had the defect. That asymmetry is the finding. The before-tree was a git-archive extract confirmed byte-identical to the HEAD blob by diff",
+      "controller_defect": "instance 13: the guard comparing the archive extract to the HEAD blob applied cut -f1 to one side only and compared it against the other side's full 'hash  -' output, so it reported a mismatch that did not exist. It failed safe, and diff settled it. Third time this phase that a check's subject was a string I constructed rather than a fact I read",
+      "suite": "767 passed, 1 failed (the same pre-existing absolute-path failure)"
+    },
+    {
+      "date": "2026-08-29",
+      "event": "push_attempted_and_rejected",
+      "authorised_by": "operator, in session: authorise pushing advanced-planning",
+      "outcome": "REJECTED for all six branches. GitHub refused: 'refusing to allow an OAuth App to create or update workflow .github/workflows/ci.yml without workflow scope'. Every branch touches that file, so the scope gap blocks all of them. Nothing reached the remote; origin still has only main, original and fix/install-audit-diverged-state",
+      "branches_still_local": [
+        "fix/shared-runtime-reachability",
+        "loop-002-envelope",
+        "loop-003-hostneutral",
+        "loop-004-cigate",
+        "loop-004-codex",
+        "loop-004-opencode"
+      ],
+      "clearing_it": "needs `gh auth refresh -s workflow` run by the operator. Granting that scope is broadening provider permissions, which the controller is not authorised to do",
+      "controller_defect": "instance 12: the push loop printed 'pushed <branch>' unconditionally because it was not gated on the exit status, so six failures were reported as six successes until ls-remote contradicted them"
+    },
+    {
+      "date": "2026-08-29",
+      "authorised_by": "operator, in session: F4 next, implemented by a worker",
+      "repository": "advanced-planning",
+      "branch": "loop-004-cigate",
+      "commit": "227c9a4",
+      "pushed": false,
+      "findings_resolved": [
+        "F4"
+      ],
+      "findings_still_open": [
+        "F5",
+        "F7",
+        "F8",
+        "F9",
+        "F10"
+      ],
+      "f4": "any_remaining was set only inside the approved-skills loop, and third-party entries were rebuilt only inside the branch it gated. So an adapter that was sole owner of every approved skill fell through to os.remove(owner_file) and deleted the WHOLE registry, taking a foreign adapter's registration with it. The foreign skill's files survive -- only approved skills are removed -- so it is left installed but unregistered",
+      "fix": "the write-or-delete decision is now computed over the whole registry after pruning, not over approved skills only. Keep every entry that still has owners, write if any remain, delete the file only when none do. The approved-skill loop already writes its pruned list back, so a solely-owned approved skill is left empty and excluded by the same test. Mirrored in all four scripts, both hosts",
+      "the_suite_asserted_the_defect": "D.15 -- 'skill-ownership.json is deleted, because no entry has any owner left' -- ran against a registry that DID still have an entry with an owner. Its fixture called _set_owners, which plants a foreign entry as a side effect, and D.15 passed only because the file was being deleted with that entry inside it. So the shipped test asserted the defect as correct behaviour. The fixture now forces nothing: a fresh single-adapter install already registers that adapter as sole owner of all eight approved skills -- measured by reading the registry the installer writes -- so D.15's docstring is true of its fixture for the first time. This is the phase's defect class again: the check's subject was not the thing its name claimed",
+      "second_finding_from_the_fix": {
+        "claim": "after the F4 fix the two hosts disagreed about a MALFORMED third-party entry -- a bare string where the schema wants a list of owners",
+        "measured": "plant that entry, uninstall as sole owner: sh deleted the whole registry, ps1 preserved it and normalised it to ['otherhost']. The PowerShell twin coerces non-array values before deciding what to keep; the POSIX side kept only values that were already lists",
+        "why_it_was_invisible": "every test in the suite writes well-formed entries, so nothing could see it. It did not exist before the F4 fix either -- the old gate deleted the file regardless of shape, so the hosts agreed by both being wrong",
+        "fixed": "the POSIX side now normalises to match ps1, which is both the more conservative behaviour and the one already shipping on Windows. Test I.4 pins the agreement and fails on all four adapter/language combinations at the parent commit"
+      },
+      "coverage_added": "TestThirdPartySurvivesSoleOwnerUninstall, 16 cases across two adapters and two languages. I.1 the registry survives and the foreign entry is unchanged; I.2 the adapter's own approved skills are gone, so the test cannot pass by never deleting anything; I.3 only the foreign entry remains; I.4 the malformed-entry host parity above. The approved-skill list is read from the registry the install wrote rather than restated in the test, so it cannot drift from the installers",
+      "how_it_was_proven": "a git-archive extract of the parent commit, confirmed byte-identical to the committed blob and confirmed to still contain any_remaining. All 16 new cases fail there, the failure being the defect itself (FileNotFoundError on skill-ownership.json); the 12 phase2b cases pass there, which is the control showing the fixture change alone does not manufacture the result",
+      "delegation": "implemented by an opencode/Qwen worker in this worktree at the operator's instruction. It reported its 56 skips plainly this time rather than describing the run as passing, which was the correction asked of it after F6. The controller ran both languages, tidied three things the worker left -- the hardcoded eight-skill list in three places, a dead $anyRemaining in both .ps1 files after the sh twin had dropped its equivalent, and the foreign entry arriving via a helper's side effect -- and found the malformed-entry asymmetry by probing the fixed code rather than reading it",
+      "controller_defect": "instance 14: the guarded-patch helper asserts the replacement is not already present, which cannot hold for a pure deletion -- the replacement is by construction a substring of what it replaces. It refused two correct edits. It failed safe and the guard was rewritten to check the outcome (anchor gone, identifier count zero, exact line delta) instead of the precondition",
+      "suite": "783 passed, 1 failed (the same pre-existing absolute-path failure)"
+    },
+    {
+      "date": "2026-08-30",
+      "authorised_by": "operator, two decisions in session: open the third-adapter gap as its own finding rather than widening F8; cover the second review lens with opencode/Qwen after agy proved unusable headless",
+      "repository": "advanced-planning",
+      "branch": "loop-004-f7",
+      "commits": {
+        "F7": "862eea7",
+        "F9": "7541807"
+      },
+      "pushed": false,
+      "findings_resolved": [
+        "F7",
+        "F9"
+      ],
+      "findings_still_open": [
+        "F5",
+        "F8",
+        "F10",
+        "F11"
+      ],
+      "f7": {
+        "defect": "E.17 parsed the removed count from uninstaller stdout with a nested helper that returned None when its 'removed,' anchor was absent, then asserted count_sh == count_ps1 -- so a wording change made both sides None and the test compared nothing. E.18 discarded BOTH _run_script return codes, so two uninstallers that never ran left two untouched projects whose registries compared equal. E.18 was green throughout the F4 registry-destroying defect",
+        "fix": "a module-level _parse_removed_count anchors on the token immediately before 'path(s)' and raises rather than returning None. That anchor reads every shipped wording including claude-code's 'Done. N path(s) removed.', which omits the ', M kept.' clause and which the old anchor could not parse at all. E.18 now asserts both return codes before comparing, so two absent registries are agreement between uninstallers known to have succeeded",
+        "proven": "not argued but reproduced, with byte-identical restores. Against a parser taking the first digit on the line, E.19 fails 'assert 9 == 7' -- a silently WRONG number, not a detectable None. With BOTH codex uninstallers made to exit 3, E.18 as it now stands fails on the return code while the discarding form it replaced PASSES. That is the vacuous pass reproduced live rather than inferred"
+      },
+      "f9": {
+        "defect": "four installers printed 'See setup/<adapter>/README.md'. Neither setup/codex nor setup/opencode has ever held a README; the documentation is at platforms/<adapter>/README.md. Project install path only -- the global path exits before that line",
+        "the_trap_that_was_avoided": "seven pointers of that exact shape exist and THREE ARE CORRECT: setup/claude-code/install.{sh,ps1} and setup/cowork/create-zip.sh, whose targets do exist. A sweep over 'See setup/*/README.md' would have rewritten all seven and broken the three that work",
+        "fix": "the four broken pointers repointed at platforms/. TestDocumentationPointersResolve (F.1) asserts each target RESOLVES rather than that it is spelled a particular way, so repointing at a different wrong place cannot satisfy it, and carries a floor of seven pointers because a regex over source text is precisely the shape that passes having matched nothing once wording drifts",
+        "proven": "as committed PASSED; with F9 reverted, failed naming all four broken pointers; with the pattern drifted, failed on the floor ('found 0 ... would otherwise pass having checked nothing'). All five files restored byte-identical"
+      },
+      "new_finding_F11": {
+        "claim": "setup/claude-code/ is a THIRD shipped installer adapter with install.sh, install.ps1, uninstall.sh, uninstall.ps1 and its own README, and the test suite references it zero times",
+        "measured": "_ADAPTERS in test_adapter_lifecycle.py has exactly two entries, codex and opencode, while the file's own header comment says adding an adapter 'must be a one-line change to the parameter list'. claude-code is 541 lines against 637 for the others, was last touched 2026-08-28 -- making it the MOST recently maintained adapter, not a legacy one -- and contains zero references to skill-ownership.json, so it is structurally different rather than a near-duplicate",
+        "why_it_is_not_F8": "F8 says no test compares the two adapters to each other. That understates it: an entire third adapter has no coverage at all. The operator's decision was to open it separately rather than widen F8, so F8 stays a drift guard between codex and opencode and the coverage question is costed on its own",
+        "found_by": "not by reading the finding list but by grepping for the real 'Done. N path(s)' wording while fixing F7, which returned a third adapter nobody had mentioned"
+      },
+      "corrections_to_the_record": [
+        "F10 is SIX scripts, not four. All three adapters carry the rewrite and all three POSIX installers use sed -i: setup/claude-code/install.sh:179, setup/codex/install.sh:165, setup/opencode/install.sh:165. Both the peer plan and the controller's own envelope assumed four",
+        "F9's citation of setup/codex/install.sh:607 was stale; the site is :637",
+        "F7 is NOT a prerequisite for F8 or F10, contrary to the controller's first sequencing. The peer reviewer said so loudly and was right: F7's subject is uninstaller stdout and post-uninstall registry per adapter, while F10 is global-rewrite line endings and F8 is adapter-vs-adapter"
+      ],
+      "delegation": "F7's edit was routed to an opencode/Qwen worker in its own worktree. It kept scope and preserved CRLF, but DEVIATED from an explicit instruction: told to reproduce the existing parse, it substituted a first-digit-on-the-line parser that returns 9 where 7 is correct. The controller caught it on the diff, not on the worker's summary, and the pinning test now fails against that version. F9 was done by the controller directly -- four line edits whose whole risk was leaving three valid pointers alone, which is the kind of instruction a worker had just been observed to override",
+      "peer_review": "the operator asked for a plan resolved with agy and cursor. cursor delivered and every claim of its that was acted on was independently verified by the controller, including three corrections to the controller's own characterisations. agy could not be reached headless: --mode plan was auto-denied a 'command' permission and --sandbox then demanded 'escalate_admin', leaving only --dangerously-skip-permissions, which blanket-approves writes and was not taken unilaterally. The operator routed the second lens to opencode/Qwen instead",
+      "suite": "platforms/python: 1 failed, 785 passed in 312.83s, zero skipped. The single failure is test_self_heal_integration.py::test_sandbox_leaves_real_working_tree_untouched, pre-existing and unrelated -- it asserts against a different checkout path under Documents/. 783 passed at 227c9a4, so the +2 is exactly E.19 and F.1"
+    },
+    {
+      "date": "2026-08-30",
+      "authorised_by": "operator, two decisions in session. F10: 'Fix + self-detecting test' -- replace the stripping call, and write a test that probes the platform's own sed behaviour and SKIPS loudly where the defect cannot occur, rather than passing silently. F5: free text, not a listed option -- 'Workers shoukd be allowed to commit but also tag their work so its clear who made the updates or commits', which REVERSES the direction the finding was written in",
+      "repository": "advanced-planning",
+      "branch": "loop-004-f7",
+      "commits": {
+        "F10+F5": "eb9e5b3"
+      },
+      "pushed": false,
+      "findings_resolved": [
+        "F10",
+        "F5"
+      ],
+      "findings_still_open": [
+        "F8",
+        "F11"
+      ],
+      "f10": {
+        "defect": "ap_rewrite_call_sites used `sed -i` in all three POSIX installers. Under MSYS (Git Bash) sed opens files in text mode and rewrites every CRLF as LF -- MEASURED even for a substitution that matches nothing, CR 2 -> 0. So a shell global install produced byte-different skill files from a PowerShell one, whose Set-ApCallSites preserves endings. The same GNU sed 4.9 on Linux (WSL) preserved CR in all three cases, so it is the platform rather than the tool and NO sed invocation is safe there",
+        "mechanism_chosen_by_measurement": "a nine-case probe ranked the candidates: perl -i -pe and gawk with BINMODE=3 preserve, but each would be a new install-time dependency gated by a decision; default awk strips like sed. Pure POSIX parameter expansion with quoted patterns (${s%%\"$n\"*}) preserves, adds no dependency, and ran identically under dash -- Ubuntu's /bin/sh, which is what CI actually executes -- and under Git Bash sh. Implemented as a function setting a global rather than a command substitution, because $( ) forks once per line and on Windows that is seconds of wall clock",
+        "beyond_the_finding": "a grep -qF guard means a file with no call site is never opened for writing, so it stays byte-identical rather than merely ending up with equal text -- 35 of the 45 .md files in the rewrite workload. A tail -c 1 probe preserves a missing final newline, which command substitution would otherwise add",
+        "proven": "five degradations reproduced live, every file restored byte-identical. As committed PASSED. Reverted to sed -i: 2 failed. Function renamed so discovery finds nothing: 3 failed on the floor ('found 0 ... would otherwise pass having checked nothing'). PRESERVES BY DOING NOTHING (mv replaced by rm, so endings survive but no substitution happens): 1 failed -- this is the decisive row, the exact way a fix could pass a naive line-endings test while being completely wrong, and only the second assertion catches it",
+        "self_detecting_half_proven_both_directions": "the operator's decision was specifically that vacuity be VISIBLE. The behavioural guard probes the platform's own sed on a planted CRLF file at runtime. On Windows the probe measured CR 2 -> 0, so the guard ran for real; under WSL it measured 2 -> 2 and the guard SKIPPED with a reason naming itself INERT and pointing at the static guard that does bite there. Forcing the probe false on Windows produced '1 skipped' with that reason printed in the run report. CI is ubuntu-only -- ci.yml, four jobs, all runs-on: ubuntu-latest, none running install.sh -- so this is exactly the environment where a naive end-to-end test would have gone green having proven nothing"
+      },
+      "f5": {
+        "the_finding_as_written": "platforms/opencode/README.md said a worker 'can stage, commit, and manage git state as needed' while the Hard Contract those same adapters install said 'NEVER commit'. The finding proposed changing the README",
+        "the_operator_reversed_it": "the CONTRACT is what changes. Workers may commit, and must tag their work so authorship is clear",
+        "what_investigation_added": "the policy was stated in SEVEN live source files, not one. And SKILL.md recorded its real origin: a codex SANDBOX CAPABILITY limit -- a linked worktree's git metadata lives in the parent repo's .git/worktrees/, outside the sandbox -- generalised into universal POLICY for every runtime. ralph-loop-worker.md recorded a SECOND rationale the operator's answer does not address: the Loops 056/061 self-commits caused real damage through a blanket `git add -A`. So the new clause permits committing while still forbidding the blanket stage, and keeps the historical citation rather than deleting it -- naming precisely what was damaging about it",
+        "fix": "one canonical clause, byte-identical in all three hand-maintained worker contracts: stage explicitly, never `git add -A`, and carry `Agent: worker/<runtime>` and `Loop: <loop_name>` trailers. Codex documented as CANNOT rather than NEVER, because it is a sandbox limit and not a policy choice. The three ORCHESTRATOR contracts deliberately keep 'NEVER commit' -- it genuinely does not commit -- and a guard asserts they still do, which is what proves the change stayed scoped rather than being over-applied",
+        "the_actual_defect_was_that_nothing_noticed": "two shipped documents stated opposite commit policy and no test compared them. Correcting the words without a guard leaves that class alive, with three contract copies and two READMEs free to drift again. TestWorkerCommitContract discovers its subjects by filesystem glob, not from a list, and carries floors",
+        "proven": "four degradations, each naming the offending file, all five files restored byte-identical. One copy reverted to 'NEVER commit': fails naming the two groups. Agent: trailer dropped: fails naming each contract and why -- 'a commit cannot be traced to the agent that made it'. Orchestrator relaxed too: fails, catching the over-application. README reverted to the wording the finding was raised about: fails -- the original contradiction, now caught"
+      },
+      "corrections_to_the_record": [
+        "the unassigned-variable analyser in test_ap_launcher.py covered 2 of the 7 installer scripts, and carried three classes of FALSE POSITIVE: an assignment after then/else/do, `read VAR`, and a backslash-escaped literal \\$ read as a variable use. All three corrected and the parametrisation widened to 4. The corrections were then shown NOT to have defanged the guard: a plain unassigned read, one after `then`, and one inside an UNQUOTED heredoc were each planted and each still failed",
+        "quoted-heredoc bodies are now stripped before the scan. `$name` inside <<'EOF' is literal text, not a variable read -- setup/codex writes a PLANNING.md containing a literal \"$advanced-planning\" that way. Unquoted heredocs DO expand and are deliberately left in scope",
+        "platforms/claude-code/install.sh is a SEVENTH installer script; verified to carry no rewrite function, so it is not an F10 site",
+        "platforms/cowork/agents/worker-prompt.md is a FOURTH worker surface and is correctly git-free -- Cowork checkpoints by snapshot with no git dependency, so it states no commit policy and is deliberately excluded from the contract guard rather than overlooked"
+      ],
+      "also_found": "test_self_heal_integration.py::test_sandbox_leaves_real_working_tree_untouched hardcodes C:/Users/mharvey2/Documents/Coding/advanced-planning, a checkout that does not exist on this machine. It is the only test doing so and the sole pre-existing suite failure -- a meta-test asserting the sandbox is clean, which fails for a reason having nothing to do with the sandbox",
+      "delegation": "both done by the controller directly. F10's mechanism had to be chosen by measurement across two platforms and two shells, and F5's scope turned on which of two rationales the operator's decision addressed -- neither is envelope-shaped work",
+      "suite": "794 passed, 1 failed (pre-existing: a meta-test hardcoding C:/Users/mharvey2/Documents/Coding/advanced-planning, a checkout absent on this machine)"
+    },
+    {
+      "date": "2026-08-30",
+      "authorised_by": "no new operator decision. F8 was already an accepted finding and its fix needed no judgement call, so it was taken under the standing programme rather than parked behind a question",
+      "repository": "advanced-planning",
+      "branch": "loop-004-f7",
+      "commits": {
+        "F8": "21d0898"
+      },
+      "pushed": false,
+      "findings_resolved": [
+        "F8"
+      ],
+      "findings_still_open": [
+        "F11"
+      ],
+      "f8": {
+        "defect": "the two adapters are ~1880 near-duplicate lines each across four scripts. TestLanguagesAgree compares sh against ps1 WITHIN one adapter; nothing compared one adapter against the other, so the duplication had no guard at all",
+        "drift_was_measured_not_assumed": "normalising each file's adapter identity away, THREE of the four pairs were already byte-identical and ONE was not: setup/opencode/install.ps1 carried a two-line note that setup/codex/install.ps1 did not, visible as a line-count gap of 529 against 532. The finding predicted drift; this is which drift, found by measuring rather than by assuming",
+        "which_direction_to_close_it": "the note is TRUE of both files -- both define Merge-ApAgentsMd and Write-ApOwnership, checked before deciding -- so it was ADDED to codex rather than deleted from opencode. Deleting accurate documentation to satisfy a guard would be the wrong way round",
+        "why_two_checks": "H.1 normalises BOTH adapters to the SAME placeholder and requires byte equality. Uniform normalisation is deliberate: the uninstaller headers say 'may be registered by both Codex and OpenCode', naming the two in a fixed order, so a self/peer scheme would report correct prose as drift. That keeps comments in scope, which matters because the drift that actually existed WAS a comment. But it opens a hole -- codex could write an opencode fence and H.1 could not tell, both tokens normalising alike. H.2 closes exactly that: on a code line an adapter must only ever name itself, with comments exempt",
+        "proven": "four degradations, every file restored byte-identical. Reintroducing the ps1 gap fails H.1 naming the file and both line counts. A one-token logic change in codex alone fails H.1. Making codex write opencode's fence fails H.2 while H.1 still PASSES -- the decisive row, demonstrating H.2 closes a real hole rather than duplicating H.1. Renaming a shared script fails BOTH on their floors rather than passing having compared nothing"
+      },
+      "f11_sized_not_fixed": {
+        "why_it_is_not_being_taken_unilaterally": "unlike F8, this is a design decision rather than a defect with one correct fix, so it is measured and handed to the operator",
+        "measured": "setup/claude-code/ ships all four scripts AND the only adapter README of the three. It references skill-ownership.json in ZERO files, where codex and opencode reference it in all four -- so it does not participate in the shared-skill ownership protocol at all. 34 test functions in test_adapter_lifecycle.py are adapter-parametrised (50 of the file's 115 collected tests). EXACTLY HALF of those 34 -- 17, enumerated in the loop record -- depend on the ownership registry claude-code never writes. Two further tests index _ADAPTERS positionally (:929 and :965) and so assume there are exactly two adapters",
+        "correction_to_the_earlier_estimate": "the second review lens sized this at '~20-25 of 106 tests'. The real figures are 17 registry-dependent of 34 adapter-parametrised, in a file of 115. The estimate was the right order but the structure is different: the failures are not scattered, they are precisely the ownership-protocol half",
+        "the_decision_it_forces": "either the fixtures learn to branch on whether an adapter uses the ownership registry, and claude-code joins _ADAPTERS -- or claude-code gets its own smaller class covering only what it genuinely shares. The first is more coverage and more coupling; the second is honest about a structurally different adapter. Both are defensible, which is why it is the operator's call"
+      },
+      "suite": "796 passed, 1 failed (the same pre-existing meta-test hardcoding a checkout path absent on this machine)"
+    },
+    {
+      "date": "2026-08-30",
+      "authorised_by": "no new operator decision. This corrects a measurement the controller itself put into amendment 8 and into commit 8fbdde3, and records the evidence that the operator's F11 choice rests on it",
+      "repository": "advanced-planning",
+      "branch": "loop-004-f7",
+      "commits": {
+        "meta_test": "196c997"
+      },
+      "pushed": false,
+      "findings_resolved": [],
+      "findings_still_open": [
+        "F11"
+      ],
+      "supersedes": "amendment 8, key f11_sized_not_fixed.measured -- and the same figures in the message of commit 8fbdde3, which cannot be edited",
+      "correction_to_amendment_8": {
+        "what_was_recorded": "'34 test functions in test_adapter_lifecycle.py are adapter-parametrised (50 of the file's 115 collected tests). EXACTLY HALF of those 34 -- 17 -- depend on the ownership registry claude-code never writes'",
+        "what_is_true": "28 test functions are adapter-parametrised. 13 of them are registry-dependent and 15 are not. It is not half, and the pleasing symmetry of '17 and 17' was the tell",
+        "how_it_went_wrong": "the count came from a regex over the file matching any test whose BODY mentioned 'adapter', which included tests that take no adapter parameter at all. The correct figures come from pytest's own collection -- counting the functions it actually parametrises -- which is the only authority on what is parametrised",
+        "why_it_is_recorded_rather_than_edited": "the record is append-only, and a wrong number that was acted on is part of the history. Amendment 8 stands as written; this supersedes it. The commit message cannot be corrected at all without rewriting a pushed commit, which is out of scope"
+      },
+      "f11_measured_properly": {
+        "the_registry_axis_is_the_wrong_one": "temporarily adding claude-code to _ADAPTERS and collecting gives 22 failed, 22 passed, 6 errors -- 11 distinct failing functions, of which 6 are registry-dependent and 5 are NOT. Seven registry-dependent tests PASS. So failure does not follow the registry axis in either direction. The real boundary is whether a test assumes the .agents/skills layout, which is a different and wider set",
+        "and_the_passes_are_partly_vacuous": "setup/claude-code's four scripts mention AGENTS.md in 0 of 4, skill-ownership.json in 0 of 4, and .agents/skills in 0 of 4. So a test like test_agents_md_fences_removed passes for claude-code because the FIXTURE creates AGENTS.md and claude-code never touches it. The assertion 'zero adapter fences remain' is trivially true of an adapter that writes no fences",
+        "which_is_the_defect_class_this_phase_exists_to_remove": "the phase's finding is that a check fails silently when its subject is a string it interpolated rather than a fact from the filesystem. This is the same failure with a different subject: a test passes because the thing under test DOES NOTHING. Adding ~22 green tests of that kind would make the suite look better while measuring less",
+        "what_claude_code_actually_is": "a structurally different adapter, not a third instance of the same one. It installs core/skills/* into .claude/skills/ and supports --symlink; codex and opencode install platforms/shared/agent-skills/advanced-planning into .agents/skills/ and maintain skill-ownership.json. It is also the only one of the three shipping a README",
+        "why_it_was_not_implemented": "the operator chose 'split the parametrisation' on the 34/17 figures above, which are wrong, and on the premise that the registry axis separates passing from failing tests, which measurement disproves. Implementing would bake a design onto the wrong axis and add vacuous green tests. It is going back to the operator with the real numbers"
+      },
+      "meta_test_fixed": {
+        "defect": "test_sandbox_leaves_real_working_tree_untouched anchored on C:/Users/mharvey2/Documents/Coding/advanced-planning, an absolute path to a checkout that does not exist on this machine. It was the suite's only hardcoded absolute path and its sole standing failure",
+        "the_worse_half": "it failed with 'sandbox tests must not modify real files', so a stale anchor was reported as a SANDBOX LEAK. An alarm that fires for the wrong reason trains a reader to dismiss the one case it exists to catch. Both anchors existed in this repo the whole time; they were being looked for in the wrong tree",
+        "fix": "repointed at Path(__file__).parents[3], which the module already computes for sys.path, plus a floor that says it can no longer tell a leak from a stale anchor if the root stops looking like the repository, plus a message naming both causes and how git status distinguishes them",
+        "sweep": "one other test file contains an absolute C:/Users path; inspected and it is synthetic fixture data being parsed, not an anchor into a real tree. Correct as it stands"
+      },
+      "suite": "797 passed, 0 failed"
+    },
+    {
+      "date": "2026-08-30",
+      "authorised_by": "operator decision, taken on the corrected figures in amendment 9 after their earlier choice was shown to rest on a measurement the controller had got wrong: 'Its own class'",
+      "repository": "advanced-planning",
+      "branch": "loop-004-f7",
+      "commits": {
+        "F11": "77ef4b3"
+      },
+      "pushed": false,
+      "findings_resolved": [
+        "F11"
+      ],
+      "findings_still_open": [],
+      "f11": {
+        "what_was_chosen_and_why": "TestClaudeCodeAdapter, a class of its own, rather than adding claude-code to _ADAPTERS. The parametrisation split was the operator's first choice but rested on figures amendment 9 corrects, and on the registry axis, which measurement disproves: the 11 failing functions split 6 registry-dependent to 5 not, while 7 registry-dependent tests pass",
+        "the_decisive_argument": "of the 22 tests that would have gone green, many would have passed VACUOUSLY. claude-code names AGENTS.md, skill-ownership.json and .agents/skills in 0 of its 4 scripts, so test_agents_md_fences_removed passes for it because the FIXTURE creates AGENTS.md and claude-code never touches it. Asserting 'zero adapter fences remain' against an adapter that writes no fences measures nothing",
+        "correction_to_the_options_as_put": "the option the operator chose was described as leaving claude-code's install path uncovered. That was wrong too, in the opposite direction: claude-code already appears in 10 test files, with real assertions in test_uninstall.py (4), test_home_resolution_agreement.py (2) and test_ap_launcher.py (3). It was never uncovered -- it was absent from the ADAPTER LIFECYCLE parametrisation specifically. The new class was scoped to what none of those cover, so it adds rather than duplicates",
+        "the_six_checks": "the adapter ships its whole surface (5 files); every repo path either installer reads from exists; the uninstaller names every $CLAUDE_DIR destination the installer writes; both languages offer the same flags, compared canonically so --dry-run and -DryRun match; the README documents every flag in both spellings; and the adapter installs into .claude/ while staying out of the shared agent layout",
+        "why_the_last_one_is_asserted_in_both_directions": "the shared-layout half alone would be vacuous -- 'names no AGENTS.md' passes for a file that does nothing. Each script must first be shown to name .claude, and each installer to name its own skills source in its own path syntax (core/skills for sh, core\\skills for PowerShell), before the absences prove anything",
+        "defect_found_by_the_new_check": "test_the_uninstaller_names_every_directory_the_installer_writes failed on its FIRST run. setup/claude-code/install.sh printed a dry-run line describing 'ln -sf $REPO_ROOT/core/agents $CLAUDE_DIR/core-agents', but no code path anywhere in the file creates $CLAUDE_DIR/core-agents -- the real self-install removes $CLAUDE_DIR/agents and symlinks each .md from BOTH core/agents and platforms/claude-code/agents into it. A dry-run exists so an operator can see what a real run would do; one naming a directory the real run never creates is wrong in the way that matters most for a dry-run. The uninstaller never mentioned core-agents because there has never been anything there to remove",
+        "how_the_fix_direction_was_settled": "install.ps1 line 332 already printed the accurate form -- 'symlink agents from core\\agents and platforms\\claude-code\\agents' -- so the PowerShell half established what the sh message was meant to say. The sh line was corrected to match the code, not the code to match the line",
+        "proven": "seven degradations, every file restored byte-identical and asserted so. Removing README.md, pointing the installer at a directory that does not exist, creating a dir the uninstaller never cleans, offering a flag in sh but not PowerShell, un-documenting a live flag, and making claude-code write into .agents/skills are all CAUGHT. The seventh renames every $CLAUDE_DIR destination away so the comparison has nothing left to compare, and the FLOOR fires rather than the check passing vacuously"
+      },
+      "noted_not_fixed": "setup/claude-code/install.sh writes a .claude/settings.json containing a permissions block into the user's project. Per the operator's own machine notes, it is the permissions block specifically that raises a second consent dialog which directory pre-trust cannot clear, so every worktree off a project installed this way needs a human before an agent can start in it. That is a deliberate design choice about what the adapter grants itself, not a defect, and it is outside F11's scope -- recorded so it is a decision someone took rather than something nobody noticed",
+      "suite": "803 passed, 0 failed"
+    },
+    {
+      "date": "2026-08-31",
+      "authorised_by": "operator decision, taken on the evidence note committed as AAW 6b5c179 and on being told explicitly that this moves a head they had already approved for push: 'Fix on loop-004-f7'",
+      "repository": "advanced-planning",
+      "branch": "loop-004-f7",
+      "commits": {
+        "F12": "5c9aa20"
+      },
+      "head_moved": {
+        "from": "77ef4b3",
+        "to": "5c9aa20",
+        "why_this_is_recorded": "77ef4b3 was in the operator's approved seven-branch push table. Nothing was pushed, so there is no external consequence, but a table they approved is now stale and the amendment says so rather than leaving them to notice"
+      },
+      "pushed": false,
+      "findings_resolved": [
+        "F12"
+      ],
+      "findings_still_open": [],
+      "f12": {
+        "how_it_was_found": "not by a reviewer. By verifying, after a compaction, the carried finding that core/skills/companion-detection/SKILL.md still named Plannotator. It did -- but the interesting part was not the mention, it was that two documents already claimed it had been removed",
+        "the_false_claims": "docs/plannotator-deprecation.md lists the companion recommendation under 'Scope of the change -> Removed'. AAW's ARCHITECTURE.md:166 goes further: '/plan-and-phase Step 5b auto-detected plannotator and invoked /plannotator-annotate ... Both were removed'. Half of that was true: AAW's own surfaces are genuinely clean, and .aaw/detect.py records plannotator in a DEPRECATED dict rather than a detector. The advanced-planning half never happened",
+        "what_was_actually_live": "platforms/claude-code/commands/plan-and-phase.md:94-113 still carried 'Step 5b: PLANNOTATOR REVIEW', detecting .claude/commands/plannotator-annotate.md and invoking it. core/skills/companion-detection/SKILL.md:40-53 told a user who did NOT have it installed to git clone it. Not a stale mention -- a live promotion of a tool this project had deprecated",
+        "why_it_is_this_phase_s_own_defect_class": "loop-004-f7 ADDS platforms/codex/README.md:178 and platforms/opencode/README.md:163, both asserting 'No Plannotator: The deprecated review companion is not installed or invoked'. True of those two adapters, false of claude-code. Two adapters asserting a property the third violates is F7, F8 and F11 again. Note the direction: codex and opencode are clean because they were WRITTEN after the deprecation, not because anyone cleaned them. A naive 'zero Plannotator references remain' check would pass vacuously for both",
+        "the_check_and_why_it_is_shaped_this_way": "TestDeprecatedCompanionsAreNotRecommended (K, 3 checks). The hard part is not finding the string -- it is not failing on the deprecation notices, which must keep saying the name. So the check is about ACTIONABLE references only: an install command, a slash-command invocation, a --plugin-dir launch, or a path into the companion's own command file. 'X was deprecated' passes; 'git clone .../X' does not",
+        "the_new_vacuity_that_created_and_how_it_is_closed": "a detector that matches NOTHING satisfies 'no actionable references' perfectly, and its output is identical to a clean tree. So the class carries a detector self-test: five known-positive lines that must be caught and five known-negative lines that must not, asserted against the same function the real scan calls. A regex that stops working now fails the self-test before it can bless the tree",
+        "the_self_test_earned_itself_on_first_run": "it failed immediately, on a hole in the detector written minutes earlier: '.claude/commands/plannotator-annotate.md' went undetected because the negative lookbehind that suppresses path false-positives swallowed it too. A file could therefore have kept the whole detection half of the integration and passed. Fixed by adding a command-file pattern -- demanded by the test, not noticed by the author",
+        "proven": "five degradations, all CAUGHT, every file restored byte-identical and asserted so. The exact recommendation that was on disk that morning; Step 5b returning; only its detection half returning; the detector blinded, where the SELF-TEST must fire; and the glob no longer reaching platforms/, where the FLOOR must",
+        "scope": "documentation only, no code. Step 5b deleted (21 lines), section 2 of companion-detection removed and the section renumbered, four descriptions corrected across CLAUDE.md, the skill frontmatter, its Key Principles and the skill catalogue"
+      },
+      "what_amendment_10_actually_meant": "amendment 10 said every finding was accounted for, and that remains true -- every finding ANYONE HAD RAISED was closed. F12 is the difference between that and 'the branch is clean', which no amendment has claimed and none should",
+      "suite": "806 passed, 0 failed (was 803)"
+    },
+    {
+      "date": "2026-08-31",
+      "authorised_by": "operator decision 'Drop the project layer in CI'. The command in the option they approved does not exist -- see why_the_approved_command_could_not_be_run -- so it was not run, and what was done instead is recorded here in full rather than presented as the thing they approved",
+      "repository": "advanced-planning",
+      "branch": "loop-004-cigate",
+      "commits": {
+        "F13": "dd18cdb"
+      },
+      "head_moved": {
+        "from": "227c9a4",
+        "to": "dd18cdb"
+      },
+      "pushed": true,
+      "push_note": "the first amendment to record a push. Branch pushes for both repositories were authorised earlier today; all seven branches are on the remote and were verified there with git ls-remote. No tag, no PR, no merge -- the merge remains the operator's",
+      "findings_resolved": [
+        "F13"
+      ],
+      "findings_still_open": [],
+      "f13": {
+        "how_it_was_found": "not by a reviewer, and not by verifying a claim either. By asking why seven branch pushes produced zero CI runs. ci.yml triggers only on push/pull_request to main, which is correct and explains the silence -- but reading the jobs to confirm it turned up one that had never been able to pass",
+        "the_defect": "the Path Convention Audit job ran install_audit --layers source,project. .gitignore excludes .claude/* but TRACKS .claude/settings.json, so on a runner .claude/ exists while .claude/commands|agents|schemas do not. install_audit's 'not found -- skipped' guard tests directory presence, so one tracked file defeats it: the audit runs against empty surfaces and reports all 27 source files missing, exit 1. Measured identical on plain main and on a trial merge of all seven branches",
+        "why_the_approved_command_could_not_be_run": "the approved option read '--layers source'. _VALID_LAYER_PAIRS is {source,project | source,global | all} and the flag is validated against it, so that command exits 2 having audited nothing. The figure was mine and it was wrong; the decision it supported -- stop asking CI for the project layer -- was right and is what was implemented",
+        "why_not_the_minimal_valid_form": "'--layers source,global' alone IS valid and would have made the job green immediately, because a runner has no ~/.claude and install_audit skips a missing layer with a note and returns 0. That is a check that cannot fail -- the exact defect class F1 through F12 exist to remove -- and it would have been worse than the red job it replaced, because red at least tells the truth",
+        "what_was_done_instead": "the runner installs a real global layer first, then audits against it. HOME on a runner is disposable so the install costs nothing, and a pass now means the installer reproduces every source file byte-for-byte after EOL and launcher-path normalisation -- something nothing verified before. This is more than the one-line edit that was approved, and it is recorded as a deviation rather than folded in silently",
+        "proven_on_the_platform_that_matters": "CI is ubuntu-latest and this machine is Windows, so the first measurement was taken under Git Bash and then repeated on real Linux (WSL, python 3.12): clean install -> audit exit 0, 27 current / 0 stale / 0 missing; remove one installed file -> non-zero. The full job was then replayed on the merged tree under Linux -- path_audit PASS, install PASS, audit PASS",
+        "an_exit_code_that_lied_on_the_way_through": "an early WSL run appeared to show the audit printing 'drift detected' while exiting 0, which would have been a far worse defect than the one being fixed. It was not real: $? did not survive the PowerShell-to-WSL hop and came back empty. main() returns 1 correctly. Re-measured with if/then/else and no $? at all",
+        "the_check": "TestCIAuditsALayerItCanActuallyHave (2 checks). It parses the real workflow as literal text -- what CI executes is the command string, and no YAML dependency is added to the suite -- and rejects three things: a --layers value absent from install_audit's own _VALID_LAYER_PAIRS, imported rather than copied so it cannot drift; a pair naming a layer .gitignore keeps out of a fresh checkout; and a global audit with no install earlier in the same job. The third rule is the point, because the vacuous repair is the tempting one",
+        "the_vacuity_it_creates_and_how_it_is_closed": "a parser that matches nothing finds no invocations, reports no problems, and is indistinguishable from a correct workflow. So the class carries a parser self-test, and the live check carries a floor that fails if no install_audit invocation is found at all -- which also stops anyone 'fixing' a future failure by deleting the step",
+        "proven": "five degradations, all CAUGHT, every file restored byte-identical: the gitignored pair that had been red on every run; '--layers source', the approved command, which does not exist; the install step dropped, which is the vacuous repair; the parser blinded, where the self-test must fire; and the audit removed entirely, where the floor must",
+        "what_this_does_to_main": "main had two red jobs. loop-004-f7's 196c997 fixes the other one, test_sandbox_leaves_real_working_tree_untouched -- confirmed pre-existing by running it on pristine 227c9a4 with this change absent. On the merged tree both are green",
+        "scope": "two files. ci.yml gains an install step and switches the audit to source,global; test_install_audit.py gains the guard class. No change to install_audit.py itself -- its skip guard is arguably too weak, but that is a separate finding and not this one"
+      },
+      "suite": "808 passed, 0 failed on the trial merge of all seven (was 806; +2 new). On loop-004-cigate alone: 785 passed, 1 failed -- test_sandbox_leaves_real_working_tree_untouched, confirmed pre-existing on pristine 227c9a4 and fixed by loop-004-f7's 196c997"
+    },
+    {
+      "date": "2026-08-31",
+      "authorised_by": "operator decision 'Authorise me to open 7 PRs'. No merge authorisation exists and none is implied by this amendment; the branch push that carries the F14 fix was covered by the earlier push authorisation for both repositories",
+      "repository": "advanced-planning",
+      "branch": "loop-004-f7",
+      "commits": {
+        "F14": "134798c"
+      },
+      "head_moved": {
+        "from": "5c9aa20",
+        "to": "134798c"
+      },
+      "pushed": true,
+      "findings_resolved": [
+        "F14"
+      ],
+      "findings_still_open": [
+        "F15"
+      ],
+      "how_this_round_differs": "the twelve amendments before this one rest on evidence gathered on Windows -- reading code, running the suite here, and asking other models to look. This one rests on CI. Opening the pull requests was the first time any of this work had been executed on ubuntu-latest, and it immediately produced two findings that no amount of local verification could have produced, because the defects are invisible from this operating system",
+      "f14": {
+        "the_defect": "test_home_resolution_agreement.py set HOME to 'M:/ap_marker_home', a path that does not exist. Windows pwsh does not care. Linux pwsh does: it builds per-user state under $HOME while starting, and with HOME naming a missing directory it exits 70, 'The shell cannot be started', before Get-ApGlobalHome is ever reached. The six cases that set HOME had therefore failed on every Linux run of the workflow since dc88bba introduced the module in loop-002-envelope, while passing here the whole time",
+        "why_it_is_the_same_finding_as_f13": "F13 pointed an audit at a layer the runner could not have. F14 pointed a test at a home the runner's shell could not start in. Both produce a job whose result carries no information about the code, and both had been red on every run without anyone reading the red. The programme's own thesis -- a check whose subject is a string rather than a fact about the machine is not a check -- applies to the harness as squarely as to the code",
+        "the_repair": "the marker values become real directories. What the module asserts is unchanged: never the path, only which VARIABLE the answer came from, read off a marker token that is still the last path segment",
+        "the_second_repair": "the interpreter skips now escalate under AP_REQUIRE_ADAPTER_INTERPRETERS, which the workflow already sets and which test_adapter_lifecycle.py already honoured while this module did not. Measured with pwsh and sh off PATH: without the escalation the module reports 14 passed, 35 skipped, exit 0. A green run with 35 checks not executed is how this class hides",
+        "proven": "three rows. The original defect restored on disk fails the new guard; both interpreters removed from PATH with the escalation armed errors at collection; the same absence with the escalation off passes by skipping, which is the control that shows the escalation is the only thing separating the two. The file was restored byte-identical",
+        "proven_where_it_matters": "not on this machine. There is no pwsh under WSL here, so the Linux half was not provable locally and was not claimed to be. The proof is the pull-request workflow run on ubuntu-latest: 806 passed, 1 skipped, 0 failed (ubuntu-latest, py3.11, run 33382506714), against 6 failed / 799 passed on the run immediately before it",
+        "suite": "807 passed, 0 failed (Windows, AP_REQUIRE_ADAPTER_INTERPRETERS=1)"
+      },
+      "f15": {
+        "status": "OPEN -- a decision for the operator, not a defect with one obvious repair",
+        "how_it_surfaced": "fixing F14 uncovered it. The Python Tests job runs pytest and then 'Verify no external dependencies'; pytest had been failing first, so the later step had never once executed on any branch in this chain. Making the tests pass was what let CI reach it",
+        "the_finding": "ast_check reports platforms/python/state_validate.py:38 and :67 importing 'platforms', which is not in core/constraints.json's allowed_imports. Clean through loop-003-hostneutral; enters at loop-004-codex with state_validate.py; present on BOTH tips. So merging the two tips does not produce a green main -- which is a correction to what the pull request bodies say",
+        "why_it_is_not_just_a_missing_entry": "the allow-set is a list of stdlib module names and the check is named for external dependencies, so 'platforms' being absent reads at first like an oversight. But setup/claude-code/install.sh:449 copies platforms/python/ap_launcher.py to bin/ap.py, and install.sh:438 states that no install ships the other modules. So ap_launcher runs in a place where the platforms package does not exist, and a platforms import there is precisely the unreachable-runtime defect loop-002 was created to fix. Adding 'platforms' to the allow-set globally would remove the guard from the one file it protects",
+        "why_it_is_not_a_defect_in_state_validate_either": "state_validate is never installed, so its import is safe in practice, and its line 67 anchor is deliberate and documented: the package location is what lets it resolve core/state from any cwd, which is the same Contract 6 reasoning that forbids os.getcwd()",
+        "the_recommendation": "scope the exemption rather than widen the allow-set: permit the internal import for modules no install ships, and make the rule that ap_launcher.py must never import platforms an explicit check that can fail, rather than a property that currently holds by accident",
+        "why_it_is_being_left_to_the_operator": "it changes core/constraints.json, which is the project's dependency contract. Widening an allow-set is the decision-gated shape the kickoff names, and the controller has no authorisation to take it"
+      }
+    },
+    {
+      "date": "2026-08-31",
+      "authorised_by": "operator decision \"Add 'platforms' to the allow-set\", chosen from four options with the cost of this one stated in the option itself. The controller had recommended scoping the exemption instead; the operator chose the widening and that is what was implemented, without the recommended alternative being folded in alongside it",
+      "repository": "advanced-planning",
+      "branch": "loop-004-f7",
+      "commits": {
+        "F15": "764be1f"
+      },
+      "head_moved": {
+        "from": "134798c",
+        "to": "764be1f"
+      },
+      "pushed": true,
+      "findings_resolved": [
+        "F15"
+      ],
+      "findings_still_open": [],
+      "f15": {
+        "what_was_decided": "'platforms' joins core/constraints.json's allowed_imports. It is the project's own package rather than an external dependency, so the stdlib-only policy is intact",
+        "what_it_costs_and_where_that_is_written": "setup/claude-code/install.sh:449 copies ap_launcher.py to bin/ap.py, where the platforms package does not exist, so a platforms import in that one module would break the installed launcher and ast_check no longer catches it. install.sh:438 ships none of the other modules, so ap_launcher.py is the whole of the exposure. This is recorded in three places rather than left implicit -- the constraints.json note, the comment beside the entry in test_ast_check.py, and the commit message -- because the entry is precisely what removes the protection",
+        "the_alternative_not_taken": "scope the exemption to modules no install ships and make ap_launcher.py being stdlib-only an explicit test that can fail. That was the controller's recommendation and it was declined. It remains available as a follow-up and would restore the guard without reverting this decision",
+        "a_check_of_mine_that_failed_and_a_guard_that_did_not": "the controller concluded that nothing pinned the allow-set, from a grep truncated by head -20 whose visible matches were all .advanced-plans markdown. test_ast_check.py's test_canonical_entries_present pins the set by equality and failed on the change, which is exactly the design working: the allow-set cannot move without someone editing the gate and saying why. The reason now sits beside the entry as runpy's does. The lesson is the programme's own -- a search that was cut short is not a search that found nothing",
+        "also_fixed_in_passing": "CLAUDE.md's mirrored copy of the allow-set was missing runpy, which had been added to the JSON without the mirror following. The doc names constraints.json as authoritative, so the mirror was stale rather than contradictory, but it was stale before this branch and is now current",
+        "proven": "ast_check reports 0 violations in 17 files. Suite 821 passed on Windows; 806 passed / 1 skipped on ubuntu-latest in the pull-request run, and ast_check reports 'NONE -- 17 file(s) checked, 0 violations' on both. The pull request run on ubuntu-latest is green on Python Tests across 3.10, 3.11 and 3.12, JSON Schema Validation and Markdown Lint; the only remaining red on that branch is Path Convention Audit, which is loop-004-cigate's to fix and which it fixes",
+        "the_merged_result": "both tips trial-merged into a throwaway worktree off main: zero conflicts, 809 passed, 0 failed, ast_check clean. The tips touch disjoint files and each half is proven on Linux by its own pull-request run, so the correction recorded in amendment 13 -- that merging the tips would not give a green main -- is itself now superseded: it will"
+      }
+    },
+    {
+      "date": "2026-08-31",
+      "authorised_by": "two operator decisions taken together: 'Authorise me to merge both' (PRs #8 and #9 into main, which is the first merge authorisation this programme has had) and 'Add the targeted test' (restore the guard the F15 allow-set widening removed)",
+      "repository": "advanced-planning",
+      "commits": {
+        "the_guard": "16a502f"
+      },
+      "findings_resolved": [],
+      "findings_still_open": [],
+      "closes": "the loop-004 multi-model gate. All fifteen findings are in main",
+      "the_guard": {
+        "why_it_exists": "the F15 decision widened the allow-set, which was right for the sixteen modules no install ships -- their platforms imports resolve because they only ever run from the checkout -- and wrong for the ones that are shipped, where it removed the only thing checking them. This restores the protection for exactly those and no others, without reverting the decision",
+        "what_it_checks": "every platforms/python module an installer copies out of the checkout must import stdlib only. It reuses ast_check's own AST walk with the allow-set minus 'platforms', so there is no second copy of the rule to drift",
+        "the_subject_is_read_not_typed": "naming ap_launcher.py would have been this programme's own defect class -- a check whose subject is a string someone wrote rather than a fact read off the machine. The test parses the installers for their copy verb instead, so a module that starts being shipped is covered the day it starts. Reading it properly corrected the finding: SIX installers ship ap_launcher.py, across all three hosts, where F15 had described one",
+        "proven": "three reversible degradations, every file restored byte-identical. (1) ap_launcher.py imports platforms: CAUGHT, naming the module and all six shipping sites. (2) the shell copy verb changes so half the sites go invisible: CAUGHT by the discovery self-check, which is the row that separates a real reading from an empty one that passes. (3) the defect present AND 'platforms' back out of the allow-set: CAUGHT -- ast_check covers the shipped modules by itself in that world, and the guard says so and asks to be deleted rather than quietly duplicating coverage",
+        "suite": "823 passed on Windows"
+      },
+      "the_merge": {
+        "order_and_why": "#8 (loop-004-cigate) first, then #9 (loop-004-f7). Each tip's one red job was the other tip's to fix, so neither could go green alone. Merge commits, not squashes: the seven branches are a chain, and squashing would have left the other five branches' commits off main, so those pull requests would not have closed and the history would have diverged from what every amendment here cites",
+        "what_merging_the_first_tip_did": "#3, #4, #5, #6 and #7 closed as MERGED automatically, being ancestors, which is what the stack diagram in the pull request bodies predicted. Six of seven landed in one merge",
+        "main_before_and_after": "main at c7efad6, before any of this: Path Convention Audit FAILURE, Python Tests FAILURE. After #8 at da3d451: Path Convention Audit SUCCESS -- the first green that job has ever had -- with Python Tests still failing on exactly the F14 defect, 'Get-ApGlobalHome exited 70 ... The shell cannot be started', six cases, plus the pre-existing sandbox test. That is the diagnosis confirmed in production rather than argued from here. After #9 at 2288f43: all six jobs SUCCESS -- 810 passed / 1 skipped on 3.10, 3.11 and 3.12; ast_check 'NONE -- 17 file(s) checked, 0 violations'; Path Convention Audit 'PASSED WITH 7 SUPPRESSED'. The first green main this programme has produced",
+        "a_prediction_that_held": "#9's checks run against the pull request MERGED with main, not against its branch head, so once #8 was on main the audit fix was in #9's test tree without being on its branch. Its run went green on jobs its own branch cannot pass"
+      },
+      "what_this_closes": "the multi-model gate opened with nine findings and a NOT READY TO MERGE verdict. Fifteen findings later -- six of them found by acting on the first nine, two of them found only because opening the pull requests ran this work on Linux for the first time -- all fifteen are in main. The reviewers' verdict is left exactly as they wrote it: it was true of the tree they reviewed, and superseding it is what the amendments are for"
+    }
+  ]
+}

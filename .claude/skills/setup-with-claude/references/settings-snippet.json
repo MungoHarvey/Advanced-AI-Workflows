@@ -1,6 +1,5 @@
 {
-  "_comment": "Advanced AI Workflows — settings.json snippet. Merge these entries into your project's .claude/settings.json. The setup-with-claude skill does this automatically when invoked.",
-
+  "_comment": "Advanced AI Workflows \u2014 settings.json snippet. Merge these entries into your project's .claude/settings.json. The setup-with-claude skill does this automatically when invoked.",
   "permissions": {
     "allow": [
       "Write(.advanced-plans/**)",
@@ -9,27 +8,25 @@
       "Read(.advanced-plans/**)"
     ]
   },
-
   "hooks": {
     "PostToolUse": [
       {
-        "_comment": "Auto-trigger hook for gstack-to-plans. Fires ONLY when a Write tool call targets a path under ~/.gstack/projects/. Path filter is strict — must NOT fire on writes elsewhere (REG-7 tests this negatively). The hook surfaces /gstack-to-plans to the user in Claude's next turn; it does not invoke it autonomously.",
+        "_comment": "Auto-trigger hook for gstack-to-plans. Fires ONLY when a Write tool call targets a path under the user's .gstack/projects/ directory whose filename matches the gstack design-doc pattern. Both the written path and the prefix are normalised through path.resolve before comparison - the version before 2026-09-01 compared a native path against a string built as homedir + '/.gstack/projects/', which on Windows is a mixed-separator prefix no real path matches, so the hook could never fire there. The hook surfaces /gstack-to-plans to the user in Claude's next turn; it does not invoke it autonomously.",
         "matcher": "Write",
         "hooks": [
           {
             "type": "command",
-            "command": "node -e \"const p = process.env.CLAUDE_TOOL_INPUT_PATH || ''; const h = require('os').homedir(); const prefix = h + '/.gstack/projects/'; if (p.startsWith(prefix)) { const f = require('path').basename(p); if (/-design-\\d/.test(f)) { console.log('[aaw-hook] gstack design doc written: ' + p); console.log('[aaw-hook] Suggestion: invoke /gstack-to-plans to archive this design doc into .advanced-plans/specs/'); } }\" 2>/dev/null || true"
+            "command": "node -e \"const path=require('path'),os=require('os');const raw=process.env.CLAUDE_TOOL_INPUT_PATH||'';const norm=s=>{const r=path.resolve(s).split(path.sep).join('/');return process.platform==='win32'?r.toLowerCase():r;};if(raw){const p=norm(raw);const prefix=norm(path.join(os.homedir(),'.gstack','projects'))+'/';if(p.startsWith(prefix)&&/-design-\\d/i.test(path.basename(raw))){console.log('[aaw-hook] gstack design doc written: '+raw);console.log('[aaw-hook] Suggestion: invoke /gstack-to-plans to archive this design doc into .advanced-plans/specs/');}}\" 2>/dev/null || true"
           }
         ]
       }
     ]
   },
-
   "_merge_instructions": {
     "permissions.allow": "Append the four .advanced-plans/** entries to the existing permissions.allow array. Do not duplicate entries that already exist.",
-    "hooks.PostToolUse": "Append the Write matcher entry to the existing PostToolUse array. If a PostToolUse Write matcher already exists, add this hook to its hooks array rather than creating a duplicate matcher.",
-    "scope_note": "The PostToolUse Write hook checks CLAUDE_TOOL_INPUT_PATH at runtime. It fires only when the written path starts with ~/.gstack/projects/ AND the filename matches the gstack design-doc pattern (*-design-{datetime}.*). Writes to any other path produce no output and exit 0 — the hook does not interfere with normal development.",
-    "windows_note": "On Windows, ~/.gstack/projects/ resolves to %USERPROFILE%\\.gstack\\projects\\. The node -e command handles this via os.homedir() which is cross-platform. The command exits 0 silently when the path does not match — no false positives.",
-    "debounce_note": "Idempotency is provided by the gstack-to-plans SKILL.md itself (Step 3: if destination is identical to source, it is a no-op). The hook fires per-write but the skill exits cleanly on re-run with no new content — satisfying REG-7 sub-case (d)."
+    "hooks.PostToolUse": "Append the Write matcher entry to the existing PostToolUse array. If a PostToolUse Write matcher already exists, add this hook to its hooks array rather than creating a duplicate matcher. If that array already holds a hook whose command mentions [aaw-hook] but does not match the command here, it is a SUPERSEDED copy from an earlier setup run: replace it, do not append beside it. Appending is how a machine ends up running a fixed hook and the bug it replaced at the same time - and the broken one is silent, so nobody would notice.",
+    "scope_note": "The PostToolUse Write hook checks CLAUDE_TOOL_INPUT_PATH at runtime. It fires only when the written path starts with ~/.gstack/projects/ AND the filename matches the gstack design-doc pattern (*-design-{datetime}.*). Writes to any other path produce no output and exit 0 \u2014 the hook does not interfere with normal development.",
+    "windows_note": "os.homedir() is cross-platform, but it returns a NATIVE path - C:\\Users\\name with backslashes - so concatenating '/.gstack/projects/' onto it produces a prefix that matches nothing. That was a real defect, shipped and inert on Windows until 2026-09-01; it is why both sides now go through path.resolve and are compared with separators normalised to '/' and, on win32, lowercased. tests/packaging/test-hook-path.sh runs the shipped command against native, POSIX and mixed path shapes, and mutates the normalisation away to prove those cases can fail.",
+    "debounce_note": "Idempotency is provided by the gstack-to-plans SKILL.md itself (Step 3: if destination is identical to source, it is a no-op). The hook fires per-write but the skill exits cleanly on re-run with no new content \u2014 satisfying REG-7 sub-case (d)."
   }
 }

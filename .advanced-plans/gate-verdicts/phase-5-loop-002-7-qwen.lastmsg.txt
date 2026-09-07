@@ -1,0 +1,299 @@
+ and/or CLAUDE.md, so the fork can go back to being a byte-identical mirror of upstream with a patch of ZERO.                              31% used
+                                                                                                                                           $0.00 spent
+ READ THESE, in this order:
+ 1. .claude/skills/setup-with-claude/references/claude-md-routing.md  - the block itself, the deliverable                                  LSP
+ 2. .advanced-plans/evidence/2026-08-26-superpowers-port.md  - sections "loop-002-2" and "loop-002-4 and loop-002-5"                       LSPs are disabled
+ 3. .advanced-plans/phases/phase-5/loops.md  - the ralph-loop-002 yaml block
+ 1. .claude/skills/setup-with-claude/references/claude-md-routing.md  - the block itself, the deliverable
+ 2. .advanced-plans/evidence/2026-08-26-superpowers-port.md  - sections "loop-002-2" and "loop-002-4 and loop-002-5"                       Phase gate review: superpowers fork
+ 3. .advanced-plans/phases/phase-5/loops.md  - the ralph-loop-002 yaml block                                                               merge strategy
+ 4. .advanced-plans/phases/phase-5/plan.md  - the section headed "Amendment - 2026-08-26"
+                                                                                                                                           Context
+ ANSWER THESE FIVE QUESTIONS. Be specific, cite file:line, and be willing to say a thing is wrong.                                         80,955 tokens
+                                                                                                                                           31% used
+ Q1. DOES THE BLOCK OVER-REACH INTO THE USER'S OWN INSTRUCTIONS? This block is inserted into a file the user wrote, between markers,       $0.00 spent
+ by an installer. It carries a disclaimer saying it does not claim precedence over anything outside its markers. It ALSO now says,
+ under Brainstorming, that where it and a skill disagree about a default, the block wins. Are those two claims consistent? Is the          LSP
+ second one too broad? Could either sentence, as written, cause an agent to override something a user wrote in their own CLAUDE.md?        LSPs are disabled
+ Quote the exact sentences you are judging.
+ under Brainstorming, that where it and a skill disagree about a default, the block wins. Are those two claims consistent? Is the
+ second one too broad? Could either sentence, as written, cause an agent to override something a user wrote in their own CLAUDE.md?        Phase gate review: superpowers fork
+ Quote the exact sentences you are judging.                                                                                                merge strategy
+ Q2. IS THE INSTALLED-OR-NOT TEST SOUND? Every conditional rule keys off .aaw/installed.json -> components["<name>"]["installed"] ==       Context
+ true. Find any rule in the block that is conditional in intent but not actually gated on that predicate, or that could fire in a          80,955 tokens
+ project where the manifest is missing or malformed. One such defect was already found and fixed here (front-door rule 5); look for        31% used
+ others rather than re-reporting that one.                                                                                                 $0.00 spent
+ Q3. IS THE BLOCK HOST-NEUTRAL? It must contain no .claude/, .cursor/, .opencode/ path, no Claude-only tool name presented as required,    LSP
+  and no host-specific permission syntax. AskUserQuestion is mentioned - judge whether it is presented as an example or as a               LSPs are disabled
+ requirement, and say which it should be.
+ Q3. IS THE BLOCK HOST-NEUTRAL? It must contain no .claude/, .cursor/, .opencode/ path, no Claude-only tool name presented as required,
+  and no host-specific permission syntax. AskUserQuestion is mentioned - judge whether it is presented as an example or as a               Phase gate review: superpowers fork
+ requirement, and say which it should be.                                                                                                  merge strategy
+ Q4. ARE THE PROOFS WORTH ANYTHING? The evidence claims ACC-04 and ACC-05 pass. Judge the METHOD, not the conclusion: hash-diff of a       Context
+ fixture against a pre-run baseline, two fixtures differing only in the manifest, a decoy .advanced-plans/ directory in the project        80,955 tokens
+ that does NOT have the framework, and six rounds of which two failed and drove fixes. What would you still not believe, and what          31% used
+ single additional check would you demand?                                                                                                 $0.00 spent
+
+ Q5. MIRROR OR PATCH? Given that superpowers' mirror/upstream-2026-08-26 is the same commit as upstream/main with an empty tree diff,      LSP
+ state whether this fork should now be published as a pure mirror, or whether some patch should be retained - and if retained, exactly     LSPs are disabled
+ what and why.
+ Q5. MIRROR OR PATCH? Given that superpowers' mirror/upstream-2026-08-26 is the same commit as upstream/main with an empty tree diff,
+ state whether this fork should now be published as a pure mirror, or whether some patch should be retained - and if retained, exactly     Phase gate review: superpowers fork
+ what and why.                                                                                                                             merge strategy
+
+ FORMAT. Start with a one-line verdict: PASS, PASS WITH FINDINGS, or BLOCKED. Then answer Q1-Q5 under those headings. Then list every      Context
+ finding as: severity (critical/major/minor), file:line, what is wrong, what you would do. End with a line naming your model exactly -     80,955 tokens
+ the model identifier, not the product name. Do not write any file.                                                                        31% used
+                                                                                                                                           $0.00 spent
+
+     + Thought: 445ms                                                                                                                          LSP
+     → Read .claude\skills\setup-with-claude\references\claude-md-routing.md
+     + Thought: 445ms
+     → Read .claude\skills\setup-with-claude\references\claude-md-routing.md                                                                   merge strategy
+     → Read .advanced-plans\evidence\2026-08-26-superpowers-port.md
+     → Read .advanced-plans\phases\phase-5\loops.md                                                                                            Context
+     → Read .advanced-plans\phases\phase-5\plan.md                                                                                             80,955 tokens
+                                                                                                                                               31% used
+     PASS WITH FINDINGS                                                                                                                        $0.00 spent
+
+     Q1. DOES THE BLOCK OVER-REACH INTO THE USER'S OWN INSTRUCTIONS?                                                                           LSP
+                                                                                                                                               LSPs are disabled
+     Verdict: The two claims are logically consistent, but the precedence claim is too broad and creates a real override risk.
+
+     The two sentences in question are:
+
+     1. Precedence disclaimer (lines 7-10): "Everything outside these two markers belongs to whoever wrote this file. This block adds
+        routing; it does not override, reorder, or claim precedence over instructions written above or below it. Where it conflicts with
+     Q1. DOES THE BLOCK OVER-REACH INTO THE USER'S OWN INSTRUCTIONS?
+                                                                                                                                               Phase gate review: superpowers fork
+     Verdict: The two claims are logically consistent, but the precedence claim is too broad and creates a real override risk.                 merge strategy
+
+     The two sentences in question are:                                                                                                        Context
+                                                                                                                                               80,955 tokens
+     1. Precedence disclaimer (lines 7-10): "Everything outside these two markers belongs to whoever wrote this file. This block adds          31% used
+        routing; it does not override, reorder, or claim precedence over instructions written above or below it. Where it conflicts with       $0.00 spent
+        the rest of this file, the rest of this file wins."
+     2. Skill-precedence claim (lines 94-99): "Where this section and the skill disagree about a default, this section wins. These are         LSPs are disabled
+        project-level instructions: a skill's built-in default is what applies in a project that has said nothing on the subject, and this
+
+     2. Skill-precedence claim (lines 94-99): "Where this section and the skill disagree about a default, this section wins. These are         Phase gate review: superpowers fork
+        project-level instructions: a skill's built-in default is what applies in a project that has said nothing on the subject, and this     merge strategy
+        project has said something."
+                                                                                                                                               Context
+     Consistency: The two claims do not contradict each other. The first sentence governs the relationship between the block and the rest      80,955 tokens
+     of the file (user-authored content outside the markers). The second governs the relationship between the block and skills (external       31% used
+     code that the agent loads). These are two different axes: horizontal (block vs. file) and vertical (project instructions vs. skill        $0.00 spent
+     defaults).
+                                                                                                                                               LSP
+     The risk: The second sentence is broader than it needs to be. It says "this section wins" over the skill's defaults, but it does not      LSPs are disabled
+     limit itself to the three specific overrides it actually carries (spec location, terminal state, structured questions). An agent
+
+     The risk: The second sentence is broader than it needs to be. It says "this section wins" over the skill's defaults, but it does not      Phase gate review: superpowers fork
+     limit itself to the three specific overrides it actually carries (spec location, terminal state, structured questions). An agent          merge strategy
+     reading "Where this section and the skill disagree about a default, this section wins" could infer that any statement in the
+     Brainstorming section outranks any skill default, even ones the section does not mention. The saving clause ("Everything the section      Context
+     does not mention... stays exactly as the skill has it") mitigates this, but it comes after the broad claim, and an agent that stops       80,955 tokens
+     reading after the first bold sentence could already have drawn the wrong conclusion.                                                      31% used
+     Could it override user content? No, not directly. The first sentence explicitly surrenders precedence to the rest of the file. But
+     the second sentence could cause an agent to override a skill default in a way the user did not intend, if the user had relied on that     LSP
+     skill default and was unaware this block changed it. The block does not claim to override the user's instructions, but it does claim      LSPs are disabled
+     to override the skill's instructions, and the user may have chosen the skill for its defaults.
+
+     Q2. IS THE INSTALLED-OR-NOT TEST SOUND?
+
+     Verdict: One defect was already found and fixed (rule 5); one other conditional rule is not properly gated.
+
+     the second sentence could cause an agent to override a skill default in a way the user did not intend, if the user had relied on that
+     skill default and was unaware this block changed it. The block does not claim to override the user's instructions, but it does claim      Phase gate review: superpowers fork
+     to override the skill's instructions, and the user may have chosen the skill for its defaults.                                            merge strategy
+
+     Q2. IS THE INSTALLED-OR-NOT TEST SOUND?                                                                                                   Context
+     Verdict: One defect was already found and fixed (rule 5); one other conditional rule is not properly gated.                               31% used
+                                                                                                                                               $0.00 spent
+     The block defines the predicate correctly at lines 14-22, and the failure mode is correctly stated at lines 32-35. However:
+                                                                                                                                               LSP
+     Finding: Lines 152-159 (Companion Tools) are conditional in intent but not properly gated. The section reads:                             LSPs are disabled
+
+
+     Finding: Lines 152-159 (Companion Tools) are conditional in intent but not properly gated. The section reads:                             Phase gate review: superpowers fork
+                                                                                                                                               merge strategy
+"When a user is planning work in a project where Advanced Planning is installed and superpowers is not, say so once and offer it...
+The reverse also holds — in a project with superpowers but no Advanced Planning, a user mentions Advanced Planning for."                Context
+                                                                                                                                               80,955 tokens
+     This rule intends to fire only when the manifest says one component is installed and the other is not. But the text does not              31% used
+     explicitly restate the manifest-read requirement here. An agent could infer "Advanced Planning is installed" from the presence of .       $0.00 spent
+     advanced-plans/ (the very failure mode the block exists to prevent) because this section does not say "read the manifest" the way the
+     Front-Door Rules do.                                                                                                                      LSP
+     Why this matters: The without-ap fixture in the behaviour proof had .advanced-plans/specs/borrowed.md on disk. If an agent read
+     Front-Door Rules do.
+     Why this matters: The without-ap fixture in the behaviour proof had .advanced-plans/specs/borrowed.md on disk. If an agent read           merge strategy
+     Companion Tools without carrying the manifest-read discipline forward from How to Tell What Is Installed, it could conclude Advanced
+     Planning was present and recommend superpowers incorrectly. The section should explicitly say: "Read .aaw/installed.json to determine     Context
+     whether Advanced Planning or superpowers is installed. Do not infer installation from the presence of directories."                       80,955 tokens
+                                                                                                                                               31% used
+     No other defects found. The Front-Door Rules (1-7) all either explicitly gate on "When Advanced Planning is installed" (rules 2, 3, 5,    $0.00 spent
+      7) or are unconditional by design (rules 1, 4, 6). The Brainstorming section gates its two Advanced-Planning-conditional additions
+     correctly (items 2 and 3 both say "When Advanced Planning is installed").                                                                 LSP
+     Q3. IS THE BLOCK HOST-NEUTRAL?
+
+     Verdict: Yes, with one caveat about AskUserQuestion.
+
+     No host-specific paths: The grep confirms zero hits for .claude/, .cursor/, .opencode/, or .agents/ (line 183-184 of evidence file).
+
+     correctly (items 2 and 3 both say "When Advanced Planning is installed").
+     Q3. IS THE BLOCK HOST-NEUTRAL?                                                                                                            merge strategy
+
+     Verdict: Yes, with one caveat about AskUserQuestion.                                                                                      Context
+                                                                                                                                               80,955 tokens
+     No host-specific paths: The grep confirms zero hits for .claude/, .cursor/, .opencode/, or .agents/ (line 183-184 of evidence file).      31% used
+                                                                                                                                               $0.00 spent
+     No host-specific permission syntax: The block does not mention permission tiers, tool allowlists, or any harness-specific permission
+     configuration.                                                                                                                            LSP
+     AskUserQuestion presentation: Line 111-114 reads:
+
+"When you ask the user clarifying questions and the answers are a small set of known alternatives, ask them with the harness's
+structured question tool (AskUserQuestion in Claude Code) rather than as free prose."
+
+     This is presented as an example, not a requirement. The sentence continues: "Where the harness has no such tool, ask in prose as
+     configuration.
+     AskUserQuestion presentation: Line 111-114 reads:                                                                                         merge strategy
+
+"When you ask the user clarifying questions and the answers are a small set of known alternatives, ask them with the harness's          Context
+structured question tool (AskUserQuestion in Claude Code) rather than as free prose."                                                   80,955 tokens
+                                                                                                                                               31% used
+     This is presented as an example, not a requirement. The sentence continues: "Where the harness has no such tool, ask in prose as          $0.00 spent
+     usual — this is a presentation preference, not a gate." That is the correct shape: it names a concrete tool for the harness that has
+     it, and explicitly provides a fallback for harnesses that do not.                                                                         LSP
+     What should change: Nothing. The presentation is already correct. If anything, the parenthetical could be made more explicit by
+     it, and explicitly provides a fallback for harnesses that do not.
+     What should change: Nothing. The presentation is already correct. If anything, the parenthetical could be made more explicit by           merge strategy
+     saying "(AskUserQuestion in Claude Code, or the equivalent structured-question tool in your harness)" to reinforce that it is an
+     example, but the current wording already achieves host neutrality.                                                                        Context
+                                                                                                                                               80,955 tokens
+     Q4. ARE THE PROOFS WORTH ANYTHING?                                                                                                        31% used
+                                                                                                                                               $0.00 spent
+     Verdict: The method is sound and caught two real defects, but there is one thing I would still not believe without an additional
+     check.                                                                                                                                    LSP
+                                                                                                                                               LSPs are disabled
+     What the method did right:
+
+     - Hash-diff against baselines, not worker self-reporting (line 382-384)
+     - Two fixtures differing only in the manifest predicate (line 358-361)
+     - A decoy .advanced-plans/ directory in without-ap that was not read as installation (line 361, 497-498)
+     - Six rounds, two of which failed and drove fixes (F1: rule 5 unconditional; F2: missing precedence claim over skills)
+     check.
+                                                                                                                                               Phase gate review: superpowers fork
+     What the method did right:                                                                                                                merge strategy
+
+     - Hash-diff against baselines, not worker self-reporting (line 382-384)                                                                   Context
+     - Two fixtures differing only in the manifest predicate (line 358-361)                                                                    80,955 tokens
+     - A decoy .advanced-plans/ directory in without-ap that was not read as installation (line 361, 497-498)                                  31% used
+     - Six rounds, two of which failed and drove fixes (F1: rule 5 unconditional; F2: missing precedence claim over skills)                    $0.00 spent
+     - Mutation testing on the installer (line 299-309)
+                                                                                                                                               LSP
+     What I would still not believe: That the block is actually delivered to non-Claude harnesses in the real world, not just in the test      LSPs are disabled
+     fixture. The evidence shows that opencode received AGENTS.md in the fixture (line 459-460), but that was a fixture set up by the
+
+     What I would still not believe: That the block is actually delivered to non-Claude harnesses in the real world, not just in the test      Phase gate review: superpowers fork
+     fixture. The evidence shows that opencode received AGENTS.md in the fixture (line 459-460), but that was a fixture set up by the          merge strategy
+     controller. I do not have evidence that a fresh opencode or codex session in a real project that ran aaw init would receive the block
+     automatically.                                                                                                                            Context
+                                                                                                                                               80,955 tokens
+     Single additional check I would demand: A fresh project, initialized by aaw init (not by manually copying AGENTS.md), then a fresh        31% used
+     opencode or codex session started in that project with no controller intervention, given the same envelope, and the result checked.       $0.00 spent
+     This would prove that the delivery mechanism (the installer merging the block into the instruction file that the harness auto-loads)
+     works end-to-end, not just that the block is readable when placed in front of an agent by hand.                                           LSP
+     Why the existing evidence is not quite enough: The fixture had AGENTS.md placed in it by the controller (line 362 says the block was
+     works end-to-end, not just that the block is readable when placed in front of an agent by hand.
+     Why the existing evidence is not quite enough: The fixture had AGENTS.md placed in it by the controller (line 362 says the block was      merge strategy
+     "byte-identical between the two"). That proves the block works when present, but not that aaw init puts it there in a way that
+     survives to a fresh agent session. The installer tests (loop-002-3) prove idempotency, but they are Python tests, not an end-to-end       Context
+     harness session.                                                                                                                          80,955 tokens
+                                                                                                                                               31% used
+     Q5. MIRROR OR PATCH?                                                                                                                      $0.00 spent
+
+     Verdict: The fork should now be published as a pure mirror. No patch should be retained.                                                  LSP
+                                                                                                                                               LSPs are disabled
+     Reasoning:
+
+     1. All four intents are carried by the fenced block:
+        - SP-1 (spec location): Brainstorming item 2, lines 118-121
+        - SP-2 (terminal state → phase planning): Brainstorming item 3, lines 123-128
+        - SP-3 (structured clarifying questions): Brainstorming item 1, lines 110-115
+     Verdict: The fork should now be published as a pure mirror. No patch should be retained.
+                                                                                                                                               Phase gate review: superpowers fork
+     Reasoning:                                                                                                                                merge strategy
+
+     1. All four intents are carried by the fenced block:                                                                                      Context
+        - SP-1 (spec location): Brainstorming item 2, lines 118-121                                                                            80,955 tokens
+        - SP-2 (terminal state → phase planning): Brainstorming item 3, lines 123-128                                                          31% used
+        - SP-3 (structured clarifying questions): Brainstorming item 1, lines 110-115                                                          $0.00 spent
+        - SP-4a (companion recommendation): Companion Tools, lines 152-159
+                                                                                                                                               LSP
+     2. The mirror is byte-identical to upstream: Line 509-511 of evidence, line 249 of loops.md: git diff --quiet upstream/main..mirror/      LSPs are disabled
+        upstream-2026-08-26 exits 0.
+
+     3. No host-specific content remains in the fork: The block is host-neutral (Q3), and nothing in the fork needs to point at AAW
+        because the block is merged into the project's instruction file by the installer, which every harness reads.
+
+     4. The patch was never about code; it was about routing authority. The four intents are all about "when the agent is in this
+
+     2. The mirror is byte-identical to upstream: Line 509-511 of evidence, line 249 of loops.md: git diff --quiet upstream/main..mirror/      Phase gate review: superpowers fork
+        upstream-2026-08-26 exits 0.                                                                                                           merge strategy
+
+     3. No host-specific content remains in the fork: The block is host-neutral (Q3), and nothing in the fork needs to point at AAW            Context
+        because the block is merged into the project's instruction file by the installer, which every harness reads.                           80,955 tokens
+     4. The patch was never about code; it was about routing authority. The four intents are all about "when the agent is in this              $0.00 spent
+        situation, do this thing." That is exactly what an instruction file is for, and the block is read before any skill loads (design
+        spec lines 206-209, 281, 598-599). A patch inside the fork would be redundant: the agent would read the block first and never load     LSP
+        the skill with the old behaviour.                                                                                                      LSPs are disabled
+
+        spec lines 206-209, 281, 598-599). A patch inside the fork would be redundant: the agent would read the block first and never load
+        the skill with the old behaviour.                                                                                                      Phase gate review: superpowers fork
+                                                                                                                                               merge strategy
+     What would justify retaining a patch? Only if some intent could not be expressed as an instruction. For example, if the integration
+     required a code change to a skill that the block could not override (because the skill did not have a configurable default, or            Context
+     because the block's precedence disclaimer prevented it from claiming authority over the skill). But:                                      80,955 tokens
+                                                                                                                                               31% used
+     - The block now explicitly claims precedence over skill defaults in the Brainstorming section (lines 94-99).                              $0.00 spent
+     - The skills themselves (brainstorming, writing-plans) were not modified in the fixtures (line 488, 499-500).
+     - Round 6 passed with the Architectural path invoking /new-phase and citing rule 5 as its reason (line 484-485).                          LSP
+                                                                                                                                               LSPs are disabled
+     Conclusion: Publish the mirror. The patch is zero, and the intent is fully carried by the block.
+
+     ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+     FINDINGS
+
+     ┌────────┬───────────────────┬─────────────────────────────────────────────────┬─────────────────────────────────────────────────────┐
+Severity│File:Line          │What is wrong                                    │What I would do                                      │
+     ├────────┼───────────────────┼─────────────────────────────────────────────────┼─────────────────────────────────────────────────────┤
+major   │claude-md-routing. │The precedence claim over skill defaults is too  │Narrow the claim to the three specific overrides:    │
+       │md:94-99           │broad; it could cause an agent to override a     │"Where this section specifies a spec location,       │
+       │                   │skill default that the section does not mention, │terminal state, or question format that differs from │
+       │                   │despite the saving clause.                       │the skill's default, this section wins for those     │
+       │                   │                                                 │three things only."                                  │
+     ├────────┼───────────────────┼─────────────────────────────────────────────────┼─────────────────────────────────────────────────────┤
+minor   │claude-md-routing. │The Companion Tools section is conditional in    │Add an explicit gate: "Read .aaw/installed.json to   │
+       │md:152-159         │intent but does not explicitly restate the       │determine whether Advanced Planning or superpowers   │
+       │                   │manifest-read requirement, creating a risk that  │is installed. Do not infer installation from the     │
+       │                   │an agent infers installation from directory      │presence of .advanced-plans/ or any other directory."│
+       │                   │presence.                                        │                                                     │
+     ├────────┼───────────────────┼─────────────────────────────────────────────────┼─────────────────────────────────────────────────────┤
+minor   │claude-md-routing. │AskUserQuestion is named as an example, but a    │Add a parenthetical: "(AskUserQuestion in Claude     │
+       │md:111             │non-Claude user might not know what the          │Code, or the equivalent structured-question tool in  │
+       │                   │equivalent is in their harness.                  │your harness)" to reinforce host neutrality.         │
+     └────────┴───────────────────┴─────────────────────────────────────────────────┴─────────────────────────────────────────────────────┘
+
+     ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+     Model: Qwen/Qwen3.5-397B-A17B-FP8
+
+     ▣  Build · Qwen3.5 397B (ELM, on-campus only) · 54.8s
+
+
+
+                                                                                                                                           ~\Coding\Advanced-AI-Workflows:docs/
+ Build · Qwen3.5 397B (ELM, on-campus only) ELM Proxy (Edinburgh)                                                                          herdr-v0.2-import
+
+   C:\Users\mharvey2\Coding\Advanced-AI-Workflows                                                              81.0K (31%)  ctrl+p commands    • OpenCode 1.18.23

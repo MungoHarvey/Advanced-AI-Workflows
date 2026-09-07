@@ -1,0 +1,19 @@
+Review result: changes requested. I reviewed through `8cd3705`.
+
+1. **[P1] Supported installers distribute commands without their required launcher** — [new-phase.md:125](/C:/Users/mharvey2/Coding/advanced-planning/platforms/claude-code/commands/new-phase.md:125)
+
+   The setup installers’ global branches exit before provisioning the runtime ([install.sh:168](/C:/Users/mharvey2/Coding/advanced-planning/setup/claude-code/install.sh:168), [install.ps1:146](/C:/Users/mharvey2/Coding/advanced-planning/setup/claude-code/install.ps1:146)). The separately documented platform installer also copies these commands but never creates `.advanced-plans/bin/ap.py` or `runtime.json` ([platform installer:88](/C:/Users/mharvey2/Coding/advanced-planning/platforms/claude-code/install.sh:88)). Those supported installation paths now fail with “can’t open file … ap.py.” The installer regression test covers only the two setup project-install paths.
+
+2. **[P1] `/sync-install` cannot repair the stale runtime it depends on** — [sync-install.md:46](/C:/Users/mharvey2/Coding/advanced-planning/platforms/claude-code/commands/sync-install.md:46)
+
+   Step 2 invokes the launcher before step 4b repairs it. A stale manifest returns exit 3, but step 2 handles only exits 0, 1, and 2; a missing launcher returns Python exit 2 and is treated as a configuration error. Consequently, the repair at [sync-install.md:108](/C:/Users/mharvey2/Coding/advanced-planning/platforms/claude-code/commands/sync-install.md:108) is unreachable in both intended recovery cases. The new test checks only for matching strings, not command sequencing.
+
+3. **[P2] Subdirectory reachability is masked by absolute-path testing** — [test_ap_launcher.py:145](/C:/Users/mharvey2/Coding/advanced-planning/platforms/python/tests/test_ap_launcher.py:145)
+
+   The resolver walks upward, but actual call sites first open `.advanced-plans/bin/ap.py` relative to the current directory ([next-loop.md:77](/C:/Users/mharvey2/Coding/advanced-planning/platforms/claude-code/commands/next-loop.md:77)). From a project subdirectory, Python fails before `find_manifest()` can run. The test passes an absolute launcher path and therefore does not reproduce the real invocation. I confirmed the relative invocation returns exit 2 from a subdirectory.
+
+4. **[P2] Valid JSON with the wrong shape bypasses the actionable guard** — [ap_launcher.py:145](/C:/Users/mharvey2/Coding/advanced-planning/platforms/python/ap_launcher.py:145)
+
+   Only JSON syntax errors are caught. A manifest containing `[]` raises `AttributeError` on `data.get`; `{"source_root": 1}` similarly fails on `.strip()`. I reproduced the former traceback. Validate that the document is an object and `source_root` is a string so malformed manifests consistently produce exit 3 and the promised repair guidance.
+
+The source-checkout `--check` path passed. Full pytest execution was unavailable because this review environment has no writable temporary directory; collection found 22 launcher tests.

@@ -1,0 +1,206 @@
+{
+  "gate": "post-release multi-model review of advanced-planning 0.17.0",
+  "date": "2026-08-31",
+  "authorised_by": "operator instruction: 'We should also conduct a full code review (high) and security review. use multiple platforms to get different viewpoints'",
+  "reviewed_tree": {
+    "repository": "advanced-planning",
+    "branch": "main",
+    "commit": "a03b122",
+    "note": "the released tree, AFTER the loop-004 work merged. This is a separate gate from phase-6-loop-004-5-multimodel.json, which reviewed the branches; that artifact is not amended by this one"
+  },
+  "method": {
+    "tool": "multi-model-review skill, three independent fan-outs",
+    "reviewers_per_round": [
+      "cursor (cursor-grok-4.6-medium)",
+      "opencode (Qwen3.5-397B)",
+      "claude"
+    ],
+    "read_only": "cursor --mode ask, opencode --agent plan, claude --permission-mode plan",
+    "scoping": "three rounds rather than one, so no envelope approached the 200000-byte truncation that gutted the loop-004-5 comparison. Largest was 139058 bytes"
+  },
+  "rounds": [
+    {
+      "round": "security",
+      "dir": "advanced-planning-20260831-140618",
+      "scope": "setup/claude-code and setup/codex, install and uninstall, sh and ps1 (8 files)",
+      "envelope_bytes": 139058,
+      "reviewers_completed": 3,
+      "reviewers_failed": [
+        "agy -- never started; pane never drew"
+      ],
+      "counts_critical_important_minor": {
+        "claude": [
+          4,
+          7,
+          5
+        ],
+        "cursor": [
+          5,
+          6,
+          0
+        ],
+        "opencode": [
+          3,
+          4,
+          3
+        ]
+      },
+      "verdicts": {
+        "claude": "No",
+        "cursor": "No",
+        "opencode": "With Fixes"
+      },
+      "consensus_findings": 5
+    },
+    {
+      "round": "code A -- the runtime and check layer",
+      "dir": "advanced-planning-20260831-142809",
+      "scope": "ap_launcher, install_audit, path_audit, ast_check, state_validate, minischema, versioning, history_log",
+      "envelope_bytes": 100745,
+      "reviewers_completed": 3,
+      "counts_critical_important_minor": {
+        "claude": [
+          5,
+          17,
+          5
+        ],
+        "cursor": [
+          3,
+          8,
+          2
+        ],
+        "opencode": [
+          4,
+          5,
+          4
+        ]
+      },
+      "verdicts": {
+        "claude": "No",
+        "cursor": "With Fixes",
+        "opencode": "With Fixes"
+      },
+      "consensus_findings": 1
+    },
+    {
+      "round": "code B -- orchestration and state",
+      "dir": "advanced-planning-20260831-143621",
+      "scope": "handoff_digest, state_manager, context_meter, codex_gate, plan_io, remediation_controller, handoff, remediate",
+      "envelope_bytes": 114045,
+      "reviewers_completed": 3,
+      "counts_critical_important_minor": {
+        "claude": [
+          5,
+          17,
+          9
+        ],
+        "cursor": [
+          2,
+          11,
+          2
+        ],
+        "opencode": [
+          5,
+          5,
+          4
+        ]
+      },
+      "verdicts": {
+        "claude": "No",
+        "cursor": "No",
+        "opencode": "With Fixes"
+      },
+      "consensus_findings": 5
+    }
+  ],
+  "verdict": "NOT READY TO TAG",
+  "verdict_is_the_controllers": "the reviewers' own verdicts are recorded per round above and are not overwritten. This line is the controller's reading of them: seven of the nine reviewer verdicts are 'No' or 'With Fixes', and none is an unqualified yes",
+  "reproduced_by_the_controller": {
+    "note": "each of these the controller ran itself against the released tree. A reviewer's report is not evidence; this list is",
+    "the_defect_class_recurs_in_the_modules_built_to_catch_it": [
+      "ast_check on a nonexistent path: WARN, 'No .py files found to check.', exit 0",
+      "install_audit --root <nonexistent> --layers source,project: 'nothing to audit', exit 0",
+      "path_audit --root <empty dir>: exit 0, and it PRINTS a hardcoded list of thirteen 'scanned roots' it never opened -- the success message interpolates a constant, which is this release's defect class in its purest form"
+    ],
+    "other_reproductions": [
+      "path_audit._is_excluded returns True for any checkout path containing 'docs' as a substring (e.g. /home/ci/docs-build/...), so the whole audit scans zero files and reports CLEAN",
+      "versioning.get_active_version against the repository's own PLANS-INDEX.md: 'phase-1' -> None, '1' -> 'Core Architecture Design' -- it returns the Name column, for every real input",
+      "minischema.validate(40 hex chars plus a trailing newline, pattern '^[0-9a-f]{40}$') -> [] (valid). base_sha/head_sha in two shipped schemas use exactly that pattern",
+      "minischema.validate([1,2], {items: [{type: string}]}) -> [] -- tuple-form items validates nothing and does not raise UnsupportedKeyword",
+      "remediation_controller.validate_diff_allowlist(['.github/workflows/ci.yml']) -> (True, []) while is_path_in_allowlist for the same path is False. The function never consults the allowlist, so a remediation diff may edit CI"
+    ]
+  },
+  "consensus_criticals_worth_naming": [
+    {
+      "id": "S1",
+      "round": "security",
+      "raised_by": [
+        "claude",
+        "cursor"
+      ],
+      "what": "both setup/claude-code installers overwrite an existing .claude/settings.json unconditionally, and both uninstallers document the opposite -- they decline to remove the file on the stated premise that install writes settings.planning.json when one exists. Neither installer ever writes that file",
+      "why": "silent loss of a user's hooks and permissions on install or upgrade"
+    },
+    {
+      "id": "S2",
+      "round": "security",
+      "raised_by": [
+        "claude",
+        "cursor"
+      ],
+      "what": "a missing or malformed skill-ownership.json fails OPEN in codex's uninstall: the parse error is caught, the registry reads empty, every approved skill resolves to zero owners and is REMOVEd, and the shared launcher goes with it. install treats the same file as a hard error",
+      "why": "one adapter's uninstall deletes another adapter's skills and runtime"
+    },
+    {
+      "id": "S3",
+      "round": "security",
+      "raised_by": [
+        "claude",
+        "cursor"
+      ],
+      "what": "install.ps1 -Global -Symlink calls Do-Junction, which does Remove-Item -Recurse -Force on the destination before linking. The destination is the user's global skills directory",
+      "why": "deletes every globally installed skill from any source, unprompted"
+    },
+    {
+      "id": "B1",
+      "round": "code B",
+      "raised_by": [
+        "claude"
+      ],
+      "what": "validate_diff_allowlist never calls is_path_in_allowlist -- only the never-touch check runs",
+      "why": "this is the anti-gate-gaming spine for /next-phase --auto. A remediation diff may edit .github/workflows/ci.yml, the installers, or constraints.json and re-gate. REPRODUCED"
+    },
+    {
+      "id": "B2",
+      "round": "code B",
+      "raised_by": [
+        "claude"
+      ],
+      "what": "archive_cross_phase_state keys the stale-state guard on a 'phase' field that write_loop_ready never emits and the schema does not declare",
+      "why": "phase N-1's assignment is handed to phase N's worker while the operator is told the bus is clean. A test enshrines the skip"
+    }
+  ],
+  "reviewer_claims_the_controller_checked_and_rejected": [
+    {
+      "reviewer": "opencode",
+      "round": "code A",
+      "severity_claimed": "Critical",
+      "claim": "ap_launcher.py reads the manifest before checking it exists",
+      "finding": "false. The code reads `candidate = global_manifest()` then `if os.path.isfile(candidate): manifest = candidate` -- manifest is only ever assigned when the file exists. The reviewer misread which branch the guard sits in"
+    },
+    {
+      "reviewer": "opencode",
+      "round": "code A",
+      "severity_claimed": "Important",
+      "claim": "_is_ancestor returns True for parent == child, so a launcher invoked from its own project root refuses its own manifest",
+      "finding": "true of the equality case, and of no consequence. sibling_manifest is consulted only after the upward walk has already failed, and in the case described the candidate it would return is the same absent file the walk did not find. The docstring states this and calls it harmless"
+    },
+    {
+      "note": "both sat in that reviewer's Critical/Important tiers. This is the loop-004-5 lesson holding: a confident citation is a prompt to verify, not evidence. Everything recorded above as reproduced was run by the controller"
+    }
+  ],
+  "operational_findings": {
+    "fan_out_concurrency": "three fan-outs launched within 40 seconds produced 3 working panes of 10. The seven dead panes all carried revision 0, max_offset_from_bottom 0 and a cwd with a trailing backslash: herdr pane run never delivered. Re-running ONE fan-out at a time worked twice in a row. A second fan-out launched while the first was still starting failed identically, so the constraint is one fan-out at a time, not one launch at a time. fanout.sh discards pane run output, which is why the failure was silent",
+    "agy": "never started in the security round and was not retried. CLAUDE.md records that agy auto-denies in headless mode the moment a tool needs the command permission, and collect.sh correctly refused to round a 0-byte reviewer up to a clean pass"
+  }
+}

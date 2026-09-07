@@ -1,0 +1,41 @@
+{
+  "_comment": [
+    "How each result in this directory was produced. 'mode' is the field that",
+    "matters to the checker: a read-only run cannot write a spec file, so its",
+    "SP-1 evidence is a NAMED path at best and often NONE. Grading it against a",
+    "spec_file_prefix would fail it for a permission decision rather than for a",
+    "routing decision, so check_results.py skips that one assertion and says so.",
+    "",
+    "This is the machine-readable form of the evidence file's 'three",
+    "write-verified, two read-verified'."
+  ],
+  "round": "cross-runtime block adherence",
+  "date": "2026-08-27",
+  "block_at_run": "cd920df",
+  "envelope": "TASK.md, byte-identical across all three fixtures",
+  "runs": {
+    "codex": {
+      "mode": "write",
+      "invocation": "codex exec -s workspace-write --skip-git-repo-check --cd . \"<envelope>\" < /dev/null",
+      "model": "gpt-5.6-terra, effort medium (config default; argv echoed at start)"
+    },
+    "claude": {
+      "mode": "write",
+      "invocation": "claude -p \"<envelope>\" < /dev/null",
+      "model": "session default",
+      "note": "Reported 'Ignoring 4 permissions.allow entries from .claude/settings.json: this workspace has not been trusted' and completed anyway. The fixture's settings file is a decoy, so ignoring it is correct - but this run is therefore not evidence about settings-driven routing."
+    },
+    "cursor": {
+      "mode": "read-only",
+      "invocation": "cursor-agent -p --trust --mode ask --model auto \"<envelope, amended to print the report to stdout>\"",
+      "model": "auto (Cursor's own router)",
+      "note": "--trust clears the workspace-trust gate but grants no tools; writes need -f/--yolo, which the controller's classifier refuses. Recorded as B13 in herdr-ops/FINDINGS.md. Verified read-only after the fact: every fixture file's mtime predates the run."
+    },
+    "agy": {
+      "mode": "read-only",
+      "invocation": "agy --mode plan --dangerously-skip-permissions --model gemini-3.1-pro-high --effort high --print-timeout 20m -p=\"<envelope, amended to print the report to stdout>\"",
+      "model": "gemini-3.1-pro-high, effort high",
+      "note": "Run by the operator: agy has no per-invocation read-only grant, and --dangerously-skip-permissions is refused to the controller in every mode. The model pin is load-bearing - agy's default is gemini-3.7-flash-high, a flash model, and it follows the head of the catalogue rather than a stored setting."
+    }
+  }
+}

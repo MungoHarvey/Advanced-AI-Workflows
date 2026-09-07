@@ -1,0 +1,101 @@
+```json
+{
+  "phase": "phase-5",
+  "attempt": 1,
+  "timestamp": "2026-08-26T00:00:00Z",
+  "agent": "codex",
+  "backend": "codex",
+  "verdict": "pass_with_findings",
+  "confidence": 91,
+  "phase_title": "Superpowers Behavioural Port",
+  "findings": [
+    {
+      "severity": "minor",
+      "location": ".advanced-plans/evidence/2026-08-26-superpowers-port.md:818-821",
+      "description": "Behavioural adherence has only been measured on the opencode harness.",
+      "evidence": "The evidence explicitly records that all seven ACC rounds used opencode and that Claude Code and Codex adherence remain unmeasured.",
+      "recommendation": "Run the installer-built fixture suite in fresh Claude Code and Codex sessions. This is not disqualifying for the stated criteria, which require host-neutral routing and with/without-AP behaviour but do not require multi-harness behavioural coverage."
+    }
+  ],
+  "loops_to_revert": [],
+  "failure_notes": [],
+  "summary": "MODEL: gpt-5.6-sol, reasoning effort: medium. I reviewed the plan and amendment, both loops and all todos, the complete port evidence, and the current routing block. The amended criteria are supported: the matrix commit predates routing implementation, the current block gates companion routes on the manifest with a default-deny rule, behavioural evidence covers both AP-present and AP-absent directions, and the fork mirror is documented as zero-diff. The one-harness limitation remains a recorded minor finding, not a stated-criterion failure. The independent-review-record criterion is not applicable because isolation forbids reading the required verdict files.",
+  "criteria_outcomes": [
+    {
+      "criterion": "The behaviour matrix is written and reviewed before any implementation todo starts.",
+      "status": "met",
+      "evidence": "git history shows matrix/gate completion commits e4aad355 and e6cefa9 at 2026-08-26T14:10-14:15+01:00, before routing implementation commit a9e1109 at 14:34+01:00."
+    },
+    {
+      "criterion": "The port branch's first commit is current `upstream/main`, provable with `git log`.",
+      "status": "not_applicable",
+      "evidence": ".advanced-plans/phases/phase-5/plan.md:93-94 supersedes this criterion with the zero-diff local-mirror criterion."
+    },
+    {
+      "criterion": "SP-1 holds: an approved design lands in `.advanced-plans/specs/` when Advanced Planning is present, and in the upstream default location when it is not.",
+      "status": "met",
+      "evidence": ".advanced-plans/evidence/2026-08-26-superpowers-port.md:479-499 records round-6 AP-present output in `.advanced-plans/specs/` and AP-absent output in `docs/superpowers/specs/`; lines 758-785 re-prove both directions using installer-built fixtures. The current routing rules match this at .claude/skills/setup-with-claude/references/claude-md-routing.md:146-150."
+    },
+    {
+      "criterion": "SP-2 holds: the terminal state routes to phase planning when Advanced Planning is present, and to upstream `writing-plans` when it is not.",
+      "status": "met",
+      "evidence": ".advanced-plans/evidence/2026-08-26-superpowers-port.md:479-499 records `/new-phase` with AP and `writing-plans` without AP; lines 758-786 independently re-prove the positive and negative controls. The routing is explicitly conditional at .claude/skills/setup-with-claude/references/claude-md-routing.md:152-156."
+    },
+    {
+      "criterion": "SP-4 (AP half only) holds: the companion-tools recommendation names Advanced Planning and does not name Plannotator.",
+      "status": "not_applicable",
+      "evidence": ".advanced-plans/phases/phase-5/plan.md:95-96 supersedes this criterion with the amended companion recommendation requirement."
+    },
+    {
+      "criterion": "The upstream \"Three Paths\" router present at current upstream head is intact - verified by diffing the section, not by asserting it.",
+      "status": "met",
+      "evidence": ".advanced-plans/evidence/2026-08-26-superpowers-port.md:506-520 records identical upstream/mirror commits, empty tree diff, and byte-identical fixture copies; .advanced-plans/phases/phase-5/loops.md:242-249 records the required router and fixture-copy checks."
+    },
+    {
+      "criterion": "ACC-05: with Advanced Planning absent, no AAW path is fabricated anywhere in the output.",
+      "status": "met",
+      "evidence": ".advanced-plans/evidence/2026-08-26-superpowers-port.md:490-499 records the upstream-default output path, zero `.advanced-plans` hits in all produced files, a false manifest predicate, and an untouched decoy; lines 758-780 re-prove this in the installer-built `only-superpowers` fixture."
+    },
+    {
+      "criterion": "Detection is host-neutral: no `.claude/.` probe remains in any ported logic.",
+      "status": "met",
+      "evidence": ".claude/skills/setup-with-claude/references/claude-md-routing.md:14-37 makes `.aaw/installed.json` the sole installation predicate and prohibits harness-specific probes; direct scan of this routing block found no `.claude/`, `.cursor/`, or `.opencode/` path. Lines 39-44 add default-deny protection for companion routes."
+    },
+    {
+      "criterion": "A provider different from the implementer reviewed the port and its verdict is recorded.",
+      "status": "not_applicable",
+      "evidence": "main-thread-verified (isolation rule forbids reading gate-verdicts/)"
+    },
+    {
+      "criterion": "`git diff upstream/main..<mirror branch>` is empty. A non-empty diff is a failed port.",
+      "status": "met",
+      "evidence": ".advanced-plans/evidence/2026-08-26-superpowers-port.md:506-524 records equal mirror/upstream SHAs, `git diff --quiet` exit 0, and zero commits in both directions."
+    },
+    {
+      "criterion": "SP-4a is absent from the fork, and the fenced block carries the companion recommendation instead, naming Advanced Planning and not Plannotator.",
+      "status": "met",
+      "evidence": ".advanced-plans/evidence/2026-08-26-superpowers-port.md:516-520 attributes all demonstrated routing to the instruction file while the fork patch is zero; .claude/skills/setup-with-claude/references/claude-md-routing.md:181-196 supplies the manifest-based companion recommendation and expressly prohibits recommending or routing to Plannotator."
+    },
+    {
+      "criterion": "SP-3 is present in the fenced block.",
+      "status": "met",
+      "evidence": ".claude/skills/setup-with-claude/references/claude-md-routing.md:138-144 provides the structured-question instruction with a harness-neutral prose fallback."
+    },
+    {
+      "criterion": "SP-2 attaches to the Architectural path only. Spike- and Bounded-classified requests must produce no spec file and must not invoke phase planning - tested, not asserted.",
+      "status": "met",
+      "evidence": ".claude/skills/setup-with-claude/references/claude-md-routing.md:130-136 limits the additions to Architectural requests; .advanced-plans/evidence/2026-08-26-superpowers-port.md:483-488 records passing Spike and Bounded negative checks."
+    },
+    {
+      "criterion": "Detection reads `.aaw/installed.json` → `components[\"advanced-planning\"][\"installed\"]`. A `.advanced-plans/` directory is data, not an installation, and does not satisfy the predicate.",
+      "status": "met",
+      "evidence": ".claude/skills/setup-with-claude/references/claude-md-routing.md:14-34 defines the manifest predicate and rejects directory detection; .advanced-plans/evidence/2026-08-26-superpowers-port.md:357-362 and 494-497 document the false-manifest borrowed-directory decoy test."
+    },
+    {
+      "criterion": "The installer merges the block idempotently - a second run leaves the instruction file byte-identical, and user-authored content survives verbatim.",
+      "status": "met",
+      "evidence": ".advanced-plans/evidence/2026-08-26-superpowers-port.md:271-309 records packaging 4/4 and idempotency 56/56, including byte-identical second installs and user-content preservation; lines 738-745 further show installer-built fixtures retaining house rules."
+    }
+  ]
+}
+```

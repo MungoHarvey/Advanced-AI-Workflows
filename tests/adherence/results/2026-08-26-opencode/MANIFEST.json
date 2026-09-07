@@ -1,0 +1,27 @@
+{
+  "_comment": [
+    "The R1 re-prove round. One runtime, three fixtures. This is the round that",
+    "built broken-manifest, and it is the reason the fixture exists: every",
+    "earlier acceptance round had a well-formed manifest, so none of them could",
+    "have caught the R1 defect (eight routes naming a companion command with no",
+    "manifest gate).",
+    "",
+    "all-installed here is the rebuilt fixture. The first attempt blocked on an",
+    "opencode external-directory permission dialog, caused by a sentinel that",
+    "read 'See the real copy; this is a sentinel only' - a stub that points",
+    "outside itself is not a stub, it is a pointer, and the worker followed it.",
+    "build_fixtures.py plants a self-contained body instead."
+  ],
+  "round": "R1 re-prove",
+  "date": "2026-08-26",
+  "block_at_run": "loop-002-7 (pre cd920df, pre c83c90e)",
+  "envelope": "TASK.md, byte-identical across all three fixtures (cmp-verified)",
+  "runs": {
+    "opencode": {
+      "mode": "write",
+      "invocation": "herdr worker, one worktree per fixture, no controller intervention between prompt and answer",
+      "model": "elm/Qwen/Qwen3.5-397B-A17B-FP8 (self-reported)",
+      "note": "Inputs hashed before and after: .aaw/installed.json, AGENTS.md and TASK.md came back byte-identical in all three. broken-manifest modified nothing at all."
+    }
+  }
+}

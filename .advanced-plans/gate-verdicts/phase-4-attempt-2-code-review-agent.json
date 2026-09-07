@@ -1,0 +1,100 @@
+{
+  "phase": "phase-4",
+  "attempt": 2,
+  "timestamp": "2026-08-26T10:16:09Z",
+  "agent": "code-review-agent",
+  "backend": "claude",
+  "verdict": "pass",
+  "confidence": 95,
+  "findings": [
+    {
+      "severity": "info",
+      "location": ".claude/skills/setup-with-claude/SKILL.md:250-276, :532-565 (Steps 6, U7)",
+      "description": "The attempt-1 defect is fixed and re-verified. Step 6 and Step U7 now resolve profile-placeholder per Step 1 rule instead of a raw tilde. Both are agent-executed sites, which is exactly where the domain-HOME hazard documented in The tilde trap applies.",
+      "evidence": "git show 3b19a49 in worktree C:/Users/mharvey2/Coding/aaw worktrees/aaw-packaging-repair shows the Step 6 and Step U7 hunks replacing tilde-based paths with profile-based backslash paths. Grep across .claude/skills/setup-with-claude/SKILL.md in that worktree returns only prose lines and the Step R2 fenced commands handed to the user to run in their own terminal, consistent with SKILL.md lines 147-149: Tell the user to run the commands in a terminal outside this Claude Code session, do NOT attempt to run the install commands yourself."
+    },
+    {
+      "severity": "info",
+      "location": "criterion No global path in the installer resolves through tilde or HOME, full-installer sweep",
+      "description": "Judgment on the R2 carve-out and a site-by-site sweep beyond the patched file: the carve-out is sound. Every remaining tilde or HOME occurrence in setup-with-claude SKILL.md is descriptive prose or inside a fenced command block explicitly handed to the user to run outside the Claude Code session, never executed by the skill itself. detect.py resolves the profile via USERPROFILE and HOMEDRIVE plus HOMEPATH on Windows and HOME on POSIX. installed.json writes are schema-forbidden from containing tilde or HOME or USERPROFILE literals. The PostToolUse hook resolves at runtime via Node os.homedir, not via shell tilde expansion.",
+      "evidence": "references/install-superpowers.md lines 32-38 and references/install-advanced-planning.md lines 7-39 both give separate POSIX and Windows PowerShell command blocks, matching SKILL.md Step 2 framing at lines 146-149 about presenting exact commands for the user platform."
+    },
+    {
+      "severity": "warning",
+      "location": ".claude/skills/setup-with-claude/references/install-gstack.md:12-16",
+      "description": "Pre-existing gap, not introduced or touched by this phase fix commit (git show 3b19a49 touched only SKILL.md). Unlike sibling reference files, install-gstack.md gives only one universal command using a tilde path with no Windows PowerShell variant, even though SKILL.md Step 2 promises to present exact commands for the user platform (Windows, macOS, Linux). On native Windows PowerShell, an unquoted tilde passed as a git clone destination argument is not shell-expanded and creates a literal directory named tilde rather than resolving to the profile, a different and more visible failure mode than the Git-Bash AD-HOME redirection hazard this phase otherwise fixed. Recorded as Important rather than Critical: it does not violate the literal criterion since the skill still hands the command to the user rather than resolving it itself, it predates phase 4, and it is not named in this phase success-criteria list.",
+      "evidence": "install-gstack.md line 16 has a single command with no PowerShell-specific block, contrasted with install-superpowers.md lines 41-47 and install-advanced-planning.md lines 27-39, both of which have a dedicated Windows PowerShell section using absolute non-tilde paths."
+    },
+    {
+      "severity": "info",
+      "location": "tests/packaging/run-all.sh",
+      "description": "Independently re-ran the full packaging suite rather than trusting the reported counts; the fresh-clone docs scan was checked for narrowing and found not narrowed.",
+      "evidence": "bash tests/packaging/run-all.sh in the worktree exits 0. Individual counts matched exactly what was reported: fresh-clone PASS 13 of 13, manifest-schema PASS 24 of 24 fixtures, audit PASS 21 of 21 checks, idempotency PASS 43 of 43 checks, overall packaging PASS 4 of 4 checks. Confirmed the docs-scan regex in test-fresh-clone.sh line 178 still runs against SETUP.md, README.md and the patched SKILL.md. Ran test-fresh-clone.sh with the keep flag and inspected the mentioned-paths temp file, which lists the 2 forward-slash repo-relative mentions already declared in required-sources.txt plus 3 tilde-prefixed mentions the script explicitly skips as user-profile paths. The backslash-form global paths the fix introduced do not match the forward-slash regex and were never enforced targets either before or after the patch, since they are global destinations outside the repository rather than shipped sources. Also confirmed the test correctly fails pre-fix: test-fresh-clone.sh against ref e508203 exits 1 with 6 missing sources including the glue skill, versus exit 0 and 13 of 13 on HEAD at 3b19a49."
+    }
+  ],
+  "loops_to_revert": [],
+  "failure_notes": [],
+  "phase_title": "Phase 4: gstack Sync and AAW Packaging Repair",
+  "criteria_outcomes": [
+    {
+      "criterion": "sync/upstream-<date> is created from a freshly fetched upstream/main, not from the fork tree.",
+      "status": "met",
+      "evidence": "In C:/Users/mharvey2/Coding/aaw worktrees/gstack-sync-2026-08-26, git log -1 format H equals ad8400543cd9ce8d07641362db48d44a95417e33, identical to upstream/main at time of sync, re-verified with git rev-parse upstream/main in gstack-fork giving the same SHA. origin/main remains at a5dc03bdd64124b302cb56927f0866edc0c11879, untouched. Recorded at .advanced-plans/evidence/2026-08-26-phase-4-loop-001-gstack-sync.md lines 17-31."
+    },
+    {
+      "criterion": "The empty-net-patch claim is re-verified at execution time with git diff <merge-base> origin/main, not with git diff upstream/main origin/main.",
+      "status": "met",
+      "evidence": "Independently re-ran in gstack-fork: git diff --stat 029356e1f0693f22cb1fa4524c9b0f28ceab5a1b origin/main produced no output, and git log --merges --oneline over that range returned exactly 3 commits a5dc03bd, 973fedc8, 58479465, matching .advanced-plans/evidence/2026-08-26-fork-divergence-reaudit.md lines 25-26."
+    },
+    {
+      "criterion": "The upstream suite passes, with the exact command and exit code recorded.",
+      "status": "waived",
+      "evidence": ".advanced-plans/evidence/2026-08-26-phase-4-loop-001-gstack-sync.md lines 120-122 record bun run test:windows exit=1, 7 failing tests. All 7 are attributed at lines 140-165: 3 need jq, 2 need Windows Developer Mode symlink privilege, 1 Git Bash fork flake, 1 genuine upstream bug at browse/test/build.test.ts line 16. Per the phase plan human waiver dated 2026-08-26 at plan.md lines 61-78, this failure does not by itself drive the overall verdict to fail; the recording half of the criterion was met."
+    },
+    {
+      "criterion": "A Windows install smoke test passes from the synced tree.",
+      "status": "met",
+      "evidence": ".advanced-plans/evidence/2026-08-26-phase-4-loop-001-gstack-sync.md lines 189-228: setup --host claude -q into an isolated SMOKE profile, exit=0, 56 skill entries installed; live profile verified byte-identical before and after."
+    },
+    {
+      "criterion": "The branch contains zero AAW-specific changes.",
+      "status": "met",
+      "evidence": "git diff --stat upstream/main sync/upstream-2026-08-26 is empty, re-verified directly. Evidence file section 8 lists only two untracked test-run fixtures, no committed AAW-specific change."
+    },
+    {
+      "criterion": "git ls-files .claude/skills/gstack-to-plans/SKILL.md returns the path, the file is tracked, not merely present.",
+      "status": "met",
+      "evidence": "Ran git ls-files .claude/skills/gstack-to-plans/SKILL.md in C:/Users/mharvey2/Coding/aaw worktrees/aaw-packaging-repair at HEAD 3b19a49: returns the path."
+    },
+    {
+      "criterion": "A fresh git clone of the branch into a temporary directory contains every install source named in README, SETUP, and the setup skill.",
+      "status": "met",
+      "evidence": "Ran bash tests/packaging/test-fresh-clone.sh at HEAD: PASS, 13 of 13 required install sources present in a fresh clone, exit 0."
+    },
+    {
+      "criterion": "The packaging test fails when any one of those sources is deleted, and passes when restored.",
+      "status": "met",
+      "evidence": "Ran bash tests/packaging/test-fresh-clone.sh against ref e508203, the real pre-fix commit missing the glue skill and aaw tools files: exit 1, FAIL with 6 of 14 required install sources missing or unusable. Same command against HEAD 3b19a49 exits 0, 13 of 13."
+    },
+    {
+      "criterion": "A directory containing only a stale .advanced-plans/ is reported as data present, Advanced Planning absent, ACC-02.",
+      "status": "met",
+      "evidence": "Ran bash tests/packaging/run-all.sh; test-audit.sh output includes an explicit ACC-02 check passing, data present and component MISSING reported together, part of audit PASS 21 of 21 checks."
+    },
+    {
+      "criterion": "Running refresh twice produces no change on the second run, ACC-16.",
+      "status": "met",
+      "evidence": "Ran bash tests/packaging/test-idempotency.sh via run-all.sh; output includes an ACC-16 check confirming the second run left every file byte-identical and reported the same state, part of idempotency PASS 43 of 43 checks."
+    },
+    {
+      "criterion": "Uninstall removes only AAW-owned fenced blocks and files, and preserves user content.",
+      "status": "met",
+      "evidence": "test-idempotency.sh stage 3 output from my own run confirms uninstall removed the fenced block, preserved the CLAUDE.md content added by the user, left .advanced-plans alone, left other user files alone, and the whole project was byte-identical to before the install."
+    },
+    {
+      "criterion": "No global path in the installer resolves through tilde or HOME.",
+      "status": "met",
+      "evidence": "git show 3b19a49 in the packaging worktree confirms Step 6 and Step U7 of setup-with-claude SKILL.md now resolve the profile placeholder instead of a raw tilde, closing the attempt-1 defect. A site-by-site sweep of remaining tilde and HOME occurrences in SKILL.md shows every one is prose or inside a Step R2 fenced block explicitly run by the user in their own terminal, per SKILL.md lines 147-149. detect.py resolves the profile correctly via USERPROFILE and HOMEDRIVE plus HOMEPATH, and the manifest schema forbids tilde and HOME and USERPROFILE literals. One pre-existing, non-blocking gap noted as an Important finding: references/install-gstack.md line 16 has no Windows-specific command variant, but it is still a user-run command, not agent-resolved, so it does not violate this criterion letter."
+    }
+  ]
+}

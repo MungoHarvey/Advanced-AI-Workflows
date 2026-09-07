@@ -157,3 +157,15 @@ npx skills@latest add MungoHarvey/Advanced-AI-Workflows --skill setup-with-claud
 # 4. Restore from skills-lock.json (if it already exists)
 npx skills@latest experimental_install
 ```
+
+---
+
+## Controller verification (2026-09-07, measured by the controller session)
+
+Answer 3 above measured only a **local-path** source. Pinning from this repo's **published remote** was measured separately in a scratch `git init` directory:
+
+```
+npx -y skills@latest add MungoHarvey/Advanced-AI-Workflows --skill setup-with-claude --yes
+```
+
+Result: `Installed 1 skill`; lock entry `source: "MungoHarvey/Advanced-AI-Workflows"`, `sourceType: "github"`, `skillPath: ".claude/skills/setup-with-claude/SKILL.md"`. The repo is public with default branch `main`. So a fresh clone **can** pin `aaw-tools` from the published remote, which is what the fresh-clone test needs; the only constraint is that the pinned skill must be on `main` of the public repo.
